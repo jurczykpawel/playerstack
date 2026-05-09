@@ -143,4 +143,22 @@ describe("createPluginRegistry", () => {
     await reg.init(fakeContext());
     await expect(reg.init(fakeContext())).rejects.toThrow(/already/i);
   });
+
+  it("destroy passes the same context to plugin.destroy that init received", async () => {
+    const reg = createPluginRegistry();
+    const ctx = fakeContext();
+    const destroySpy = vi.fn();
+
+    reg.register({
+      name: "p",
+      init: () => {},
+      destroy: destroySpy,
+    });
+
+    await reg.init(ctx);
+    reg.destroy();
+
+    expect(destroySpy).toHaveBeenCalledTimes(1);
+    expect(destroySpy).toHaveBeenCalledWith(ctx);
+  });
 });

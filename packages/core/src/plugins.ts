@@ -11,7 +11,7 @@ export interface PlayerstackContext {
 export interface PlayerstackPlugin {
   readonly name: string;
   init(ctx: PlayerstackContext): void | Promise<void>;
-  destroy?(): void;
+  destroy?(ctx: PlayerstackContext): void;
 }
 
 export interface PluginRegistry {
@@ -24,6 +24,7 @@ export interface PluginRegistry {
 export function createPluginRegistry(): PluginRegistry {
   const plugins: PlayerstackPlugin[] = [];
   let initialized = false;
+  let lastContext: PlayerstackContext | null = null;
 
   function register(plugin: PlayerstackPlugin): void {
     if (plugins.some((p) => p.name === plugin.name)) {
@@ -41,22 +42,26 @@ export function createPluginRegistry(): PluginRegistry {
       throw new Error("[playerstack] plugin registry already initialized — call destroy() first");
     }
     initialized = true;
+    lastContext = ctx;
     for (const plugin of plugins) {
       await plugin.init(ctx);
     }
   }
 
   function destroy(): void {
+    if (!lastContext) return;
+    const ctx = lastContext;
     for (let i = plugins.length - 1; i >= 0; i--) {
       const plugin = plugins[i];
       if (!plugin?.destroy) continue;
       try {
-        plugin.destroy();
+        plugin.destroy(ctx);
       } catch (err) {
         console.error(`[playerstack] destroy of plugin "${plugin.name}" threw:`, err);
       }
     }
     initialized = false;
+    lastContext = null;
   }
 
   return { register, list, init, destroy };
