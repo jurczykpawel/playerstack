@@ -1,0 +1,188 @@
+---
+import Base from "./Base.astro";
+
+interface Props {
+  title: string;
+  description?: string;
+}
+
+const { title, description } = Astro.props;
+
+const NAV = [
+  {
+    section: "Start",
+    items: [
+      { href: "/docs", label: "Overview" },
+      { href: "/docs/getting-started", label: "Getting started" },
+    ],
+  },
+  {
+    section: "Plugins",
+    items: [
+      { href: "/docs/plugins", label: "Plugin overview" },
+      { href: "/docs/plugins/sources", label: "sources" },
+      { href: "/docs/plugins/controls-policy", label: "controls-policy" },
+      { href: "/docs/plugins/autopreview", label: "autopreview" },
+      { href: "/docs/plugins/branded-thumb", label: "branded-thumb" },
+      { href: "/docs/plugins/cta-end", label: "cta-end" },
+      { href: "/docs/plugins/sellf-adapter", label: "sellf-adapter" },
+    ],
+  },
+  {
+    section: "Reference",
+    items: [
+      { href: "/docs/api", label: "Core API" },
+      { href: "/docs/recipes", label: "Recipes" },
+    ],
+  },
+];
+
+const path = Astro.url.pathname.replace(/\/$/, "");
+---
+
+<Base title={title} description={description}>
+  <div class="docs-layout">
+    <aside>
+      <a class="brand" href="/">← Playerstack</a>
+      <nav>
+        {
+          NAV.map((sec) => (
+            <div class="section">
+              <h4>{sec.section}</h4>
+              <ul>
+                {sec.items.map((item) => (
+                  <li>
+                    <a
+                      href={item.href}
+                      class:list={[{ active: path === item.href.replace(/\/$/, "") }]}
+                    >
+                      {item.label}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))
+        }
+      </nav>
+    </aside>
+    <article>
+      <slot />
+    </article>
+  </div>
+</Base>
+
+<style>
+  .docs-layout {
+    display: grid;
+    grid-template-columns: 240px 1fr;
+    max-width: 1200px;
+    margin: 0 auto;
+    gap: 48px;
+    padding: 32px 24px 96px;
+  }
+  @media (max-width: 800px) {
+    .docs-layout { grid-template-columns: 1fr; }
+    aside { position: static !important; height: auto !important; }
+  }
+  aside {
+    position: sticky;
+    top: 32px;
+    height: fit-content;
+  }
+  .brand {
+    display: block;
+    color: var(--muted);
+    text-decoration: none;
+    font-size: 14px;
+    margin-bottom: 24px;
+  }
+  .section { margin-bottom: 24px; }
+  .section h4 {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    margin: 0 0 8px;
+  }
+  ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  li a {
+    display: block;
+    padding: 4px 8px;
+    margin: 0 -8px;
+    border-radius: 4px;
+    color: var(--fg);
+    text-decoration: none;
+    font-size: 14px;
+  }
+  li a:hover { background: rgba(255,255,255,0.04); }
+  li a.active { background: rgba(0,138,255,0.1); color: var(--accent); }
+
+  article :global(h1) {
+    font-size: 36px;
+    margin: 0 0 8px;
+    line-height: 1.1;
+  }
+  article :global(h2) {
+    font-size: 22px;
+    color: var(--accent);
+    margin: 40px 0 12px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border);
+  }
+  article :global(h2:first-of-type) {
+    border-top: none;
+    padding-top: 0;
+  }
+  article :global(h3) {
+    font-size: 17px;
+    margin: 24px 0 8px;
+  }
+  article :global(p), article :global(ul), article :global(ol) {
+    line-height: 1.6;
+  }
+  article :global(table) {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 16px 0;
+    font-size: 14px;
+  }
+  article :global(th), article :global(td) {
+    text-align: left;
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--border);
+  }
+  article :global(th) {
+    color: var(--muted);
+    font-weight: 600;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  article :global(code:not(pre code)) {
+    background: rgba(255,255,255,0.06);
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-size: 0.9em;
+  }
+  article :global(pre) {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid var(--border);
+    padding: 16px;
+    border-radius: 8px;
+    overflow-x: auto;
+    font-size: 13px;
+    line-height: 1.5;
+  }
+  article :global(blockquote) {
+    margin: 16px 0;
+    padding: 8px 16px;
+    border-left: 3px solid var(--accent);
+    color: var(--muted);
+    background: rgba(0,138,255,0.05);
+  }
+</style>
