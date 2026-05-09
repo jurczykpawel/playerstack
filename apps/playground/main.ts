@@ -1,3 +1,6 @@
-import "@playerstack/core";
+import { Playerstack } from "@playerstack/core";
+import { sourcesPlugin } from "@playerstack/plugin-sources";
 
-console.log("[playerstack] playground booted");
+Playerstack.use(sourcesPlugin).define();
+
+console.log("[playerstack] playground booted with plugins:", Playerstack.plugins().map((p) => p.name));

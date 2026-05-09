@@ -1,9 +1,11 @@
 import type { EventBus } from "./events";
+import type { PlayerstackConfig } from "./config";
 
 export interface PlayerstackContext {
   events: EventBus;
   container: HTMLElement;
   mediaPlayer: HTMLElement;
+  config: PlayerstackConfig;
 }
 
 export interface PlayerstackPlugin {

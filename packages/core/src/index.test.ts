@@ -22,4 +22,11 @@ describe("@playerstack/core public API", () => {
   it("auto-defines <player-stack> when imported in a DOM environment", () => {
     expect(customElements.get("player-stack")).toBeDefined();
   });
+
+  it("exports the Playerstack singleton with use, plugins, define", () => {
+    expect(core.Playerstack).toBeDefined();
+    expect(typeof core.Playerstack.use).toBe("function");
+    expect(typeof core.Playerstack.plugins).toBe("function");
+    expect(typeof core.Playerstack.define).toBe("function");
+  });
 });
