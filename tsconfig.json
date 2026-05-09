@@ -15,7 +15,6 @@
     "forceConsistentCasingInFileNames": true,
     "verbatimModuleSyntax": true,
     "useDefineForClassFields": true,
-    "experimentalDecorators": false,
-    "types": ["bun"]
+    "experimentalDecorators": false
   }
 }

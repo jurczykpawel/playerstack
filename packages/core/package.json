@@ -19,7 +19,15 @@
     "src",
     "README.md"
   ],
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
   "dependencies": {
     "vidstack": "^1.12.13"
+  },
+  "devDependencies": {
+    "vitest": "^3.2.4",
+    "happy-dom": "^20.0.0"
   }
 }

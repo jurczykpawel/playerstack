@@ -17,20 +17,21 @@ Embeddable video player. OSS-first (MIT). Bun monorepo. Plugin-first architectur
 | Engine | Vidstack (MIT, wrapper not fork) |
 | Embed | Web Component `<player-stack>` + fallback `<div data-playerstack>` |
 | Bundler | esbuild → UMD + ESM |
-| Tests unit | Vitest |
-| Tests E2E | Playwright |
+| Tests unit | Vitest + happy-dom (strict TDD) |
+| Tests E2E | Playwright (Day 14) |
 | Docs (post-MVP) | Astro on `playerstack.sellf.app` |
 | Backend (post-MVP) | Hono + CF Workers + D1 + R2 |
 
 ## Rules
 
-1. **Core knows nothing about Sellf, SaaS, analytics, or lead capture.** All of that lives in plugins or pluggable Config Providers added at runtime.
-2. **Plugin interface is stable.** Once `init(ctx)` and the event names are defined (Day 3-4), they are not changed without bumping a major version.
-3. **Bundle ≤ 50 KB gzipped** for `playerstack` standalone UMD. Code-split per plugin when dist grows.
-4. **No GPL code in core.** Presto Player code is GPL v3 — read it for ideas, don't copy verbatim. Vidstack is MIT, that's our engine.
-5. **MIT for core + MVP plugins.** Premium plugins (post-MVP) live in `@playerstack-pro/*` (proprietary, separate repo).
-6. **No emoji in code.** Per workspace rules.
-7. **Polish for business docs, English for code/technical docs.**
+1. **Strict TDD from Day 3-4 onwards.** Test-first, red → green → refactor, including DOM via happy-dom or Vitest browser mode. No production code in `packages/*/src/` lands without a preceding failing test. Day 1-2 (monorepo + Vidstack wrapper) is the only exception — smoke-tested via Playwright manually.
+2. **Core knows nothing about Sellf, SaaS, analytics, or lead capture.** All of that lives in plugins or pluggable Config Providers added at runtime.
+3. **Plugin interface is stable.** Once `init(ctx)` and the event names are defined (Day 3-4), they are not changed without bumping a major version.
+4. **Bundle ≤ 50 KB gzipped** for `playerstack` standalone UMD. Code-split per plugin when dist grows.
+5. **No GPL code in core.** Presto Player code is GPL v3 — read it for ideas, don't copy verbatim. Vidstack is MIT, that's our engine.
+6. **MIT for core + MVP plugins.** Premium plugins (post-MVP) live in `@playerstack-pro/*` (proprietary, separate repo).
+7. **No emoji in code.** Per workspace rules.
+8. **Polish for business docs, English for code/technical docs.**
 
 ## Naming
 
