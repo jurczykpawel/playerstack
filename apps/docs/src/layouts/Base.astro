@@ -1,0 +1,93 @@
+---
+interface Props {
+  title: string;
+  description?: string;
+  ogImage?: string;
+}
+
+const {
+  title,
+  description = "Embeddable video player. Drop one script tag, embed YouTube, Vimeo, MP4, or HLS with branding and CTAs. MIT.",
+  ogImage = "/og-default.png",
+} = Astro.props;
+
+const canonical = new URL(Astro.url.pathname, Astro.site);
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="canonical" href={canonical} />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={new URL(ogImage, Astro.site)} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:type" content="image/png" />
+    <meta property="og:image:alt" content={title} />
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={new URL(ogImage, Astro.site)} />
+
+    <script
+      type="application/ld+json"
+      set:html={JSON.stringify({
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        name: "Playerstack",
+        applicationCategory: "DeveloperApplication",
+        operatingSystem: "Web",
+        offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+        license: "MIT",
+        url: Astro.site?.toString(),
+      })}
+    />
+  </head>
+  <body>
+    <slot />
+  </body>
+</html>
+
+<style is:global>
+  :root {
+    color-scheme: light dark;
+    --bg: #0b0d12;
+    --fg: #e8eaed;
+    --muted: #9aa3b2;
+    --accent: #008aff;
+    --border: rgba(255, 255, 255, 0.1);
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--fg);
+    font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    line-height: 1.5;
+  }
+  a { color: var(--accent); }
+  code {
+    background: rgba(255, 255, 255, 0.06);
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-size: 0.9em;
+    font-family: ui-monospace, "SF Mono", Consolas, monospace;
+  }
+  pre {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid var(--border);
+    padding: 16px;
+    border-radius: 8px;
+    overflow-x: auto;
+  }
+  h1, h2, h3 { letter-spacing: -0.01em; }
+</style>

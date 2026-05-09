@@ -1,0 +1,166 @@
+---
+import Base from "../layouts/Base.astro";
+const VIDSTACK_VERSION = "1.12.13";
+---
+
+<Base title="Playground — Playerstack">
+  <main>
+    <header>
+      <a href="/" class="back">← Playerstack</a>
+      <h1>Live playground</h1>
+      <p class="lead">Edit the config, copy the embed code.</p>
+    </header>
+
+    <div class="grid">
+      <form id="cfg-form">
+        <label>
+          <span>Source URL</span>
+          <input id="cfg-src" type="url" value="https://youtu.be/dQw4w9WgXcQ" />
+        </label>
+        <label>
+          <span>Title</span>
+          <input id="cfg-title" type="text" value="Demo" />
+        </label>
+        <label>
+          <span>Poster URL</span>
+          <input id="cfg-poster" type="url" placeholder="https://…/poster.jpg" />
+        </label>
+        <label>
+          <span>Accent color</span>
+          <input id="cfg-accent" type="color" value="#008aff" />
+        </label>
+        <label class="checkbox">
+          <input id="cfg-clicktoload" type="checkbox" checked />
+          <span>Click-to-load (LCP + GDPR)</span>
+        </label>
+        <label>
+          <span>CTA title at end</span>
+          <input id="cfg-ctatitle" type="text" placeholder="Thanks for watching!" />
+        </label>
+        <label>
+          <span>CTA button label</span>
+          <input id="cfg-btnlabel" type="text" placeholder="Buy now" />
+        </label>
+        <label>
+          <span>CTA button URL</span>
+          <input id="cfg-btnurl" type="url" placeholder="https://…" />
+        </label>
+      </form>
+
+      <div class="preview">
+        <div class="player-wrap" id="preview-host"></div>
+        <h3>Embed snippet</h3>
+        <pre id="snippet"><code></code></pre>
+        <button id="copy-btn" type="button">Copy</button>
+      </div>
+    </div>
+  </main>
+
+  <link rel="stylesheet" href={`https://cdn.jsdelivr.net/npm/vidstack@${VIDSTACK_VERSION}/player/styles/default/theme.css`} />
+  <link rel="stylesheet" href={`https://cdn.jsdelivr.net/npm/vidstack@${VIDSTACK_VERSION}/player/styles/default/layouts/video.css`} />
+  <script>
+    import "https://cdn.jsdelivr.net/npm/playerstack@latest/dist/playerstack.min.js";
+
+    function readForm() {
+      return {
+        src: (document.getElementById("cfg-src") as HTMLInputElement).value,
+        title: (document.getElementById("cfg-title") as HTMLInputElement).value,
+        poster: (document.getElementById("cfg-poster") as HTMLInputElement).value,
+        accent: (document.getElementById("cfg-accent") as HTMLInputElement).value,
+        clickToLoad: (document.getElementById("cfg-clicktoload") as HTMLInputElement).checked,
+        ctaTitle: (document.getElementById("cfg-ctatitle") as HTMLInputElement).value,
+        btnLabel: (document.getElementById("cfg-btnlabel") as HTMLInputElement).value,
+        btnUrl: (document.getElementById("cfg-btnurl") as HTMLInputElement).value,
+      };
+    }
+
+    function buildConfig(state: ReturnType<typeof readForm>) {
+      const cfg: Record<string, unknown> = {};
+      if (state.accent) cfg.controls = { accent: state.accent };
+      if (state.clickToLoad) cfg.brandedThumb = { enabled: true, clickToLoad: true };
+      const cta: Record<string, unknown> = {};
+      if (state.ctaTitle) cta.title = state.ctaTitle;
+      if (state.btnLabel && state.btnUrl) cta.button = { label: state.btnLabel, url: state.btnUrl };
+      if (Object.keys(cta).length > 0) cfg.ctaEnd = { enabled: true, ...cta };
+      return cfg;
+    }
+
+    function escapeAttr(s: string) { return s.replace(/"/g, "&quot;"); }
+
+    function render() {
+      const state = readForm();
+      const cfg = buildConfig(state);
+      const cfgJson = JSON.stringify(cfg);
+
+      const host = document.getElementById("preview-host");
+      if (host) {
+        host.innerHTML = "";
+        const el = document.createElement("player-stack");
+        el.setAttribute("src", state.src);
+        if (state.title) el.setAttribute("title", state.title);
+        if (state.poster) el.setAttribute("poster", state.poster);
+        if (cfgJson !== "{}") el.setAttribute("data-config", cfgJson);
+        host.appendChild(el);
+      }
+
+      const snippet = document.querySelector("#snippet code");
+      if (snippet) {
+        const attrs = [
+          `src="${escapeAttr(state.src)}"`,
+          state.title ? `title="${escapeAttr(state.title)}"` : "",
+          state.poster ? `poster="${escapeAttr(state.poster)}"` : "",
+          cfgJson !== "{}" ? `data-config='${cfgJson}'` : "",
+        ].filter(Boolean).join("\n  ");
+
+        snippet.textContent = '<script src="https://cdn.jsdelivr.net/npm/playerstack@0.1.0/dist/playerstack.min.js" defer><' + '/script>\n\n<player-stack\n  ' + attrs + '>\n</player-stack>';
+      }
+    }
+
+    document.querySelectorAll<HTMLInputElement>("#cfg-form input").forEach((input) => {
+      input.addEventListener("input", render);
+      input.addEventListener("change", render);
+    });
+
+    document.getElementById("copy-btn")?.addEventListener("click", () => {
+      const txt = document.querySelector("#snippet code")?.textContent ?? "";
+      navigator.clipboard.writeText(txt);
+    });
+
+    render();
+  </script>
+</Base>
+
+<style>
+  main { max-width: 1100px; margin: 0 auto; padding: 32px 24px 96px; }
+  .back { color: var(--muted); text-decoration: none; font-size: 14px; }
+  h1 { font-size: 32px; margin: 12px 0 4px; }
+  .lead { color: var(--muted); margin: 0 0 24px; }
+  .grid { display: grid; grid-template-columns: 320px 1fr; gap: 32px; }
+  @media (max-width: 800px) {
+    .grid { grid-template-columns: 1fr; }
+  }
+  form { display: grid; gap: 12px; }
+  label { display: grid; gap: 4px; font-size: 13px; color: var(--muted); }
+  label.checkbox { display: flex; flex-direction: row; align-items: center; gap: 8px; }
+  input[type="text"], input[type="url"] {
+    padding: 8px 10px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--fg);
+    font-size: 14px;
+  }
+  input[type="color"] { width: 100%; height: 36px; border: 1px solid var(--border); border-radius: 6px; background: transparent; }
+  .player-wrap { background: #000; border-radius: 12px; overflow: hidden; aspect-ratio: 16/9; position: relative; }
+  pre { white-space: pre-wrap; word-break: break-all; }
+  #copy-btn {
+    margin-top: 8px;
+    padding: 8px 16px;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 500;
+  }
+</style>
