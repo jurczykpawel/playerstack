@@ -1,0 +1,12 @@
+node_modules/
+dist/
+build/
+.astro/
+.cache/
+test-results/
+playwright-report/
+bun.lock
+**/*.tsbuildinfo
+apps/docs/public/playground.ts
+apps/docs/public/playerstack.min.js
+apps/docs/public/playerstack.min.js.map

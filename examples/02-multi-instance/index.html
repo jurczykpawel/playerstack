@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Playerstack — multi-instance</title>
+    <script
+      src="https://cdn.jsdelivr.net/npm/playerstack@0.1.0/dist/playerstack.min.js"
+      defer
+    ></script>
+    <style>
+      body {
+        max-width: 880px;
+        margin: 32px auto;
+        padding: 0 16px;
+        font-family: system-ui, sans-serif;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 24px;
+        margin-top: 24px;
+      }
+      .player {
+        background: #000;
+        border-radius: 12px;
+        overflow: hidden;
+      }
+      h2 {
+        font-size: 16px;
+        margin: 0 0 8px;
+      }
+      @media (max-width: 720px) {
+        .grid {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Multi-instance demo</h1>
+    <p>
+      Three players, three different configs. Each gets its own scoped CSS, its own plugin state,
+      and its own event bus.
+    </p>
+
+    <div class="grid">
+      <div>
+        <h2>Blue accent, only play + progress</h2>
+        <div class="player">
+          <player-stack
+            src="https://youtu.be/dQw4w9WgXcQ"
+            data-config='{"controls":{"show":["play","progress"],"accent":"#008aff"}}'
+          ></player-stack>
+        </div>
+      </div>
+
+      <div>
+        <h2>Red accent, full controls</h2>
+        <div class="player">
+          <player-stack
+            src="https://youtu.be/_cMxraX_5RE"
+            data-config='{"controls":{"accent":"#ff3b30"}}'
+          ></player-stack>
+        </div>
+      </div>
+
+      <div style="grid-column: 1 / -1">
+        <h2>MP4 with end-of-video CTA</h2>
+        <div class="player">
+          <player-stack
+            src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"
+            poster="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/images/BigBuckBunny.jpg"
+            data-config='{"ctaEnd":{"enabled":true,"title":"Want more like this?","button":{"label":"Subscribe","url":"https://example.com/subscribe","utm":"utm_source=playerstack-demo"},"showReplay":true}}'
+          ></player-stack>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

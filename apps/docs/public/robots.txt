@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+
+# Content-Signals: AI training and search are both allowed
+# https://www.cloudflare.com/learning/bots/content-signals/
+Content-Signals: search=yes, ai-input=yes, ai-train=yes
+
+Sitemap: https://playerstack.sellf.app/sitemap-index.xml

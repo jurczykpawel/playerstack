@@ -1,0 +1,26 @@
+---
+interface Props {
+  src: string;
+  poster?: string;
+  title?: string;
+  config?: Record<string, unknown>;
+  class?: string;
+}
+
+const { src, poster, title, config, class: className } = Astro.props;
+const PLAYERSTACK_VERSION = "0.1.0";
+---
+
+<!-- Playerstack bundle (auto-registers <player-stack>; ships its own UI via Web Components) -->
+<script
+  src={`https://cdn.jsdelivr.net/npm/playerstack@${PLAYERSTACK_VERSION}/dist/playerstack.min.js`}
+  defer
+  is:inline></script>
+
+<player-stack
+  src={src}
+  poster={poster}
+  title={title}
+  data-config={config ? JSON.stringify(config) : undefined}
+  class={className}
+></player-stack>

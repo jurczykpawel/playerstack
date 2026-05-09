@@ -1,0 +1,40 @@
+# Playerstack
+
+> Embeddable video player for any HTML page. Drop one script tag, embed YouTube, Vimeo, MP4, or HLS with branding and CTAs. MIT, plugin-first.
+
+## What it is
+Playerstack is a thin layer on top of Mux's media-chrome and media-elements with a marketing layer added: branded thumbnails, click-to-load (LCP + GDPR), end-of-video CTAs, autopreview, themed controls. Framework-agnostic Web Component.
+
+## Quickstart
+```html
+<script src="https://cdn.jsdelivr.net/npm/playerstack@0.1.0/dist/playerstack.min.js" defer></script>
+<player-stack src="https://youtu.be/dQw4w9WgXcQ"></player-stack>
+```
+
+## Plugins (all 13 ship in the standalone bundle, all MIT)
+- `@playerstack/plugin-sources` — auto-detects YouTube, Vimeo, MP4, HLS, WebM, DASH
+- `@playerstack/plugin-controls-policy` — theme color, show/hide controls
+- `@playerstack/plugin-autopreview` — muted autoplay in viewport, respects prefers-reduced-motion
+- `@playerstack/plugin-branded-thumb` — custom poster, click-to-load (no third-party cookies until click)
+- `@playerstack/plugin-cta-end` — overlay HTML at end of video, button with UTM, replay
+- `@playerstack/plugin-chapters` — clickable timecoded navigation
+- `@playerstack/plugin-action-bar` — mid-video dismissible CTA banner
+- `@playerstack/plugin-email-gate` — pause-and-collect lead capture
+- `@playerstack/plugin-saved-position` — resume watching
+- `@playerstack/plugin-sticky` — corner-pin on scroll
+- `@playerstack/plugin-focus-mode` — auto-pause on tab blur
+- `@playerstack/plugin-analytics` — beacon / gtag forwarder
+- `@playerstack/plugin-yt-subscribe` — subscribe-on-YouTube bar
+
+## Stack
+Bun monorepo. TypeScript strict. Engine: Mux media-chrome + media-elements (MIT). esbuild bundler. Astro docs site.
+
+## License
+MIT for core and all 13 plugins. Premium plugins (post-MVP) are proprietary.
+
+## Links
+- Site: https://playerstack.sellf.app
+- GitHub: https://github.com/jurczykpawel/playerstack
+- npm (UMD bundle): https://www.npmjs.com/package/playerstack
+- Engine UI: https://github.com/muxinc/media-chrome
+- Engine media elements: https://github.com/muxinc/media-elements
