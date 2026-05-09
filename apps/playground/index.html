@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Playerstack — Day 1-2 POC</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/vidstack@1.12.13/player/styles/default/theme.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/vidstack@1.12.13/player/styles/default/layouts/video.css" />
+    <style>
+      :root {
+        color-scheme: light dark;
+        --bg: #0b0d12;
+        --fg: #e8eaed;
+        --muted: #9aa3b2;
+        --accent: #008aff;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+        background: var(--bg);
+        color: var(--fg);
+        line-height: 1.5;
+      }
+      header {
+        max-width: 920px;
+        margin: 0 auto;
+        padding: 32px 20px 16px;
+      }
+      h1 { margin: 0 0 4px; font-size: 28px; letter-spacing: -0.01em; }
+      header p { margin: 0; color: var(--muted); }
+      main {
+        max-width: 920px;
+        margin: 0 auto;
+        padding: 16px 20px 64px;
+        display: grid;
+        gap: 32px;
+      }
+      section { display: grid; gap: 8px; }
+      h2 { margin: 0; font-size: 18px; color: var(--accent); font-weight: 600; }
+      code {
+        background: rgba(255,255,255,0.06);
+        padding: 1px 6px;
+        border-radius: 4px;
+        font-size: 0.9em;
+      }
+      .player-wrap {
+        background: #000;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+      }
+      footer {
+        max-width: 920px;
+        margin: 0 auto;
+        padding: 8px 20px 32px;
+        color: var(--muted);
+        font-size: 13px;
+      }
+      footer a { color: var(--accent); text-decoration: none; }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>Playerstack — Day 1-2 POC</h1>
+      <p>Wrapper <code>&lt;player-stack&gt;</code> wokół Vidstack. YouTube + MP4 z jednego custom elementu.</p>
+    </header>
+
+    <main>
+      <section>
+        <h2>YouTube</h2>
+        <p>Source: <code>https://youtu.be/_cMxraX_5RE</code></p>
+        <div class="player-wrap">
+          <player-stack
+            src="youtube/_cMxraX_5RE"
+            title="Sprite Fight (YouTube)"
+            poster="https://image.mux.com/VZtzUzGRv02OhRnZCxcNg49OilvolTqdnFLEqBsTwaxU/thumbnail.webp?time=268&width=1200">
+          </player-stack>
+        </div>
+      </section>
+
+      <section>
+        <h2>MP4 (Mux test stream)</h2>
+        <p>Source: <code>https://files.vidstack.io/sprite-fight/720p.mp4</code></p>
+        <div class="player-wrap">
+          <player-stack
+            src="https://files.vidstack.io/sprite-fight/720p.mp4"
+            title="Sprite Fight (MP4)"
+            poster="https://files.vidstack.io/sprite-fight/poster.webp">
+          </player-stack>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      Playerstack POC. <a href="https://vidstack.io" target="_blank" rel="noreferrer">Engine: Vidstack</a>.
+    </footer>
+
+    <script type="module" src="/main.ts"></script>
+  </body>
+</html>

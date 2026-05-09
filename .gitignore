@@ -1,0 +1,25 @@
+node_modules/
+dist/
+.turbo/
+.cache/
+*.log
+.DS_Store
+.env
+.env.local
+.env.*.local
+
+# Bun
+bun.lock
+.bun/
+
+# Build output
+*.tsbuildinfo
+**/build/
+
+# Editor
+.vscode/
+.idea/
+*.swp
+
+# OS
+Thumbs.db
