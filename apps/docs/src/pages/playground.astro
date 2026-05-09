@@ -1,0 +1,773 @@
+---
+import Base from "../layouts/Base.astro";
+---
+
+<Base title="Playground — Playerstack">
+  <main>
+    <header>
+      <a href="/" class="back">← Playerstack</a>
+      <h1>Live playground</h1>
+      <p class="lead">
+        Pick a preset to see what's possible, then tweak the config and copy the embed.
+      </p>
+    </header>
+
+    <div class="presets" id="presets">
+      <button type="button" data-preset="minimal">
+        <strong>1. Minimal YouTube</strong>
+        <span>Default Media Chrome UI, no plugins. Just paste a YT URL.</span>
+      </button>
+      <button type="button" data-preset="gdpr">
+        <strong>2. GDPR + LCP</strong>
+        <span>Click-to-load. Zero YT cookies until interaction.</span>
+      </button>
+      <button type="button" data-preset="branded">
+        <strong>3. Branded purple</strong>
+        <span>Custom accent color + custom poster. No click-to-load.</span>
+      </button>
+      <button type="button" data-preset="sales">
+        <strong>4. Sales funnel</strong>
+        <span>Click-to-load + end-of-video CTA "Buy now" + replay button.</span>
+      </button>
+      <button type="button" data-preset="vimeo">
+        <strong>5. Vimeo source</strong>
+        <span>Same plugin, Vimeo URL. Auto-detected.</span>
+      </button>
+      <button type="button" data-preset="mp4-cta">
+        <strong>6. MP4 with CTA</strong>
+        <span>Self-hosted MP4 file with end-card linking to a course.</span>
+      </button>
+      <button type="button" data-preset="chapters">
+        <strong>7. Video chapters</strong>
+        <span>Clickable chapter list under the player, active chapter highlights as time progresses.</span>
+      </button>
+      <button type="button" data-preset="email-gate">
+        <strong>8. Email gate</strong>
+        <span>Lead capture form blocks playback until visitor submits email. Saved in localStorage.</span>
+      </button>
+      <button type="button" data-preset="action-bar">
+        <strong>9. Mid-video CTA bar</strong>
+        <span>Banner appears 5s in with a button. Dismissible. Emits action-bar:click event.</span>
+      </button>
+      <button type="button" data-preset="resume">
+        <strong>10. Resume watching</strong>
+        <span>Saved-position plugin remembers where you left off via localStorage.</span>
+      </button>
+      <button type="button" data-preset="autopreview">
+        <strong>11. Autopreview</strong>
+        <span>Muted autoplay when player is in viewport, pause when scrolled out.</span>
+      </button>
+      <button type="button" data-preset="sticky">
+        <strong>12. Sticky on scroll</strong>
+        <span>Pin to corner when you scroll past while it's playing. Scroll the page to see it.</span>
+      </button>
+      <button type="button" data-preset="focus-mode">
+        <strong>13. Focus mode</strong>
+        <span>Auto-pause when you switch tabs. Switch back, click play to resume.</span>
+      </button>
+      <button type="button" data-preset="yt-subscribe">
+        <strong>14. YT Subscribe bar</strong>
+        <span>Subscribe button below the player linking to a YouTube channel.</span>
+      </button>
+      <button type="button" data-preset="minimal-controls">
+        <strong>15. Hide controls</strong>
+        <span>Whitelist play+progress only. Hide volume, fullscreen, speed, etc.</span>
+      </button>
+      <button type="button" data-preset="analytics">
+        <strong>16. Analytics tracking</strong>
+        <span>Forwards every cta:click / play / pause / ended to a beacon endpoint.</span>
+      </button>
+      <button type="button" data-preset="full-stack">
+        <strong>17. Everything on</strong>
+        <span>All marketing + e-learning + privacy plugins enabled at once.</span>
+      </button>
+    </div>
+
+    <div class="grid">
+      <form id="cfg-form">
+        <label>
+          <span>Source URL</span>
+          <input id="cfg-src" type="url" value="https://youtu.be/dQw4w9WgXcQ" />
+        </label>
+        <label>
+          <span>Title</span>
+          <input id="cfg-title" type="text" value="Demo" />
+        </label>
+        <label>
+          <span>Poster URL</span>
+          <input id="cfg-poster" type="url" placeholder="https://…/poster.jpg" />
+        </label>
+        <label>
+          <span>Accent color</span>
+          <input id="cfg-accent" type="color" value="#008aff" />
+        </label>
+        <label class="checkbox">
+          <input id="cfg-clicktoload" type="checkbox" checked />
+          <span>Click-to-load (LCP + GDPR)</span>
+        </label>
+        <label>
+          <span>CTA title at end</span>
+          <input id="cfg-ctatitle" type="text" placeholder="Thanks for watching!" />
+        </label>
+        <label>
+          <span>CTA button label</span>
+          <input id="cfg-btnlabel" type="text" placeholder="Buy now" />
+        </label>
+        <label>
+          <span>CTA button URL</span>
+          <input id="cfg-btnurl" type="url" placeholder="https://…" />
+        </label>
+      </form>
+
+      <div class="preview">
+        <div class="player-wrap" id="preview-host"></div>
+        <div class="preset-tip" id="preset-tip" hidden>
+          <strong class="preset-tip-title"></strong>
+          <ol class="preset-tip-steps"></ol>
+        </div>
+        <h3>Embed snippet</h3>
+        <pre id="snippet"><code></code></pre>
+        <button id="copy-btn" type="button">Copy</button>
+      </div>
+    </div>
+  </main>
+
+  <!-- Media Chrome ships its own UI as Web Components (shadow DOM); no external CSS needed. -->
+  <!-- Local bundle in dev (apps/docs/public/playerstack.min.js); jsDelivr in prod build -->
+  <script src="/playerstack.min.js" is:inline></script>
+  <script>
+    function readForm() {
+      return {
+        src: (document.getElementById("cfg-src") as HTMLInputElement).value,
+        title: (document.getElementById("cfg-title") as HTMLInputElement).value,
+        poster: (document.getElementById("cfg-poster") as HTMLInputElement).value,
+        accent: (document.getElementById("cfg-accent") as HTMLInputElement).value,
+        clickToLoad: (document.getElementById("cfg-clicktoload") as HTMLInputElement).checked,
+        ctaTitle: (document.getElementById("cfg-ctatitle") as HTMLInputElement).value,
+        btnLabel: (document.getElementById("cfg-btnlabel") as HTMLInputElement).value,
+        btnUrl: (document.getElementById("cfg-btnurl") as HTMLInputElement).value,
+      };
+    }
+
+    let activePresetExtra: Record<string, unknown> = {};
+
+    function buildConfig(state: ReturnType<typeof readForm>) {
+      const cfg: Record<string, unknown> = { ...activePresetExtra };
+      if (state.accent) cfg.controls = { ...((cfg.controls as Record<string, unknown>) ?? {}), accent: state.accent };
+      if (state.clickToLoad) cfg.brandedThumb = { enabled: true, clickToLoad: true, ...((cfg.brandedThumb as Record<string, unknown>) ?? {}) };
+      const cta: Record<string, unknown> = {};
+      if (state.ctaTitle) cta.title = state.ctaTitle;
+      if (state.btnLabel && state.btnUrl) cta.button = { label: state.btnLabel, url: state.btnUrl };
+      if (Object.keys(cta).length > 0) cfg.ctaEnd = { enabled: true, ...cta };
+      return cfg;
+    }
+
+    function escapeAttr(s: string) { return s.replace(/"/g, "&quot;"); }
+
+    function render() {
+      const state = readForm();
+      const cfg = buildConfig(state);
+      const cfgJson = JSON.stringify(cfg);
+
+      const host = document.getElementById("preview-host");
+      if (host) {
+        host.innerHTML = "";
+        const el = document.createElement("player-stack");
+        el.setAttribute("src", state.src);
+        if (state.title) el.setAttribute("title", state.title);
+        if (state.poster) el.setAttribute("poster", state.poster);
+        if (cfgJson !== "{}") el.setAttribute("data-config", cfgJson);
+        host.appendChild(el);
+      }
+
+      const snippet = document.querySelector("#snippet code");
+      if (snippet) {
+        const attrs = [
+          `src="${escapeAttr(state.src)}"`,
+          state.title ? `title="${escapeAttr(state.title)}"` : "",
+          state.poster ? `poster="${escapeAttr(state.poster)}"` : "",
+          cfgJson !== "{}" ? `data-config='${cfgJson}'` : "",
+        ].filter(Boolean).join("\n  ");
+
+        snippet.textContent = '<script src="https://cdn.jsdelivr.net/npm/playerstack@0.1.0/dist/playerstack.min.js" defer><' + '/script>\n\n<player-stack\n  ' + attrs + '>\n</player-stack>';
+      }
+    }
+
+    document.querySelectorAll<HTMLInputElement>("#cfg-form input").forEach((input) => {
+      const onUserEdit = () => {
+        // user is hand-tweaking — drop preset's deep config so the form fields stay authoritative
+        activePresetExtra = {};
+        document.querySelectorAll("#presets button.active").forEach((b) => b.classList.remove("active"));
+        renderTip(null);
+        render();
+      };
+      input.addEventListener("input", onUserEdit);
+      input.addEventListener("change", onUserEdit);
+    });
+
+    document.getElementById("copy-btn")?.addEventListener("click", () => {
+      const txt = document.querySelector("#snippet code")?.textContent ?? "";
+      navigator.clipboard.writeText(txt);
+    });
+
+    interface Preset {
+      src: string;
+      title: string;
+      poster: string;
+      accent: string;
+      clickToLoad: boolean;
+      ctaTitle: string;
+      btnLabel: string;
+      btnUrl: string;
+      /** Extra config keys merged into the embed (chapters, emailGate, sticky, etc.) */
+      extra?: Record<string, unknown>;
+      /** Headline shown in the "what to expect" panel */
+      tipTitle?: string;
+      /** Step-by-step instructions for what to actually try */
+      tipSteps?: string[];
+    }
+
+    const PRESETS: Record<string, Preset> = {
+      minimal: {
+        src: "https://youtu.be/_cMxraX_5RE",
+        title: "Sprite Fight",
+        poster: "",
+        accent: "#008aff",
+        clickToLoad: false,
+        ctaTitle: "",
+        btnLabel: "",
+        btnUrl: "",
+        tipTitle: "Bare minimum embed",
+        tipSteps: [
+          "Hit the play button — video starts immediately (no plugins in the way).",
+          "Notice the standard control bar from media-chrome: play / volume / time / fullscreen.",
+          "The blue accent (#008aff) is set via controls.accent → mapped to --media-primary-color and --media-brand on <media-controller>.",
+        ],
+      },
+      gdpr: {
+        src: "https://youtu.be/dQw4w9WgXcQ",
+        title: "Privacy-first embed",
+        poster: "https://i.ytimg.com/vi/dQw4w9WgXcQ/maxresdefault.jpg",
+        accent: "#008aff",
+        clickToLoad: true,
+        ctaTitle: "",
+        btnLabel: "",
+        btnUrl: "",
+        tipTitle: "Zero YouTube cookies until interaction",
+        tipSteps: [
+          "Open DevTools → Network → filter for 'youtube' BEFORE clicking — should be empty.",
+          "Click the play overlay. Now <youtube-video> loads the YT iframe.",
+          "Network tab: youtube.com/googlevideo.com requests appear only AFTER the click.",
+          "Open DevTools → Application → Cookies — no YT cookies until the click either.",
+        ],
+      },
+      branded: {
+        src: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
+        title: "Branded look",
+        poster: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/images/BigBuckBunny.jpg",
+        accent: "#a855f7",
+        clickToLoad: false,
+        ctaTitle: "",
+        btnLabel: "",
+        btnUrl: "",
+        tipTitle: "Custom poster + accent color in the player UI",
+        tipSteps: [
+          "Wait ~1 second for buffering — the spinner ring is purple (--media-primary-color from accent).",
+          "Hit play. Hover the player to reveal controls.",
+          "The progress bar fill, play button hover state, and slider thumb are all purple.",
+          "Inspect the inner <video> in DevTools — see --media-brand: #a855f7 inline.",
+        ],
+      },
+      sales: {
+        src: "https://youtu.be/_cMxraX_5RE",
+        title: "Pitch video",
+        poster: "https://i.ytimg.com/vi/_cMxraX_5RE/maxresdefault.jpg",
+        accent: "#10b981",
+        clickToLoad: true,
+        ctaTitle: "Loved it? Get the full course.",
+        btnLabel: "Enroll now →",
+        btnUrl: "https://example.com/course?utm_source=playground",
+        tipTitle: "Sales funnel — privacy + end-card combo",
+        tipSteps: [
+          "Click overlay → YT loads, video auto-plays (one click).",
+          "Wait for the video to end (or seek to the last second).",
+          "Green CTA card 'Loved it? Get the full course.' with 'Enroll now →' button + replay.",
+          "CTA URL has utm_source=playground appended automatically.",
+          "Click button → opens example.com/course in new tab; replay restarts the video.",
+        ],
+      },
+      vimeo: {
+        src: "https://vimeo.com/76979871",
+        title: "Vimeo demo",
+        poster: "",
+        accent: "#1ab7ea",
+        clickToLoad: false,
+        ctaTitle: "",
+        btnLabel: "",
+        btnUrl: "",
+        tipTitle: "Same plugin, Vimeo URL",
+        tipSteps: [
+          "The src is plain vimeo.com/76979871 — sources plugin auto-detects, core picks <vimeo-video>.",
+          "Click play. <vimeo-video> mounts the Vimeo iframe.",
+          "Vimeo accent color (#1ab7ea) brands the controls.",
+        ],
+      },
+      "mp4-cta": {
+        src: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
+        title: "Lesson 1",
+        poster: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/images/BigBuckBunny.jpg",
+        accent: "#f59e0b",
+        clickToLoad: false,
+        ctaTitle: "Continue to Lesson 2",
+        btnLabel: "Next lesson →",
+        btnUrl: "https://example.com/lesson-2",
+        tipTitle: "Self-hosted MP4 with course end-card",
+        tipSteps: [
+          "Self-hosted MP4 — fully your video, no third-party.",
+          "Hit play, watch through (or seek to end with the timeline slider).",
+          "Amber CTA appears: 'Continue to Lesson 2' with 'Next lesson →' button.",
+          "Replay button is also there to re-watch.",
+        ],
+      },
+      chapters: {
+        src: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
+        title: "With chapters",
+        poster: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/images/BigBuckBunny.jpg",
+        accent: "#06b6d4",
+        clickToLoad: false,
+        ctaTitle: "",
+        btnLabel: "",
+        btnUrl: "",
+        extra: {
+          chapters: {
+            points: [
+              { time: 0, label: "Intro" },
+              { time: 30, label: "Build-up" },
+              { time: 90, label: "Battle" },
+              { time: 180, label: "Resolution" },
+            ],
+          },
+        },
+        tipTitle: "4 chapter buttons appear UNDER the player",
+        tipSteps: [
+          "Below the video you should see four buttons: 0:00 Intro, 0:30 Build-up, 1:30 Battle, 3:00 Resolution.",
+          "Click 'Battle' (1:30) — the player jumps there immediately.",
+          "Press play. As time passes the active chapter button gets the .active class.",
+          "Watch the cyan accent on the slider fill as you scrub.",
+        ],
+      },
+      "email-gate": {
+        src: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
+        title: "Behind a lead form",
+        poster: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/images/BigBuckBunny.jpg",
+        accent: "#ec4899",
+        clickToLoad: false,
+        ctaTitle: "",
+        btnLabel: "",
+        btnUrl: "",
+        extra: {
+          emailGate: {
+            enabled: true,
+            at: "before",
+            title: "Drop your email to watch the rest",
+            buttonLabel: "Unlock video →",
+          },
+        },
+        tipTitle: "Pink overlay covers the player on load",
+        tipSteps: [
+          "BEFORE you can play: heading + email input + 'Unlock video →' button.",
+          "Submit a fake email (anything@anything.com works).",
+          "Overlay disappears, video starts auto-playing.",
+          "Refresh the page — gate stays GONE (localStorage memo per src).",
+          "DevTools → Application → Local Storage → playerstack:email-gate:... key with timestamp.",
+          "To reset: clear localStorage and reload.",
+        ],
+      },
+      "action-bar": {
+        src: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
+        title: "Mid-video bar",
+        poster: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/images/BigBuckBunny.jpg",
+        accent: "#f59e0b",
+        clickToLoad: false,
+        ctaTitle: "",
+        btnLabel: "",
+        btnUrl: "",
+        extra: {
+          actionBar: {
+            enabled: true,
+            showAt: 5,
+            title: "🎁 Limited offer",
+            button: {
+              label: "Claim 30% off",
+              url: "https://example.com/offer",
+              utm: "utm_source=video-action-bar",
+            },
+          },
+        },
+        tipTitle: "Banner appears 5 seconds INTO playback",
+        tipSteps: [
+          "Hit play. The bar is NOT there yet.",
+          "Wait ~5 seconds (or scrub to 0:05).",
+          "Black banner slides in at the bottom: '🎁 Limited offer' + amber 'Claim 30% off' button.",
+          "Click ×  to dismiss it. Click the button → opens example.com/offer with UTM appended.",
+          "If you don't see it: check the time-counter is past 5s.",
+        ],
+      },
+      resume: {
+        src: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
+        title: "Resume watching",
+        poster: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/images/BigBuckBunny.jpg",
+        accent: "#10b981",
+        clickToLoad: false,
+        ctaTitle: "",
+        btnLabel: "",
+        btnUrl: "",
+        extra: {
+          savedPosition: { enabled: true, throttleMs: 500 },
+        },
+        tipTitle: "Watch some, refresh — pick up where you left off",
+        tipSteps: [
+          "Hit play. Watch ~30 seconds.",
+          "Pause. Open DevTools → Application → Local Storage. Look for key starting with playerstack:pos:.",
+          "Reload the page (or click the same preset again).",
+          "Player jumps to your saved time when 'loaded-metadata' fires.",
+          "Watch to the end → storage is auto-cleared on the 'ended' event.",
+        ],
+      },
+      autopreview: {
+        src: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
+        title: "Pauses when scrolled away",
+        poster: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/images/BigBuckBunny.jpg",
+        accent: "#a855f7",
+        clickToLoad: false,
+        ctaTitle: "",
+        btnLabel: "",
+        btnUrl: "",
+        extra: {
+          preview: { enabled: true, threshold: 0.5 },
+        },
+        tipTitle: "Auto-pause/resume tied to viewport visibility",
+        tipSteps: [
+          "Click play once (browser autoplay policy requires the gesture for cross-origin video).",
+          "Once playing: scroll down so the player leaves the viewport → it pauses automatically.",
+          "Scroll back so it's at least 50% visible → resumes muted.",
+          "Click the unmute button to hear sound.",
+          "Plugin always sets muted=true on resume so it never blasts audio after a scroll-back.",
+          "If you have prefers-reduced-motion enabled in OS settings, autopreview opts out entirely (no observer).",
+        ],
+      },
+      sticky: {
+        src: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
+        title: "Sticky on scroll",
+        poster: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/images/BigBuckBunny.jpg",
+        accent: "#3b82f6",
+        clickToLoad: false,
+        ctaTitle: "",
+        btnLabel: "",
+        btnUrl: "",
+        extra: {
+          sticky: { enabled: true, threshold: 0.1 },
+        },
+        tipTitle: "Pin to corner — only when playing AND off-screen",
+        tipSteps: [
+          "Hit play. (Sticky won't engage if paused.)",
+          "Scroll DOWN past the player. The video shrinks and pins to the bottom-right corner.",
+          "× close button appears top-right of the sticky player.",
+          "Scroll back up → sticky drops, player returns to inline.",
+          "Click × to dismiss sticky for the rest of this page session.",
+        ],
+      },
+      "focus-mode": {
+        src: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
+        title: "Pauses when you blur the tab",
+        poster: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/images/BigBuckBunny.jpg",
+        accent: "#6366f1",
+        clickToLoad: false,
+        ctaTitle: "",
+        btnLabel: "",
+        btnUrl: "",
+        extra: {
+          focusMode: { enabled: true, resumeOnVisible: false },
+        },
+        tipTitle: "Tab-blur kills the playback",
+        tipSteps: [
+          "Hit play. Video starts.",
+          "Switch to a different browser tab (Cmd-T new tab, or click another existing tab).",
+          "Switch back. Video is paused.",
+          "Click play to continue (resumeOnVisible is false in this preset).",
+          "Use case: e-learning where you want students actively watching, not background-playing.",
+        ],
+      },
+      "yt-subscribe": {
+        src: "https://youtu.be/dQw4w9WgXcQ",
+        title: "With subscribe bar",
+        poster: "",
+        accent: "#cc0000",
+        clickToLoad: false,
+        ctaTitle: "",
+        btnLabel: "",
+        btnUrl: "",
+        extra: {
+          ytSubscribe: {
+            enabled: true,
+            channelId: "UCuAXFkgsw1L7xaCfnd5JJOw",
+            label: "Subscribe to Rick Astley",
+          },
+        },
+        tipTitle: "Red subscribe bar BELOW the player",
+        tipSteps: [
+          "Look below the video — light bar with red 'Subscribe to Rick Astley' button.",
+          "Click it → opens youtube.com/channel/.../?sub_confirmation=1 in a new tab.",
+          "If user is logged into YouTube, that confirmation page is one click to actually subscribe.",
+          "No YouTube SDK loaded — just an anchor tag, ~0 KB extra.",
+        ],
+      },
+      "minimal-controls": {
+        src: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
+        title: "Just play + progress",
+        poster: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/images/BigBuckBunny.jpg",
+        accent: "#0ea5e9",
+        clickToLoad: false,
+        ctaTitle: "",
+        btnLabel: "",
+        btnUrl: "",
+        extra: {
+          controls: { show: ["play", "progress"], accent: "#0ea5e9" },
+        },
+        tipTitle: "Strip the player UI down to play + progress only",
+        tipSteps: [
+          "Hover the player. The control bar is missing volume / fullscreen / settings / time.",
+          "Only the play button and the progress slider remain.",
+          "DevTools → head → look for <style data-playerstack='controls-policy'>: contains scoped 'display: none' rules per hidden control.",
+          "Useful for landing pages where you don't want the user to mute or skip.",
+        ],
+      },
+      analytics: {
+        src: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
+        title: "Tracked playback",
+        poster: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/images/BigBuckBunny.jpg",
+        accent: "#22c55e",
+        clickToLoad: false,
+        ctaTitle: "Subscribe?",
+        btnLabel: "Yes",
+        btnUrl: "https://example.com/sub",
+        extra: {
+          analytics: {
+            enabled: true,
+            endpoint: "https://example.com/api/track",
+            customProps: { source: "playground" },
+          },
+        },
+        tipTitle: "Every event is sent via navigator.sendBeacon",
+        tipSteps: [
+          "DevTools → Network → filter for 'track' BEFORE clicking play.",
+          "Hit play → POST to example.com/api/track with body { event: 'play', src, data: {...customProps}, ts }.",
+          "Pause / play / scrub / seek → more beacon POSTs.",
+          "Watch to end → 'ended' event sent. Click the CTA → 'cta:click' beacon with label/url.",
+          "In real apps swap endpoint for your beacon endpoint or set provider: 'gtag' for GA4.",
+          "Note: example.com/api/track returns 404 — that's fine, sendBeacon is fire-and-forget.",
+        ],
+      },
+      "full-stack": {
+        src: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
+        title: "Everything on",
+        poster: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/images/BigBuckBunny.jpg",
+        accent: "#8b5cf6",
+        clickToLoad: true,
+        ctaTitle: "Liked it?",
+        btnLabel: "Get the course",
+        btnUrl: "https://example.com/course",
+        extra: {
+          chapters: {
+            points: [
+              { time: 0, label: "Intro" },
+              { time: 60, label: "Demo" },
+              { time: 180, label: "Wrap-up" },
+            ],
+          },
+          actionBar: {
+            enabled: true,
+            showAt: 10,
+            title: "Try the playground →",
+            button: { label: "Open", url: "https://playerstack.sellf.app/playground" },
+          },
+          savedPosition: { enabled: true },
+          preview: { enabled: false },
+          sticky: { enabled: true },
+          focusMode: { enabled: true },
+          analytics: { enabled: true, provider: "gtag" },
+        },
+        tipTitle: "All 13 plugins firing simultaneously",
+        tipSteps: [
+          "Player is gated by clickToLoad — click the play overlay first.",
+          "Below the player you see 3 chapter buttons.",
+          "Wait 10s into playback → action-bar 'Try the playground →' slides in.",
+          "Scroll down while playing → sticky pin to corner.",
+          "Switch tab and back → focus-mode pauses.",
+          "Pause + reload → saved-position resumes you where you left off.",
+          "Watch to end → CTA-end card 'Liked it? Get the course' shows.",
+          "Open DevTools console → analytics is set to provider: 'gtag' (no gtag loaded so it's a no-op, but listeners are attached).",
+        ],
+      },
+    };
+
+    function applyPreset(preset: Preset) {
+      const set = (id: string, value: string) => {
+        const el = document.getElementById(id) as HTMLInputElement | null;
+        if (el) el.value = value;
+      };
+      const setCheck = (id: string, value: boolean) => {
+        const el = document.getElementById(id) as HTMLInputElement | null;
+        if (el) el.checked = value;
+      };
+
+      set("cfg-src", preset.src);
+      set("cfg-title", preset.title);
+      set("cfg-poster", preset.poster);
+      set("cfg-accent", preset.accent);
+      setCheck("cfg-clicktoload", preset.clickToLoad);
+      set("cfg-ctatitle", preset.ctaTitle);
+      set("cfg-btnlabel", preset.btnLabel);
+      set("cfg-btnurl", preset.btnUrl);
+      activePresetExtra = preset.extra ?? {};
+      renderTip(preset);
+      render();
+    }
+
+    function renderTip(preset: Preset | null) {
+      const tip = document.getElementById("preset-tip") as HTMLElement | null;
+      if (!tip) return;
+      if (!preset || !preset.tipTitle) {
+        tip.hidden = true;
+        return;
+      }
+      tip.hidden = false;
+      const titleEl = tip.querySelector(".preset-tip-title") as HTMLElement;
+      titleEl.textContent = `What to look for: ${preset.tipTitle}`;
+      const list = tip.querySelector(".preset-tip-steps") as HTMLOListElement;
+      list.innerHTML = "";
+      for (const step of preset.tipSteps ?? []) {
+        const li = document.createElement("li");
+        li.textContent = step;
+        list.appendChild(li);
+      }
+    }
+
+    document.querySelectorAll<HTMLButtonElement>("#presets button").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const key = btn.dataset.preset ?? "";
+        const preset = PRESETS[key];
+        if (!preset) return;
+        document
+          .querySelectorAll("#presets button")
+          .forEach((b) => b.classList.remove("active"));
+        btn.classList.add("active");
+        applyPreset(preset);
+      });
+    });
+
+    render();
+  </script>
+</Base>
+
+<style>
+  main { max-width: 1100px; margin: 0 auto; padding: 32px 24px 96px; }
+  .back { color: var(--muted); text-decoration: none; font-size: 14px; }
+  h1 { font-size: 32px; margin: 12px 0 4px; }
+  .lead { color: var(--muted); margin: 0 0 24px; }
+
+  .presets {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin: 0 0 32px;
+  }
+  @media (max-width: 800px) {
+    .presets { grid-template-columns: 1fr 1fr; }
+  }
+  @media (max-width: 500px) {
+    .presets { grid-template-columns: 1fr; }
+  }
+  .presets button {
+    display: grid;
+    gap: 4px;
+    text-align: left;
+    padding: 12px 14px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--fg);
+    cursor: pointer;
+    font: inherit;
+    transition: background 0.15s, border-color 0.15s;
+  }
+  .presets button:hover {
+    background: rgba(255, 255, 255, 0.06);
+    border-color: rgba(0, 138, 255, 0.4);
+  }
+  .presets button.active {
+    background: rgba(0, 138, 255, 0.1);
+    border-color: var(--accent);
+  }
+  .presets button strong {
+    font-size: 14px;
+    font-weight: 600;
+  }
+  .presets button span {
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.4;
+  }
+
+  .grid { display: grid; grid-template-columns: 320px 1fr; gap: 32px; }
+  @media (max-width: 800px) {
+    .grid { grid-template-columns: 1fr; }
+  }
+  form { display: grid; gap: 12px; }
+  label { display: grid; gap: 4px; font-size: 13px; color: var(--muted); }
+  label.checkbox { display: flex; flex-direction: row; align-items: center; gap: 8px; }
+  input[type="text"], input[type="url"] {
+    padding: 8px 10px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--fg);
+    font-size: 14px;
+  }
+  input[type="color"] { width: 100%; height: 36px; border: 1px solid var(--border); border-radius: 6px; background: transparent; }
+  .player-wrap { background: #000; border-radius: 12px; overflow: hidden; aspect-ratio: 16/9; position: relative; }
+  .preset-tip {
+    margin-top: 16px;
+    padding: 14px 16px;
+    background: rgba(0, 138, 255, 0.06);
+    border: 1px solid rgba(0, 138, 255, 0.25);
+    border-radius: 8px;
+    font-size: 13px;
+    line-height: 1.5;
+  }
+  .preset-tip .preset-tip-title {
+    display: block;
+    font-size: 14px;
+    color: var(--accent);
+    margin-bottom: 6px;
+  }
+  .preset-tip ol {
+    margin: 0;
+    padding-left: 20px;
+    color: var(--fg);
+  }
+  .preset-tip li {
+    margin: 4px 0;
+  }
+  pre { white-space: pre-wrap; word-break: break-all; }
+  #copy-btn {
+    margin-top: 8px;
+    padding: 8px 16px;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 500;
+  }
+</style>

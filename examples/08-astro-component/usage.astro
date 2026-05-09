@@ -1,0 +1,34 @@
+---
+import PlayerStack from "./PlayerStack.astro";
+---
+
+<html>
+  <body>
+    <h1>Playerstack in Astro</h1>
+
+    <PlayerStack
+      src="https://youtu.be/_cMxraX_5RE"
+      title="Sprite Fight"
+      config={{
+        controls: { accent: "#008aff" },
+        ctaEnd: {
+          enabled: true,
+          button: { label: "Read more", url: "/blog/post-slug" },
+        },
+      }}
+      class="hero-player"
+    />
+
+    <style>
+      .hero-player {
+        display: block;
+        width: 100%;
+        max-width: 720px;
+        margin: 0 auto;
+        border-radius: 12px;
+        overflow: hidden;
+        aspect-ratio: 16 / 9;
+      }
+    </style>
+  </body>
+</html>

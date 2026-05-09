@@ -1,0 +1,19 @@
+{
+  "name": "playerstack-playground",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@playerstack/core": "workspace:*",
+    "@playerstack/plugin-sources": "workspace:*",
+    "@playerstack/plugin-controls-policy": "workspace:*"
+  },
+  "devDependencies": {
+    "vite": "^7.1.2"
+  }
+}

@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Playerstack — GDPR click-to-load</title>
+    <script
+      src="https://cdn.jsdelivr.net/npm/playerstack@0.1.0/dist/playerstack.min.js"
+      defer
+    ></script>
+    <style>
+      body {
+        max-width: 720px;
+        margin: 32px auto;
+        padding: 0 16px;
+        font-family: system-ui, sans-serif;
+        line-height: 1.6;
+      }
+      .player {
+        background: #000;
+        border-radius: 12px;
+        overflow: hidden;
+        position: relative;
+      }
+      .check {
+        margin-top: 24px;
+        padding: 16px;
+        background: #f4f4f6;
+        border-radius: 8px;
+        font-size: 14px;
+      }
+      code {
+        background: rgba(0, 0, 0, 0.06);
+        padding: 1px 6px;
+        border-radius: 4px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Click-to-load: zero third-party cookies until interaction</h1>
+
+    <p>
+      Open DevTools → Network → Cookies <strong>before</strong> clicking the player. You'll see no
+      requests to <code>youtube.com</code> or <code>googlevideo.com</code> at all. Click play —
+      that's when the YouTube iframe actually loads.
+    </p>
+
+    <div class="player">
+      <player-stack
+        src="https://youtu.be/dQw4w9WgXcQ"
+        poster="https://i.ytimg.com/vi/dQw4w9WgXcQ/maxresdefault.jpg"
+        data-config='{
+          "brandedThumb": {
+            "enabled": true,
+            "clickToLoad": true,
+            "playButtonStyle": "circle"
+          }
+        }'
+      ></player-stack>
+    </div>
+
+    <div class="check">
+      <strong>Why this matters for GDPR / Privacy Sandbox:</strong>
+      <ul>
+        <li>YouTube embeds normally drop tracking cookies on page load — even before play</li>
+        <li>EU regulators have ruled this requires consent (multiple GDPR fines)</li>
+        <li>With <code>clickToLoad: true</code>, the iframe never loads until interaction</li>
+        <li>No consent banner needed for the embed itself</li>
+        <li>~200 KB of YouTube JS deferred → faster Largest Contentful Paint</li>
+      </ul>
+    </div>
+
+    <p>
+      Use <a href="https://privacybadger.org">Privacy Badger</a> or your browser's tracker counter
+      to verify. Refresh, count trackers before clicking, then click and count again.
+    </p>
+  </body>
+</html>

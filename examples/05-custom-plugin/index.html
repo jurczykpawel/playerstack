@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Playerstack — custom plugin (chapter markers)</title>
+    <style>
+      body {
+        max-width: 720px;
+        margin: 32px auto;
+        padding: 0 16px;
+        font-family: system-ui, sans-serif;
+      }
+      .player {
+        background: #000;
+        border-radius: 12px;
+        overflow: hidden;
+      }
+      .chapters {
+        margin-top: 16px;
+        list-style: none;
+        padding: 0;
+      }
+      .chapters li {
+        padding: 8px 12px;
+        background: #f4f4f6;
+        border-radius: 6px;
+        margin-bottom: 4px;
+        cursor: pointer;
+        font-family: ui-monospace, Consolas, monospace;
+        font-size: 14px;
+      }
+      .chapters li:hover {
+        background: #e6e9ee;
+      }
+      .chapters li.active {
+        background: #008aff;
+        color: #fff;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Custom plugin: chapter markers</h1>
+    <p>
+      A plugin that reads chapter timestamps from config, renders a clickable list, and highlights
+      the current chapter as the video plays.
+    </p>
+
+    <div class="player">
+      <player-stack
+        id="my-player"
+        src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"
+        data-config='{
+          "chapters": {
+            "points": [
+              { "time": 0, "label": "Intro" },
+              { "time": 30, "label": "Forest scene" },
+              { "time": 90, "label": "Battle" },
+              { "time": 180, "label": "Resolution" }
+            ]
+          }
+        }'
+      ></player-stack>
+    </div>
+
+    <ul class="chapters" id="chapters"></ul>
+
+    <script src="https://cdn.jsdelivr.net/npm/playerstack@0.1.0/dist/playerstack.min.js"></script>
+    <script type="module">
+      await new Promise((r) => setTimeout(r, 0));
+      const { Playerstack } = window;
+
+      // ---------- our custom plugin ----------
+      const states = new WeakMap();
+
+      const chaptersPlugin = {
+        name: "chapters",
+        init(ctx) {
+          const chapters = ctx.config.chapters;
+          if (!chapters?.points?.length) return;
+
+          const list = document.getElementById("chapters");
+          list.innerHTML = "";
+
+          const items = chapters.points.map((point, i) => {
+            const li = document.createElement("li");
+            li.textContent = `${formatTime(point.time)}  ${point.label}`;
+            li.dataset.time = point.time;
+            li.addEventListener("click", () => {
+              const player = ctx.mediaPlayer;
+              if ("currentTime" in player) player.currentTime = point.time;
+            });
+            list.appendChild(li);
+            return { li, time: point.time };
+          });
+
+          // Highlight active chapter as time progresses
+          const onTimeUpdate = () => {
+            const t = ctx.mediaPlayer.currentTime ?? 0;
+            let activeIdx = 0;
+            for (let i = items.length - 1; i >= 0; i--) {
+              if (t >= items[i].time) {
+                activeIdx = i;
+                break;
+              }
+            }
+            items.forEach((item, i) => item.li.classList.toggle("active", i === activeIdx));
+          };
+
+          ctx.mediaPlayer.addEventListener("timeupdate", onTimeUpdate);
+          states.set(ctx, { onTimeUpdate });
+        },
+        destroy(ctx) {
+          const state = states.get(ctx);
+          if (state) ctx.mediaPlayer.removeEventListener("timeupdate", state.onTimeUpdate);
+          states.delete(ctx);
+        },
+      };
+
+      function formatTime(t) {
+        const m = Math.floor(t / 60);
+        const s = String(Math.floor(t % 60)).padStart(2, "0");
+        return `${m}:${s}`;
+      }
+
+      Playerstack.use(chaptersPlugin);
+    </script>
+  </body>
+</html>

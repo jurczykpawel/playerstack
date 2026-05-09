@@ -1,0 +1,34 @@
+node_modules/
+dist/
+.turbo/
+.cache/
+*.log
+.DS_Store
+.env
+.env.local
+.env.*.local
+
+# Bun
+bun.lock
+.bun/
+
+# Build output
+*.tsbuildinfo
+**/build/
+
+# Editor
+.vscode/
+.idea/
+*.swp
+
+# OS
+Thumbs.db
+
+# Playwright
+test-results/
+playwright-report/
+.playwright/
+
+# Local dev bundle copy (built on demand for docs playground)
+apps/docs/public/playerstack.min.js
+apps/docs/public/playerstack.min.js.map
