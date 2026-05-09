@@ -1,0 +1,35 @@
+{
+  "name": "playerstack",
+  "version": "0.0.0",
+  "license": "MIT",
+  "description": "Embeddable video player. Drop one script tag, embed YouTube/Vimeo/MP4/HLS with branding and CTAs. MIT, plugin-first.",
+  "type": "module",
+  "main": "./dist/playerstack.cjs",
+  "module": "./dist/playerstack.esm.js",
+  "browser": "./dist/playerstack.min.js",
+  "unpkg": "./dist/playerstack.min.js",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "browser": "./dist/playerstack.min.js",
+      "import": "./dist/playerstack.esm.js",
+      "require": "./dist/playerstack.cjs"
+    }
+  },
+  "files": ["src", "dist", "README.md"],
+  "scripts": {
+    "build": "bun build.ts"
+  },
+  "dependencies": {
+    "@playerstack/core": "workspace:*",
+    "@playerstack/plugin-sources": "workspace:*",
+    "@playerstack/plugin-controls-policy": "workspace:*",
+    "@playerstack/plugin-autopreview": "workspace:*",
+    "@playerstack/plugin-branded-thumb": "workspace:*",
+    "@playerstack/plugin-cta-end": "workspace:*"
+  },
+  "devDependencies": {
+    "esbuild": "^0.27.7"
+  }
+}
