@@ -62,7 +62,7 @@ function makeContext(extra: Partial<PlayerstackConfig> = {}): PlayerstackContext
   pauseSpy: ReturnType<typeof vi.fn>;
 } {
   const container = document.createElement("div");
-  const mediaPlayer = document.createElement("media-player") as HTMLElement & {
+  const mediaPlayer = document.createElement("media-player") as unknown as HTMLElement & {
     play: ReturnType<typeof vi.fn>;
     pause: ReturnType<typeof vi.fn>;
     muted: boolean;
@@ -94,14 +94,14 @@ describe("autopreviewPlugin", () => {
   });
 
   it("creates an IntersectionObserver when preview.enabled is true", async () => {
-    const ctx = makeContext({ preview: { enabled: true } } as PlayerstackConfig);
+    const ctx = makeContext({ preview: { enabled: true } });
     await autopreviewPlugin.init(ctx);
     expect(observers.length).toBe(1);
     expect(observers[0]?.observe).toHaveBeenCalledWith(ctx.mediaPlayer);
   });
 
   it("calls play() and mutes mediaPlayer when it enters the viewport", async () => {
-    const ctx = makeContext({ preview: { enabled: true } } as PlayerstackConfig);
+    const ctx = makeContext({ preview: { enabled: true } });
     await autopreviewPlugin.init(ctx);
     observers[0]?.trigger(true);
     expect(ctx.playSpy).toHaveBeenCalled();
@@ -109,7 +109,7 @@ describe("autopreviewPlugin", () => {
   });
 
   it("calls pause() when mediaPlayer leaves the viewport", async () => {
-    const ctx = makeContext({ preview: { enabled: true } } as PlayerstackConfig);
+    const ctx = makeContext({ preview: { enabled: true } });
     await autopreviewPlugin.init(ctx);
     observers[0]?.trigger(true);
     observers[0]?.trigger(false);
@@ -118,14 +118,14 @@ describe("autopreviewPlugin", () => {
 
   it("respects prefers-reduced-motion and never plays automatically", async () => {
     prefersReducedMotion = true;
-    const ctx = makeContext({ preview: { enabled: true } } as PlayerstackConfig);
+    const ctx = makeContext({ preview: { enabled: true } });
     await autopreviewPlugin.init(ctx);
     observers[0]?.trigger(true);
     expect(ctx.playSpy).not.toHaveBeenCalled();
   });
 
   it("destroy disconnects the observer", async () => {
-    const ctx = makeContext({ preview: { enabled: true } } as PlayerstackConfig);
+    const ctx = makeContext({ preview: { enabled: true } });
     await autopreviewPlugin.init(ctx);
     autopreviewPlugin.destroy?.(ctx);
     expect(observers[0]?.disconnect).toHaveBeenCalled();

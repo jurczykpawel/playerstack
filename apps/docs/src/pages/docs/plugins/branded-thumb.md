@@ -16,7 +16,8 @@ Renders a custom poster overlay with an accessible play button. Optional `clickT
 <player-stack
   src="https://youtu.be/dQw4w9WgXcQ"
   poster="https://cdn.example.com/poster.webp"
-  data-config='{"brandedThumb":{"enabled":true,"clickToLoad":true,"playButtonStyle":"box"}}'>
+  data-config='{"brandedThumb":{"enabled":true,"clickToLoad":true,"playButtonStyle":"box"}}'
+>
 </player-stack>
 ```
 
@@ -24,11 +25,11 @@ Renders a custom poster overlay with an accessible play button. Optional `clickT
 
 `config.brandedThumb`:
 
-| Field | Type | Default | Description |
-|---|---|---|---|
-| `enabled` | boolean | `false` | Plugin is a no-op unless `true` |
+| Field             | Type                             | Default    | Description                                                 |
+| ----------------- | -------------------------------- | ---------- | ----------------------------------------------------------- |
+| `enabled`         | boolean                          | `false`    | Plugin is a no-op unless `true`                             |
 | `playButtonStyle` | `"minimal" \| "box" \| "circle"` | `"circle"` | Visual style of the play button (CSS hook via `data-style`) |
-| `clickToLoad` | boolean | `false` | Defer iframe load until click (LCP + GDPR) |
+| `clickToLoad`     | boolean                          | `false`    | Defer iframe load until click (LCP + GDPR)                  |
 
 ## Why clickToLoad
 
@@ -51,8 +52,8 @@ When `clickToLoad: true`:
 
 ## Events
 
-| Name | Payload | When |
-|---|---|---|
+| Name          | Payload     | When                    |
+| ------------- | ----------- | ----------------------- |
 | `thumb:click` | `undefined` | User clicks the overlay |
 
 Track it via the event bus:

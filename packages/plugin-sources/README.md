@@ -31,14 +31,14 @@ Now any of these work without per-source configuration:
 
 ## Supported formats
 
-| Format | URL patterns |
-|---|---|
+| Format  | URL patterns                                                                                                                                                                                |
+| ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | YouTube | `youtu.be/ID`, `youtube.com/watch?v=ID`, `youtube.com/embed/ID`, `youtube.com/shorts/ID`, `youtube.com/v/ID`, `m.youtube.com/...`, `youtube-nocookie.com/...`, plus Vidstack's `youtube/ID` |
-| Vimeo | `vimeo.com/ID`, `vimeo.com/ID/HASH` (private), `player.vimeo.com/video/ID`, plus `vimeo/ID` |
-| MP4 | any `https://...*.mp4` |
-| HLS | any `https://...*.m3u8` |
-| WebM | any `https://...*.webm` |
-| DASH | any `https://...*.mpd` |
+| Vimeo   | `vimeo.com/ID`, `vimeo.com/ID/HASH` (private), `player.vimeo.com/video/ID`, plus `vimeo/ID`                                                                                                 |
+| MP4     | any `https://...*.mp4`                                                                                                                                                                      |
+| HLS     | any `https://...*.m3u8`                                                                                                                                                                     |
+| WebM    | any `https://...*.webm`                                                                                                                                                                     |
+| DASH    | any `https://...*.mpd`                                                                                                                                                                      |
 
 Extension matching is case-insensitive. Non-https schemes are rejected. Unknown formats produce a clear error.
 

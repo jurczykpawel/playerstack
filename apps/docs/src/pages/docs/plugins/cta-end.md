@@ -26,7 +26,8 @@ When the video ends, render an overlay with optional title, custom HTML, anchor 
       },
       "showReplay": true
     }
-  }'>
+  }'
+>
 </player-stack>
 ```
 
@@ -34,30 +35,33 @@ When the video ends, render an overlay with optional title, custom HTML, anchor 
 
 `config.ctaEnd`:
 
-| Field | Type | Description |
-|---|---|---|
-| `enabled` | boolean | Plugin is a no-op unless `true` |
-| `title` | string? | Heading text inside the overlay |
-| `html` | string? | Custom HTML rendered in the overlay (innerHTML — sanitize on your end) |
-| `button.label` | string | Visible button text |
-| `button.url` | string | Destination URL |
-| `button.utm` | string? | Query string appended to URL (e.g. `utm_source=...`) |
-| `showReplay` | boolean? | Render a "Replay" button that re-plays the video and dismisses the overlay |
+| Field          | Type     | Description                                                                |
+| -------------- | -------- | -------------------------------------------------------------------------- |
+| `enabled`      | boolean  | Plugin is a no-op unless `true`                                            |
+| `title`        | string?  | Heading text inside the overlay                                            |
+| `html`         | string?  | Custom HTML rendered in the overlay (innerHTML — sanitize on your end)     |
+| `button.label` | string   | Visible button text                                                        |
+| `button.url`   | string   | Destination URL                                                            |
+| `button.utm`   | string?  | Query string appended to URL (e.g. `utm_source=...`)                       |
+| `showReplay`   | boolean? | Render a "Replay" button that re-plays the video and dismisses the overlay |
 
 ## Events
 
-| Name | Payload | When |
-|---|---|---|
-| `cta:click` | `{ label: string, url: string }` | User clicks the CTA button |
-| `cta:replay` | `undefined` | User clicks the replay button |
+| Name         | Payload                          | When                          |
+| ------------ | -------------------------------- | ----------------------------- |
+| `cta:click`  | `{ label: string, url: string }` | User clicks the CTA button    |
+| `cta:replay` | `undefined`                      | User clicks the replay button |
 
 ```ts
 ctx.events.on("cta:click", ({ label, url }) => {
-  navigator.sendBeacon("/api/track", JSON.stringify({
-    event: "cta_click",
-    label,
-    url,
-  }));
+  navigator.sendBeacon(
+    "/api/track",
+    JSON.stringify({
+      event: "cta_click",
+      label,
+      url,
+    }),
+  );
 });
 ```
 

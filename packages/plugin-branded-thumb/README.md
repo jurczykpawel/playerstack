@@ -23,7 +23,8 @@ Playerstack.use(brandedThumbPlugin).define();
 <player-stack
   src="https://youtu.be/dQw4w9WgXcQ"
   poster="https://cdn.example.com/poster.webp"
-  data-config='{"brandedThumb":{"enabled":true,"clickToLoad":true,"playButtonStyle":"box"}}'>
+  data-config='{"brandedThumb":{"enabled":true,"clickToLoad":true,"playButtonStyle":"box"}}'
+>
 </player-stack>
 ```
 
@@ -31,11 +32,11 @@ Playerstack.use(brandedThumbPlugin).define();
 
 `config.brandedThumb`:
 
-| Field | Type | Default | Description |
-|---|---|---|---|
-| `enabled` | `boolean` | `false` | Plugin is a no-op unless `true` |
-| `playButtonStyle` | `"minimal" \| "box" \| "circle"` | `"circle"` | Visual style of the play button (CSS hook via `data-style`) |
-| `clickToLoad` | `boolean` | `false` | If `true`, removes `src` from `mediaPlayer` until user clicks. Vidstack/YouTube/Vimeo iframe is NOT loaded until then |
+| Field             | Type                             | Default    | Description                                                                                                           |
+| ----------------- | -------------------------------- | ---------- | --------------------------------------------------------------------------------------------------------------------- |
+| `enabled`         | `boolean`                        | `false`    | Plugin is a no-op unless `true`                                                                                       |
+| `playButtonStyle` | `"minimal" \| "box" \| "circle"` | `"circle"` | Visual style of the play button (CSS hook via `data-style`)                                                           |
+| `clickToLoad`     | `boolean`                        | `false`    | If `true`, removes `src` from `mediaPlayer` until user clicks. Vidstack/YouTube/Vimeo iframe is NOT loaded until then |
 
 ## Why clickToLoad
 
@@ -47,8 +48,8 @@ YouTube and Vimeo iframes fetch tracking cookies as soon as they load — even b
 
 ## Events
 
-| Name | Payload | When |
-|---|---|---|
+| Name          | Payload     | When                    |
+| ------------- | ----------- | ----------------------- |
 | `thumb:click` | `undefined` | User clicks the overlay |
 
 ## License

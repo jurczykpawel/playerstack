@@ -32,7 +32,7 @@ describe("brandedThumbPlugin", () => {
     const ctx = makeContext({
       poster: "https://cdn.example.com/poster.jpg",
       brandedThumb: { enabled: true },
-    } as PlayerstackConfig);
+    });
     await brandedThumbPlugin.init(ctx);
     const overlay = ctx.container.querySelector(".playerstack-thumb");
     expect(overlay).not.toBeNull();
@@ -41,7 +41,7 @@ describe("brandedThumbPlugin", () => {
   });
 
   it("inserts a play button with default 'circle' style", async () => {
-    const ctx = makeContext({ brandedThumb: { enabled: true } } as PlayerstackConfig);
+    const ctx = makeContext({ brandedThumb: { enabled: true } });
     await brandedThumbPlugin.init(ctx);
     const button = ctx.container.querySelector(".playerstack-thumb-play");
     expect(button).not.toBeNull();
@@ -52,7 +52,7 @@ describe("brandedThumbPlugin", () => {
     for (const style of ["minimal", "box", "circle"] as const) {
       const ctx = makeContext({
         brandedThumb: { enabled: true, playButtonStyle: style },
-      } as PlayerstackConfig);
+      });
       await brandedThumbPlugin.init(ctx);
       const button = ctx.container.querySelector(".playerstack-thumb-play");
       expect(button?.getAttribute("data-style")).toBe(style);
@@ -62,7 +62,7 @@ describe("brandedThumbPlugin", () => {
   it("with clickToLoad: removes src from mediaPlayer and stores it for later", async () => {
     const ctx = makeContext({
       brandedThumb: { enabled: true, clickToLoad: true },
-    } as PlayerstackConfig);
+    });
     await brandedThumbPlugin.init(ctx);
     expect(ctx.mediaPlayer.getAttribute("src")).toBeNull();
   });
@@ -70,7 +70,7 @@ describe("brandedThumbPlugin", () => {
   it("without clickToLoad: leaves mediaPlayer src untouched", async () => {
     const ctx = makeContext({
       brandedThumb: { enabled: true, clickToLoad: false },
-    } as PlayerstackConfig);
+    });
     await brandedThumbPlugin.init(ctx);
     expect(ctx.mediaPlayer.getAttribute("src")).toBe("youtube/abc123");
   });
@@ -78,7 +78,7 @@ describe("brandedThumbPlugin", () => {
   it("clicking the overlay restores mediaPlayer src and removes overlay", async () => {
     const ctx = makeContext({
       brandedThumb: { enabled: true, clickToLoad: true },
-    } as PlayerstackConfig);
+    });
     await brandedThumbPlugin.init(ctx);
     const overlay = ctx.container.querySelector(".playerstack-thumb") as HTMLElement;
     overlay.click();
@@ -89,7 +89,7 @@ describe("brandedThumbPlugin", () => {
   it("emits a 'thumb:click' event on the bus when overlay is clicked", async () => {
     const ctx = makeContext({
       brandedThumb: { enabled: true },
-    } as PlayerstackConfig);
+    });
     const handler = vi.fn();
     ctx.events.on("thumb:click", handler);
     await brandedThumbPlugin.init(ctx);
@@ -101,7 +101,7 @@ describe("brandedThumbPlugin", () => {
   it("destroy removes overlay and restores src if it was held", async () => {
     const ctx = makeContext({
       brandedThumb: { enabled: true, clickToLoad: true },
-    } as PlayerstackConfig);
+    });
     await brandedThumbPlugin.init(ctx);
     brandedThumbPlugin.destroy?.(ctx);
     expect(ctx.container.querySelector(".playerstack-thumb")).toBeNull();

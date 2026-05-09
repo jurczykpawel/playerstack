@@ -26,9 +26,7 @@ export const controlsPolicyPlugin: PlayerstackPlugin = {
     style.textContent = css;
   },
   destroy(ctx: PlayerstackContext): void {
-    const style = ctx.mediaPlayer.querySelector(
-      `style[data-playerstack='${STYLE_MARKER}']`,
-    );
+    const style = ctx.mediaPlayer.querySelector(`style[data-playerstack='${STYLE_MARKER}']`);
     style?.remove();
   },
 };

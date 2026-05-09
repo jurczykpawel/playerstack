@@ -23,7 +23,9 @@ describe("createSellfConfigProvider", () => {
       json: async () => ({ src: "https://cdn.example.com/v.mp4", title: "Sellf product" }),
     });
     const provider = createSellfConfigProvider({ baseUrl: "https://sellf.app" });
-    const cfg = await provider.load(el(`<player-stack data-sellf-product="abc123"></player-stack>`));
+    const cfg = await provider.load(
+      el(`<player-stack data-sellf-product="abc123"></player-stack>`),
+    );
     expect(cfg.src).toBe("https://cdn.example.com/v.mp4");
     expect(cfg.title).toBe("Sellf product");
     expect(globalThis.fetch).toHaveBeenCalled();

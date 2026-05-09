@@ -16,7 +16,10 @@ One script tag, all five MVP plugins included.
 <!doctype html>
 <html>
   <head>
-    <script src="https://cdn.jsdelivr.net/npm/playerstack@0.1.0/dist/playerstack.min.js" defer></script>
+    <script
+      src="https://cdn.jsdelivr.net/npm/playerstack@0.1.0/dist/playerstack.min.js"
+      defer
+    ></script>
   </head>
   <body>
     <player-stack src="https://youtu.be/dQw4w9WgXcQ"></player-stack>
@@ -53,13 +56,15 @@ Two equivalent ways:
 <player-stack
   src="https://youtu.be/dQw4w9WgXcQ"
   poster="https://example.com/poster.webp"
-  title="Demo">
+  title="Demo"
+>
 </player-stack>
 
 <!-- JSON config -->
 <player-stack
   src="https://youtu.be/dQw4w9WgXcQ"
-  data-config='{"poster":"https://example.com/poster.webp","title":"Demo"}'>
+  data-config='{"poster":"https://example.com/poster.webp","title":"Demo"}'
+>
 </player-stack>
 ```
 

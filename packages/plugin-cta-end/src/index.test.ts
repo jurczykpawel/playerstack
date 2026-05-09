@@ -5,7 +5,7 @@ import type { PlayerstackContext, PlayerstackConfig } from "@playerstack/core";
 
 function makeContext(extra: Partial<PlayerstackConfig> = {}): PlayerstackContext {
   const container = document.createElement("div");
-  const mediaPlayer = document.createElement("media-player") as HTMLElement & {
+  const mediaPlayer = document.createElement("media-player") as unknown as HTMLElement & {
     play: ReturnType<typeof vi.fn>;
   };
   mediaPlayer.play = vi.fn(() => Promise.resolve());
@@ -37,7 +37,7 @@ describe("ctaEndPlugin", () => {
   it("renders overlay when video ends", async () => {
     const ctx = makeContext({
       ctaEnd: { enabled: true, title: "Thanks for watching!" },
-    } as PlayerstackConfig);
+    });
     await ctaEndPlugin.init(ctx);
     fireEnded(ctx.mediaPlayer);
     const overlay = ctx.container.querySelector(".playerstack-cta");
@@ -48,7 +48,7 @@ describe("ctaEndPlugin", () => {
   it("renders custom HTML when ctaEnd.html is provided", async () => {
     const ctx = makeContext({
       ctaEnd: { enabled: true, html: "<p class='custom'>Hello</p>" },
-    } as PlayerstackConfig);
+    });
     await ctaEndPlugin.init(ctx);
     fireEnded(ctx.mediaPlayer);
     expect(ctx.container.querySelector(".custom")).not.toBeNull();
@@ -57,7 +57,7 @@ describe("ctaEndPlugin", () => {
   it("renders a button with label and url when configured", async () => {
     const ctx = makeContext({
       ctaEnd: { enabled: true, button: { label: "Buy now", url: "https://example.com/buy" } },
-    } as PlayerstackConfig);
+    });
     await ctaEndPlugin.init(ctx);
     fireEnded(ctx.mediaPlayer);
     const link = ctx.container.querySelector("a.playerstack-cta-button") as HTMLAnchorElement;
@@ -72,7 +72,7 @@ describe("ctaEndPlugin", () => {
         enabled: true,
         button: { label: "Buy", url: "https://example.com", utm: "utm_source=playerstack" },
       },
-    } as PlayerstackConfig);
+    });
     await ctaEndPlugin.init(ctx);
     fireEnded(ctx.mediaPlayer);
     const link = ctx.container.querySelector("a.playerstack-cta-button") as HTMLAnchorElement;
@@ -82,7 +82,7 @@ describe("ctaEndPlugin", () => {
   it("emits cta:click on event bus when CTA button is clicked", async () => {
     const ctx = makeContext({
       ctaEnd: { enabled: true, button: { label: "Buy", url: "https://example.com" } },
-    } as PlayerstackConfig);
+    });
     const handler = vi.fn();
     ctx.events.on("cta:click", handler);
     await ctaEndPlugin.init(ctx);
@@ -95,20 +95,22 @@ describe("ctaEndPlugin", () => {
   it("renders a replay button when showReplay is true and replays on click", async () => {
     const ctx = makeContext({
       ctaEnd: { enabled: true, showReplay: true },
-    } as PlayerstackConfig);
+    });
     await ctaEndPlugin.init(ctx);
     fireEnded(ctx.mediaPlayer);
     const replay = ctx.container.querySelector(".playerstack-cta-replay") as HTMLButtonElement;
     expect(replay).not.toBeNull();
     replay.click();
-    expect((ctx.mediaPlayer as HTMLElement & { play: ReturnType<typeof vi.fn> }).play).toHaveBeenCalled();
+    expect(
+      (ctx.mediaPlayer as HTMLElement & { play: ReturnType<typeof vi.fn> }).play,
+    ).toHaveBeenCalled();
     expect(ctx.container.querySelector(".playerstack-cta")).toBeNull();
   });
 
   it("destroy removes the listener so 'ended' no longer renders overlay", async () => {
     const ctx = makeContext({
       ctaEnd: { enabled: true, title: "Done" },
-    } as PlayerstackConfig);
+    });
     await ctaEndPlugin.init(ctx);
     ctaEndPlugin.destroy?.(ctx);
     fireEnded(ctx.mediaPlayer);
@@ -118,7 +120,7 @@ describe("ctaEndPlugin", () => {
   it("destroy removes any existing overlay too", async () => {
     const ctx = makeContext({
       ctaEnd: { enabled: true, title: "Done" },
-    } as PlayerstackConfig);
+    });
     await ctaEndPlugin.init(ctx);
     fireEnded(ctx.mediaPlayer);
     ctaEndPlugin.destroy?.(ctx);

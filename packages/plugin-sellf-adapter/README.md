@@ -37,7 +37,10 @@ When the element connects, the provider fetches `https://sellf.app/api/products/
 Inline attributes always override fetched config. Useful for per-page CTAs:
 
 ```html
-<player-stack data-sellf-product="abc123" title="Override the title from Sellf"></player-stack>
+<player-stack
+  data-sellf-product="abc123"
+  title="Override the title from Sellf"
+></player-stack>
 ```
 
 This loads everything from Sellf, but `title` is taken from the attribute.
@@ -52,7 +55,10 @@ The Sellf endpoint must return a JSON object that conforms to `PlayerstackConfig
   "poster": "https://cdn.example.com/poster.webp",
   "title": "Lesson 1",
   "controls": { "accent": "#008aff" },
-  "ctaEnd": { "enabled": true, "button": { "label": "Next lesson", "url": "..." } }
+  "ctaEnd": {
+    "enabled": true,
+    "button": { "label": "Next lesson", "url": "..." }
+  }
 }
 ```
 

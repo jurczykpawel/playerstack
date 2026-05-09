@@ -31,11 +31,11 @@ Playerstack.use(sourcesPlugin).define();
 
 Singleton with three methods:
 
-| Method | Returns | Description |
-|---|---|---|
-| `use(plugin)` | `Playerstack` (chainable) | Register a plugin. Throws on duplicate `name` |
-| `plugins()` | `readonly PlayerstackPlugin[]` | Snapshot of registered plugins |
-| `define()` | `void` | Register `<player-stack>` custom element. Idempotent |
+| Method        | Returns                        | Description                                          |
+| ------------- | ------------------------------ | ---------------------------------------------------- |
+| `use(plugin)` | `Playerstack` (chainable)      | Register a plugin. Throws on duplicate `name`        |
+| `plugins()`   | `readonly PlayerstackPlugin[]` | Snapshot of registered plugins                       |
+| `define()`    | `void`                         | Register `<player-stack>` custom element. Idempotent |
 
 ### `PlayerstackPlugin`
 
@@ -53,8 +53,8 @@ interface PlayerstackPlugin {
 
 ```ts
 interface PlayerstackContext {
-  events: EventBus;        // typed pub/sub
-  container: HTMLElement;  // <player-stack> itself
+  events: EventBus; // typed pub/sub
+  container: HTMLElement; // <player-stack> itself
   mediaPlayer: HTMLElement; // Vidstack <media-player>
   config: PlayerstackConfig;
 }
@@ -85,7 +85,7 @@ Default is `createInlineConfigProvider()` which reads `src`, `poster`, `title` a
 
 ```ts
 interface PlayerstackConfig {
-  src: string;        // required
+  src: string; // required
   poster?: string;
   title?: string;
   [key: string]: unknown; // plugin-specific slices

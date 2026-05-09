@@ -15,7 +15,8 @@ Brand the player with a theme color, hide controls you don't want, all via a sin
 ```html
 <player-stack
   src="https://youtu.be/dQw4w9WgXcQ"
-  data-config='{"controls":{"show":["play","progress","time"],"accent":"#008aff","bgOpacity":0.6}}'>
+  data-config='{"controls":{"show":["play","progress","time"],"accent":"#008aff","bgOpacity":0.6}}'
+>
 </player-stack>
 ```
 
@@ -25,11 +26,11 @@ This shows ONLY play, progress, and time controls. Volume, fullscreen, and speed
 
 `config.controls`:
 
-| Field | Type | Default | Description |
-|---|---|---|---|
-| `show` | `("play" \| "progress" \| "time" \| "volume" \| "fullscreen" \| "speed")[]` | (all visible) | If set, only listed controls are visible |
-| `accent` | string (CSS color) | none | Sets `--ps-accent` CSS var. Validated against injection: `#hex`, named colors, `rgb()`, `hsl()` only |
-| `bgOpacity` | number `[0..1]` | none | Sets `--ps-bg-opacity` CSS var. Clamped to `[0..1]` |
+| Field       | Type                                                                        | Default       | Description                                                                                          |
+| ----------- | --------------------------------------------------------------------------- | ------------- | ---------------------------------------------------------------------------------------------------- |
+| `show`      | `("play" \| "progress" \| "time" \| "volume" \| "fullscreen" \| "speed")[]` | (all visible) | If set, only listed controls are visible                                                             |
+| `accent`    | string (CSS color)                                                          | none          | Sets `--ps-accent` CSS var. Validated against injection: `#hex`, named colors, `rgb()`, `hsl()` only |
+| `bgOpacity` | number `[0..1]`                                                             | none          | Sets `--ps-bg-opacity` CSS var. Clamped to `[0..1]`                                                  |
 
 Unknown control names in `show` are silently ignored — safer than throwing on a typo.
 

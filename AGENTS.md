@@ -9,18 +9,18 @@ Embeddable video player. OSS-first (MIT). Bun monorepo. Plugin-first architectur
 
 ## Stack
 
-| Layer | Choice |
-|---|---|
-| Runtime | Bun 1.3+ |
-| Workspaces | Bun native (`apps/*`, `packages/*`) |
-| Language | TypeScript (strict, ES2020 target) |
-| Engine | Vidstack (MIT, wrapper not fork) |
-| Embed | Web Component `<player-stack>` + fallback `<div data-playerstack>` |
-| Bundler | esbuild → UMD + ESM |
-| Tests unit | Vitest + happy-dom (strict TDD) |
-| Tests E2E | Playwright (Day 14) |
-| Docs (post-MVP) | Astro on `playerstack.sellf.app` |
-| Backend (post-MVP) | Hono + CF Workers + D1 + R2 |
+| Layer              | Choice                                                             |
+| ------------------ | ------------------------------------------------------------------ |
+| Runtime            | Bun 1.3+                                                           |
+| Workspaces         | Bun native (`apps/*`, `packages/*`)                                |
+| Language           | TypeScript (strict, ES2020 target)                                 |
+| Engine             | Vidstack (MIT, wrapper not fork)                                   |
+| Embed              | Web Component `<player-stack>` + fallback `<div data-playerstack>` |
+| Bundler            | esbuild → UMD + ESM                                                |
+| Tests unit         | Vitest + happy-dom (strict TDD)                                    |
+| Tests E2E          | Playwright (Day 14)                                                |
+| Docs (post-MVP)    | Astro on `playerstack.sellf.app`                                   |
+| Backend (post-MVP) | Hono + CF Workers + D1 + R2                                        |
 
 ## Rules
 

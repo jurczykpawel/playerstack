@@ -22,7 +22,8 @@ Playerstack.use(autopreviewPlugin).define();
 ```html
 <player-stack
   src="https://example.com/preview.mp4"
-  data-config='{"preview":{"enabled":true,"threshold":0.6}}'>
+  data-config='{"preview":{"enabled":true,"threshold":0.6}}'
+>
 </player-stack>
 ```
 
@@ -30,11 +31,11 @@ Playerstack.use(autopreviewPlugin).define();
 
 `config.preview`:
 
-| Field | Type | Default | Description |
-|---|---|---|---|
-| `enabled` | `boolean` | `false` | Plugin is a no-op unless `true` |
-| `threshold` | `number` `[0..1]` | `0.5` | How much of the player must be in view before play is triggered |
-| `loopUntilInteraction` | `boolean` | (reserved) | Reserved for future use; current build always loops while in view |
+| Field                  | Type              | Default    | Description                                                       |
+| ---------------------- | ----------------- | ---------- | ----------------------------------------------------------------- |
+| `enabled`              | `boolean`         | `false`    | Plugin is a no-op unless `true`                                   |
+| `threshold`            | `number` `[0..1]` | `0.5`      | How much of the player must be in view before play is triggered   |
+| `loopUntilInteraction` | `boolean`         | (reserved) | Reserved for future use; current build always loops while in view |
 
 ## Behavior
 

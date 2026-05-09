@@ -22,7 +22,8 @@ Playerstack.use(controlsPolicyPlugin).define();
 ```html
 <player-stack
   src="https://youtu.be/dQw4w9WgXcQ"
-  data-config='{"controls":{"show":["play","progress","time"],"accent":"#008aff","bgOpacity":0.6}}'>
+  data-config='{"controls":{"show":["play","progress","time"],"accent":"#008aff","bgOpacity":0.6}}'
+>
 </player-stack>
 ```
 
@@ -30,11 +31,11 @@ Playerstack.use(controlsPolicyPlugin).define();
 
 `config.controls`:
 
-| Field | Type | Default | Description |
-|---|---|---|---|
-| `show` | `("play" \| "progress" \| "time" \| "volume" \| "fullscreen" \| "speed")[]` | (all visible) | If set, ONLY listed controls are visible. Anything else gets `display: none` |
-| `accent` | `string` (CSS color) | none | Sets `--ps-accent` CSS variable. Validated against injection (`#hex`, named colors, `rgb()`, `hsl()`) |
-| `bgOpacity` | `number` `[0..1]` | none | Sets `--ps-bg-opacity` CSS variable. Clamped to `[0..1]` |
+| Field       | Type                                                                        | Default       | Description                                                                                           |
+| ----------- | --------------------------------------------------------------------------- | ------------- | ----------------------------------------------------------------------------------------------------- |
+| `show`      | `("play" \| "progress" \| "time" \| "volume" \| "fullscreen" \| "speed")[]` | (all visible) | If set, ONLY listed controls are visible. Anything else gets `display: none`                          |
+| `accent`    | `string` (CSS color)                                                        | none          | Sets `--ps-accent` CSS variable. Validated against injection (`#hex`, named colors, `rgb()`, `hsl()`) |
+| `bgOpacity` | `number` `[0..1]`                                                           | none          | Sets `--ps-bg-opacity` CSS variable. Clamped to `[0..1]`                                              |
 
 Unknown control names in `show` are silently ignored.
 

@@ -14,7 +14,7 @@ export function createSellfConfigProvider(opts: SellfAdapterOptions): ConfigProv
 
       if (!productId) {
         if (!inline.src) {
-          throw new Error('[playerstack:sellf] no data-sellf-product and no src attribute');
+          throw new Error("[playerstack:sellf] no data-sellf-product and no src attribute");
         }
         return inline as PlayerstackConfig;
       }

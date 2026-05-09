@@ -7,11 +7,15 @@ This is the standalone bundle for `<script src=...>` use. For composable usage (
 ## Quickstart
 
 ```html
-<script src="https://cdn.jsdelivr.net/npm/playerstack@0.1.0/dist/playerstack.min.js" defer></script>
+<script
+  src="https://cdn.jsdelivr.net/npm/playerstack@0.1.0/dist/playerstack.min.js"
+  defer
+></script>
 
 <player-stack
   src="https://youtu.be/dQw4w9WgXcQ"
-  data-config='{"controls":{"accent":"#008aff"}}'>
+  data-config='{"controls":{"accent":"#008aff"}}'
+>
 </player-stack>
 ```
 
@@ -29,11 +33,11 @@ The Sellf adapter is **not** bundled — install it separately if you need it.
 
 ## Bundle size
 
-| File | Size | Gzipped |
-|---|---|---|
-| `dist/playerstack.min.js` | 411 KB | 127 KB |
-| `dist/playerstack.esm.js` | (debug) | — |
-| `dist/playerstack.cjs` | (debug) | — |
+| File                      | Size    | Gzipped |
+| ------------------------- | ------- | ------- |
+| `dist/playerstack.min.js` | 411 KB  | 127 KB  |
+| `dist/playerstack.esm.js` | (debug) | —       |
+| `dist/playerstack.cjs`    | (debug) | —       |
 
 Vidstack is the dominant cost. Slimming to <50 KB via lazy plugins and Vidstack treeshaking is on the post-v0.1 roadmap. If 127 KB is a deal-breaker, use the scoped packages and ship only what you need.
 

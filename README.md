@@ -1,5 +1,10 @@
 # Playerstack
 
+[![CI](https://github.com/jurczykpawel/playerstack/actions/workflows/ci.yml/badge.svg)](https://github.com/jurczykpawel/playerstack/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+[![npm](https://img.shields.io/npm/v/playerstack.svg)](https://www.npmjs.com/package/playerstack)
+[![Tests](https://img.shields.io/badge/tests-139%20unit%20%2B%204%20e2e-brightgreen.svg)](#testing)
+
 Embeddable video player for any HTML page. One script tag. YouTube, Vimeo, MP4, HLS. Brand it, add CTAs, gate emails — all via plugins. **MIT.**
 
 > **Status:** v0.1.0 (initial release, 2026-05-09)
@@ -7,11 +12,15 @@ Embeddable video player for any HTML page. One script tag. YouTube, Vimeo, MP4, 
 ## Quickstart
 
 ```html
-<script src="https://cdn.jsdelivr.net/npm/playerstack@0.1.0/dist/playerstack.min.js" defer></script>
+<script
+  src="https://cdn.jsdelivr.net/npm/playerstack@0.1.0/dist/playerstack.min.js"
+  defer
+></script>
 
 <player-stack
   src="https://youtu.be/dQw4w9WgXcQ"
-  data-config='{"controls":{"accent":"#008aff"},"ctaEnd":{"enabled":true,"button":{"label":"Buy now","url":"https://example.com"}}}'>
+  data-config='{"controls":{"accent":"#008aff"},"ctaEnd":{"enabled":true,"button":{"label":"Buy now","url":"https://example.com"}}}'
+>
 </player-stack>
 ```
 
@@ -25,14 +34,14 @@ Presto Player has the marketing layer — only for WordPress.
 
 ## Plugins (all MIT, all opt-in)
 
-| Plugin | What it does |
-|---|---|
-| `@playerstack/plugin-sources` | Auto-detects YouTube/Vimeo/MP4/HLS/WebM/DASH from one `src` URL |
-| `@playerstack/plugin-controls-policy` | Theme color, show/hide controls via whitelist |
-| `@playerstack/plugin-autopreview` | Muted autoplay in viewport, respects `prefers-reduced-motion` |
-| `@playerstack/plugin-branded-thumb` | Custom poster + click-to-load (LCP + GDPR — no third-party cookies until click) |
-| `@playerstack/plugin-cta-end` | Overlay HTML at end of video, button with UTM, replay |
-| `@playerstack/plugin-sellf-adapter` | Fetch config from a Sellf product endpoint |
+| Plugin                                | What it does                                                                    |
+| ------------------------------------- | ------------------------------------------------------------------------------- |
+| `@playerstack/plugin-sources`         | Auto-detects YouTube/Vimeo/MP4/HLS/WebM/DASH from one `src` URL                 |
+| `@playerstack/plugin-controls-policy` | Theme color, show/hide controls via whitelist                                   |
+| `@playerstack/plugin-autopreview`     | Muted autoplay in viewport, respects `prefers-reduced-motion`                   |
+| `@playerstack/plugin-branded-thumb`   | Custom poster + click-to-load (LCP + GDPR — no third-party cookies until click) |
+| `@playerstack/plugin-cta-end`         | Overlay HTML at end of video, button with UTM, replay                           |
+| `@playerstack/plugin-sellf-adapter`   | Fetch config from a Sellf product endpoint                                      |
 
 The standalone `playerstack` bundle pre-registers all 5 MVP plugins. Use scoped packages directly if you want a smaller, custom bundle.
 

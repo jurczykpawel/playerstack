@@ -15,7 +15,8 @@ Plays muted when the player scrolls into view, pauses when it scrolls out. Great
 ```html
 <player-stack
   src="https://example.com/preview.mp4"
-  data-config='{"preview":{"enabled":true,"threshold":0.6}}'>
+  data-config='{"preview":{"enabled":true,"threshold":0.6}}'
+>
 </player-stack>
 ```
 
@@ -23,11 +24,11 @@ Plays muted when the player scrolls into view, pauses when it scrolls out. Great
 
 `config.preview`:
 
-| Field | Type | Default | Description |
-|---|---|---|---|
-| `enabled` | boolean | `false` | Plugin is a no-op unless `true` |
-| `threshold` | number `[0..1]` | `0.5` | How much of the player must be in view before play triggers |
-| `loopUntilInteraction` | boolean | (reserved) | Reserved; current build always loops while in view |
+| Field                  | Type            | Default    | Description                                                 |
+| ---------------------- | --------------- | ---------- | ----------------------------------------------------------- |
+| `enabled`              | boolean         | `false`    | Plugin is a no-op unless `true`                             |
+| `threshold`            | number `[0..1]` | `0.5`      | How much of the player must be in view before play triggers |
+| `loopUntilInteraction` | boolean         | (reserved) | Reserved; current build always loops while in view          |
 
 ## Accessibility
 

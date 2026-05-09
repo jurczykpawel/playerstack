@@ -3,14 +3,8 @@ export type EventHandler<TPayload> = (payload: TPayload) => void;
 export type EventMap = Record<string, unknown>;
 
 export interface EventBus<TEvents extends EventMap = EventMap> {
-  on<K extends keyof TEvents & string>(
-    name: K,
-    handler: EventHandler<TEvents[K]>,
-  ): () => void;
-  off<K extends keyof TEvents & string>(
-    name: K,
-    handler: EventHandler<TEvents[K]>,
-  ): boolean;
+  on<K extends keyof TEvents & string>(name: K, handler: EventHandler<TEvents[K]>): () => void;
+  off<K extends keyof TEvents & string>(name: K, handler: EventHandler<TEvents[K]>): boolean;
   emit<K extends keyof TEvents & string>(name: K, payload: TEvents[K]): void;
 }
 

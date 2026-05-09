@@ -22,14 +22,14 @@ Auto-detects the source type from a single `src` URL and rewrites it into the fo
 
 ## Supported formats
 
-| Format | URL patterns |
-|---|---|
+| Format  | URL patterns                                                                                                                               |
+| ------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
 | YouTube | `youtu.be/ID`, `youtube.com/watch?v=ID`, `/embed/ID`, `/shorts/ID`, `/v/ID`, `m.youtube.com/...`, `youtube-nocookie.com/...`, `youtube/ID` |
-| Vimeo | `vimeo.com/ID`, `vimeo.com/ID/HASH` (private), `player.vimeo.com/video/ID`, `vimeo/ID` |
-| MP4 | any `https://...*.mp4` |
-| HLS | any `https://...*.m3u8` |
-| WebM | any `https://...*.webm` |
-| DASH | any `https://...*.mpd` |
+| Vimeo   | `vimeo.com/ID`, `vimeo.com/ID/HASH` (private), `player.vimeo.com/video/ID`, `vimeo/ID`                                                     |
+| MP4     | any `https://...*.mp4`                                                                                                                     |
+| HLS     | any `https://...*.m3u8`                                                                                                                    |
+| WebM    | any `https://...*.webm`                                                                                                                    |
+| DASH    | any `https://...*.mpd`                                                                                                                     |
 
 Extension matching is case-insensitive. Non-https schemes are rejected. Unknown formats produce a clear error at init time.
 

@@ -19,8 +19,7 @@ const states = new WeakMap<PlayerstackContext, ThumbState>();
 export const brandedThumbPlugin: PlayerstackPlugin = {
   name: "branded-thumb",
   async init(ctx: PlayerstackContext): Promise<void> {
-    const cfg = (ctx.config as { brandedThumb?: BrandedThumbConfig; poster?: string })
-      .brandedThumb;
+    const cfg = (ctx.config as { brandedThumb?: BrandedThumbConfig; poster?: string }).brandedThumb;
     if (!cfg?.enabled) return;
 
     const poster = (ctx.config as { poster?: string }).poster;
@@ -37,8 +36,7 @@ export const brandedThumbPlugin: PlayerstackPlugin = {
       const img = document.createElement("img");
       img.src = poster;
       img.alt = "";
-      img.style.cssText =
-        "position:absolute;inset:0;width:100%;height:100%;object-fit:cover;";
+      img.style.cssText = "position:absolute;inset:0;width:100%;height:100%;object-fit:cover;";
       img.loading = "lazy";
       overlay.appendChild(img);
     }

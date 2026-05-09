@@ -17,7 +17,11 @@
       "require": "./dist/playerstack.cjs"
     }
   },
-  "files": ["src", "dist", "README.md"],
+  "files": [
+    "src",
+    "dist",
+    "README.md"
+  ],
   "scripts": {
     "build": "bun build.ts"
   },

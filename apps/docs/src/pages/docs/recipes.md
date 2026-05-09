@@ -18,12 +18,15 @@ const analyticsPlugin: PlayerstackPlugin = {
   name: "analytics",
   init(ctx) {
     ctx.events.on("cta:click", ({ label, url }) => {
-      navigator.sendBeacon("/api/track", JSON.stringify({
-        event: "cta_click",
-        label,
-        url,
-        productId: ctx.container.dataset.productId,
-      }));
+      navigator.sendBeacon(
+        "/api/track",
+        JSON.stringify({
+          event: "cta_click",
+          label,
+          url,
+          productId: ctx.container.dataset.productId,
+        }),
+      );
     });
   },
 };
@@ -43,7 +46,9 @@ const states = new WeakMap<PlayerstackContext, MyState>();
 const myPlugin: PlayerstackPlugin = {
   name: "my-plugin",
   init(ctx) {
-    states.set(ctx, { /* ... */ });
+    states.set(ctx, {
+      /* ... */
+    });
   },
   destroy(ctx) {
     states.get(ctx)?.cleanup();

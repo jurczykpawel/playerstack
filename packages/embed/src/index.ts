@@ -5,8 +5,7 @@ import { autopreviewPlugin } from "@playerstack/plugin-autopreview";
 import { brandedThumbPlugin } from "@playerstack/plugin-branded-thumb";
 import { ctaEndPlugin } from "@playerstack/plugin-cta-end";
 
-Playerstack
-  .use(sourcesPlugin)
+Playerstack.use(sourcesPlugin)
   .use(controlsPolicyPlugin)
   .use(autopreviewPlugin)
   .use(brandedThumbPlugin)

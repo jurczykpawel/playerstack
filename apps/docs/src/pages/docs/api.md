@@ -15,17 +15,14 @@ The entry point. Register plugins, then call `define()` to register the custom e
 ```ts
 import { Playerstack } from "@playerstack/core";
 
-Playerstack
-  .use(somePlugin)
-  .use(anotherPlugin)
-  .define();
+Playerstack.use(somePlugin).use(anotherPlugin).define();
 ```
 
-| Method | Returns | Description |
-|---|---|---|
-| `use(plugin)` | `Playerstack` (chainable) | Register a plugin. Throws on duplicate `name` |
-| `plugins()` | `readonly PlayerstackPlugin[]` | Snapshot of registered plugins (read-only) |
-| `define()` | `void` | Register `<player-stack>` custom element. Idempotent |
+| Method        | Returns                        | Description                                          |
+| ------------- | ------------------------------ | ---------------------------------------------------- |
+| `use(plugin)` | `Playerstack` (chainable)      | Register a plugin. Throws on duplicate `name`        |
+| `plugins()`   | `readonly PlayerstackPlugin[]` | Snapshot of registered plugins (read-only)           |
+| `define()`    | `void`                         | Register `<player-stack>` custom element. Idempotent |
 
 ## PlayerstackPlugin
 
@@ -51,8 +48,8 @@ What `init` and `destroy` receive:
 
 ```ts
 interface PlayerstackContext {
-  events: EventBus;        // typed pub/sub
-  container: HTMLElement;   // the <player-stack> itself
+  events: EventBus; // typed pub/sub
+  container: HTMLElement; // the <player-stack> itself
   mediaPlayer: HTMLElement; // the inner <media-player>
   config: PlayerstackConfig;
 }
@@ -77,11 +74,11 @@ unsubscribe();
 const removed = bus.off("cta:click", handler); // returns boolean
 ```
 
-| Method | Returns |
-|---|---|
-| `on(name, handler)` | unsubscribe function |
-| `off(name, handler)` | boolean (was it removed?) |
-| `emit(name, payload)` | void |
+| Method                | Returns                   |
+| --------------------- | ------------------------- |
+| `on(name, handler)`   | unsubscribe function      |
+| `off(name, handler)`  | boolean (was it removed?) |
+| `emit(name, payload)` | void                      |
 
 Handlers that throw don't stop later handlers — errors are logged.
 
@@ -111,7 +108,7 @@ See [sellf-adapter](/docs/plugins/sellf-adapter) for an example.
 
 ```ts
 interface PlayerstackConfig {
-  src: string;        // required
+  src: string; // required
   poster?: string;
   title?: string;
   [key: string]: unknown; // plugin-specific slices

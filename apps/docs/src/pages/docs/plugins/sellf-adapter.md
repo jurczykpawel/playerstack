@@ -62,7 +62,10 @@ The Sellf endpoint must return a JSON object that conforms to `PlayerstackConfig
 Inline attributes always win on merge. Useful for per-page CTAs without changing Sellf:
 
 ```html
-<player-stack data-sellf-product="abc123" title="Override the title from Sellf"></player-stack>
+<player-stack
+  data-sellf-product="abc123"
+  title="Override the title from Sellf"
+></player-stack>
 ```
 
 This loads everything from Sellf, but `title` is taken from the attribute.

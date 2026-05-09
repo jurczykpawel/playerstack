@@ -17,7 +17,9 @@ describe("createInlineConfigProvider", () => {
 
   it("reads src from a plain src attribute", async () => {
     const provider = createInlineConfigProvider();
-    const config = await provider.load(el(`<player-stack src="https://example.com/v.mp4"></player-stack>`));
+    const config = await provider.load(
+      el(`<player-stack src="https://example.com/v.mp4"></player-stack>`),
+    );
     expect(config.src).toBe("https://example.com/v.mp4");
   });
 
@@ -52,16 +54,12 @@ describe("createInlineConfigProvider", () => {
 
   it("throws a clear error when src is missing", async () => {
     const provider = createInlineConfigProvider();
-    await expect(provider.load(el(`<player-stack></player-stack>`))).rejects.toThrow(
-      /src/i,
-    );
+    await expect(provider.load(el(`<player-stack></player-stack>`))).rejects.toThrow(/src/i);
   });
 
   it("throws a clear error when src is empty string", async () => {
     const provider = createInlineConfigProvider();
-    await expect(provider.load(el(`<player-stack src=""></player-stack>`))).rejects.toThrow(
-      /src/i,
-    );
+    await expect(provider.load(el(`<player-stack src=""></player-stack>`))).rejects.toThrow(/src/i);
   });
 
   it("throws a JSON parse error mentioning data-config", async () => {

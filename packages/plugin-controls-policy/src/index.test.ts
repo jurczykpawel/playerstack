@@ -27,7 +27,7 @@ describe("controlsPolicyPlugin", () => {
   });
 
   it("injects a style block into mediaPlayer when controls.accent is set", async () => {
-    const ctx = makeContext({ controls: { accent: "#008aff" } } as PlayerstackConfig);
+    const ctx = makeContext({ controls: { accent: "#008aff" } });
     await controlsPolicyPlugin.init(ctx);
     const style = ctx.mediaPlayer.querySelector("style[data-playerstack='controls-policy']");
     expect(style).not.toBeNull();
@@ -37,7 +37,7 @@ describe("controlsPolicyPlugin", () => {
   it("injects hide rules when controls.show whitelist is provided", async () => {
     const ctx = makeContext({
       controls: { show: ["play", "progress"] },
-    } as PlayerstackConfig);
+    });
     await controlsPolicyPlugin.init(ctx);
     const style = ctx.mediaPlayer.querySelector("style[data-playerstack='controls-policy']");
     expect(style?.textContent).toContain("media-volume-slider");
@@ -45,17 +45,15 @@ describe("controlsPolicyPlugin", () => {
   });
 
   it("does not duplicate the style block on repeated init", async () => {
-    const ctx = makeContext({ controls: { accent: "#008aff" } } as PlayerstackConfig);
+    const ctx = makeContext({ controls: { accent: "#008aff" } });
     await controlsPolicyPlugin.init(ctx);
     await controlsPolicyPlugin.init(ctx);
-    const styles = ctx.mediaPlayer.querySelectorAll(
-      "style[data-playerstack='controls-policy']",
-    );
+    const styles = ctx.mediaPlayer.querySelectorAll("style[data-playerstack='controls-policy']");
     expect(styles.length).toBe(1);
   });
 
   it("destroy removes the injected style block from the right mediaPlayer", async () => {
-    const ctx = makeContext({ controls: { accent: "#008aff" } } as PlayerstackConfig);
+    const ctx = makeContext({ controls: { accent: "#008aff" } });
     await controlsPolicyPlugin.init(ctx);
     controlsPolicyPlugin.destroy?.(ctx);
     const style = ctx.mediaPlayer.querySelector("style[data-playerstack='controls-policy']");
@@ -63,14 +61,18 @@ describe("controlsPolicyPlugin", () => {
   });
 
   it("isolates state between two contexts (multi-instance safe)", async () => {
-    const a = makeContext({ controls: { accent: "#aaaaaa" } } as PlayerstackConfig);
-    const b = makeContext({ controls: { accent: "#bbbbbb" } } as PlayerstackConfig);
+    const a = makeContext({ controls: { accent: "#aaaaaa" } });
+    const b = makeContext({ controls: { accent: "#bbbbbb" } });
 
     await controlsPolicyPlugin.init(a);
     await controlsPolicyPlugin.init(b);
 
-    expect(a.mediaPlayer.querySelector("style[data-playerstack='controls-policy']")?.textContent).toContain("#aaaaaa");
-    expect(b.mediaPlayer.querySelector("style[data-playerstack='controls-policy']")?.textContent).toContain("#bbbbbb");
+    expect(
+      a.mediaPlayer.querySelector("style[data-playerstack='controls-policy']")?.textContent,
+    ).toContain("#aaaaaa");
+    expect(
+      b.mediaPlayer.querySelector("style[data-playerstack='controls-policy']")?.textContent,
+    ).toContain("#bbbbbb");
 
     controlsPolicyPlugin.destroy?.(a);
     expect(a.mediaPlayer.querySelector("style[data-playerstack='controls-policy']")).toBeNull();

@@ -1,11 +1,4 @@
-export const ALL_CONTROLS = [
-  "play",
-  "progress",
-  "time",
-  "volume",
-  "fullscreen",
-  "speed",
-] as const;
+export const ALL_CONTROLS = ["play", "progress", "time", "volume", "fullscreen", "speed"] as const;
 
 export type ControlName = (typeof ALL_CONTROLS)[number];
 

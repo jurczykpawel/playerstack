@@ -31,7 +31,8 @@ test.describe("playground embed", () => {
   test("plugins were registered on Playerstack singleton", async ({ page }) => {
     await page.goto("/");
     const plugins = await page.evaluate(() => {
-      const ps = (window as unknown as { Playerstack?: { plugins(): readonly { name: string }[] } }).Playerstack;
+      const ps = (window as unknown as { Playerstack?: { plugins(): readonly { name: string }[] } })
+        .Playerstack;
       return ps?.plugins().map((p) => p.name) ?? [];
     });
     expect(plugins).toContain("sources");

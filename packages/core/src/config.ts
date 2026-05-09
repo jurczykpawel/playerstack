@@ -48,9 +48,7 @@ function readDataConfigJson(element: HTMLElement): Partial<PlayerstackConfig> {
   try {
     parsed = JSON.parse(raw);
   } catch (err) {
-    throw new Error(
-      `[playerstack] failed to parse data-config JSON: ${(err as Error).message}`,
-    );
+    throw new Error(`[playerstack] failed to parse data-config JSON: ${(err as Error).message}`);
   }
 
   if (parsed === null || typeof parsed !== "object" || Array.isArray(parsed)) {
