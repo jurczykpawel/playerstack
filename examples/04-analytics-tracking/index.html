@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Playerstack — analytics tracking</title>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/vidstack@1.12.13/player/styles/default/theme.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/vidstack@1.12.13/player/styles/default/layouts/video.css"
+    />
+    <style>
+      body {
+        max-width: 720px;
+        margin: 32px auto;
+        padding: 0 16px;
+        font-family: system-ui, sans-serif;
+      }
+      .player {
+        background: #000;
+        border-radius: 12px;
+        overflow: hidden;
+      }
+      #log {
+        margin-top: 24px;
+        background: #0b0d12;
+        color: #8af;
+        padding: 16px;
+        border-radius: 8px;
+        font-family: ui-monospace, Consolas, monospace;
+        font-size: 13px;
+        min-height: 80px;
+        white-space: pre-wrap;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Analytics tracking via custom plugin</h1>
+    <p>Open DevTools → Console. Click the CTA at the end. The plugin sends events.</p>
+
+    <div class="player">
+      <player-stack
+        src="https://files.vidstack.io/sprite-fight/720p.mp4"
+        poster="https://files.vidstack.io/sprite-fight/poster.webp"
+        data-config='{
+          "brandedThumb": { "enabled": true },
+          "ctaEnd": {
+            "enabled": true,
+            "title": "Loved it? Get the full course.",
+            "button": {
+              "label": "Enroll now",
+              "url": "https://example.com/course",
+              "utm": "utm_source=demo&utm_medium=video"
+            },
+            "showReplay": true
+          }
+        }'
+      ></player-stack>
+    </div>
+
+    <div id="log">Waiting for events…</div>
+
+    <!-- Load Playerstack -->
+    <script src="https://cdn.jsdelivr.net/npm/playerstack@0.1.0/dist/playerstack.min.js"></script>
+
+    <!-- Custom analytics plugin -->
+    <script type="module">
+      // Wait for the bundle to be ready
+      await new Promise((r) => setTimeout(r, 0));
+      const { Playerstack } = window;
+      if (!Playerstack) {
+        document.getElementById("log").textContent = "Playerstack failed to load";
+        throw new Error("no Playerstack");
+      }
+
+      const log = document.getElementById("log");
+      const append = (msg) => {
+        log.textContent += "\n" + new Date().toLocaleTimeString() + "  " + msg;
+      };
+
+      const analyticsPlugin = {
+        name: "demo-analytics",
+        init(ctx) {
+          ctx.events.on("thumb:click", () => {
+            append("→ thumb:click  (player loaded)");
+            // In production: navigator.sendBeacon("/api/track", JSON.stringify({...}));
+          });
+          ctx.events.on("cta:click", ({ label, url }) => {
+            append(`→ cta:click   label="${label}"  url=${url}`);
+          });
+          ctx.events.on("cta:replay", () => {
+            append("→ cta:replay  (user wants to watch again)");
+          });
+        },
+      };
+
+      Playerstack.use(analyticsPlugin);
+      log.textContent = "Plugin registered. Click the player.";
+    </script>
+  </body>
+</html>

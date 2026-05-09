@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Playerstack — vanilla HTML</title>
+
+    <!-- Playerstack bundle (auto-registers <player-stack> + 5 plugins) -->
+    <script
+      src="https://cdn.jsdelivr.net/npm/playerstack@0.1.0/dist/playerstack.min.js"
+      defer
+    ></script>
+
+    <!-- Vidstack default UI styles -->
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/vidstack@1.12.13/player/styles/default/theme.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/vidstack@1.12.13/player/styles/default/layouts/video.css"
+    />
+
+    <style>
+      body {
+        max-width: 720px;
+        margin: 32px auto;
+        padding: 0 16px;
+        font-family: system-ui, sans-serif;
+      }
+      .player {
+        background: #000;
+        border-radius: 12px;
+        overflow: hidden;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Playerstack — simplest possible embed</h1>
+    <p>One script tag. One element. YouTube source.</p>
+
+    <div class="player">
+      <player-stack src="https://youtu.be/_cMxraX_5RE" title="Sprite Fight"></player-stack>
+    </div>
+  </body>
+</html>

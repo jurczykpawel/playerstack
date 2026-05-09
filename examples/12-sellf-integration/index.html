@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Playerstack — Sellf integration</title>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/vidstack@1.12.13/player/styles/default/theme.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/vidstack@1.12.13/player/styles/default/layouts/video.css"
+    />
+    <style>
+      body {
+        max-width: 720px;
+        margin: 32px auto;
+        padding: 0 16px;
+        font-family: system-ui, sans-serif;
+      }
+      .player {
+        background: #000;
+        border-radius: 12px;
+        overflow: hidden;
+        margin: 16px 0;
+      }
+      .product-card {
+        padding: 16px;
+        background: #f4f4f6;
+        border-radius: 8px;
+        font-size: 14px;
+      }
+      code {
+        background: rgba(0, 0, 0, 0.06);
+        padding: 1px 6px;
+        border-radius: 4px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Sellf-driven embed</h1>
+    <p>
+      The player config is fetched from a Sellf product endpoint at runtime. Update the product in
+      Sellf admin → embeds across the web update on next page load.
+    </p>
+
+    <div class="product-card">
+      <strong>Product ID:</strong> <code>example-course-001</code><br />
+      <strong>Endpoint:</strong>
+      <code>https://sellf.app/api/products/example-course-001/playerstack</code>
+    </div>
+
+    <div class="player">
+      <player-stack data-sellf-product="example-course-001"></player-stack>
+    </div>
+
+    <p>
+      <strong>Inline overrides win on merge.</strong> If you set <code>title</code> on the element,
+      it beats Sellf's title for this page only.
+    </p>
+
+    <div class="player">
+      <player-stack
+        data-sellf-product="example-course-001"
+        title="Per-page title override"
+      ></player-stack>
+    </div>
+
+    <!-- Use scoped packages instead of the standalone bundle, because we need
+         to install a custom config provider before the element registers -->
+    <script type="module">
+      import {
+        Playerstack,
+        setConfigProviderForElement,
+      } from "https://esm.sh/@playerstack/core@0.1.0";
+      import { sourcesPlugin } from "https://esm.sh/@playerstack/plugin-sources@0.1.0";
+      import { controlsPolicyPlugin } from "https://esm.sh/@playerstack/plugin-controls-policy@0.1.0";
+      import { ctaEndPlugin } from "https://esm.sh/@playerstack/plugin-cta-end@0.1.0";
+      import { brandedThumbPlugin } from "https://esm.sh/@playerstack/plugin-branded-thumb@0.1.0";
+      import { createSellfConfigProvider } from "https://esm.sh/@playerstack/plugin-sellf-adapter@0.1.0";
+
+      // 1. Install the Sellf config provider BEFORE define()
+      const sellf = createSellfConfigProvider({
+        baseUrl: "https://sellf.app",
+        // fetchOptions: { credentials: "include" }, // if your endpoint needs cookies
+      });
+      setConfigProviderForElement(sellf);
+
+      // 2. Register plugins as usual
+      Playerstack.use(sourcesPlugin)
+        .use(controlsPolicyPlugin)
+        .use(brandedThumbPlugin)
+        .use(ctaEndPlugin)
+        .define();
+    </script>
+  </body>
+</html>

@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Playerstack — Tailwind styling</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script
+      src="https://cdn.jsdelivr.net/npm/playerstack@0.1.0/dist/playerstack.min.js"
+      defer
+    ></script>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/vidstack@1.12.13/player/styles/default/theme.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/vidstack@1.12.13/player/styles/default/layouts/video.css"
+    />
+  </head>
+  <body class="bg-gray-50 dark:bg-zinc-950 dark:text-zinc-100">
+    <main class="max-w-3xl mx-auto px-4 py-12">
+      <h1 class="text-4xl font-bold tracking-tight mb-2">Tailwind + Playerstack</h1>
+      <p class="text-gray-600 dark:text-zinc-400 mb-8">
+        Wrap the player in any Tailwind-styled container. The accent color is set via
+        <code class="text-sm bg-gray-200 dark:bg-zinc-800 px-1 rounded">data-config</code>.
+      </p>
+
+      <!-- Card pattern -->
+      <div
+        class="rounded-2xl shadow-xl shadow-blue-500/10 ring-1 ring-black/5 dark:ring-white/10 overflow-hidden bg-black"
+      >
+        <player-stack
+          src="https://files.vidstack.io/sprite-fight/720p.mp4"
+          poster="https://files.vidstack.io/sprite-fight/poster.webp"
+          data-config='{"controls":{"accent":"#3b82f6"}}'
+        ></player-stack>
+      </div>
+
+      <!-- Stats row -->
+      <div class="mt-8 grid grid-cols-3 gap-4 text-center">
+        <div
+          class="rounded-lg bg-white dark:bg-zinc-900 p-4 ring-1 ring-black/5 dark:ring-white/10"
+        >
+          <div class="text-2xl font-bold">12K</div>
+          <div class="text-xs text-gray-500 dark:text-zinc-500 uppercase tracking-wider">Views</div>
+        </div>
+        <div
+          class="rounded-lg bg-white dark:bg-zinc-900 p-4 ring-1 ring-black/5 dark:ring-white/10"
+        >
+          <div class="text-2xl font-bold">94%</div>
+          <div class="text-xs text-gray-500 dark:text-zinc-500 uppercase tracking-wider">
+            Watch rate
+          </div>
+        </div>
+        <div
+          class="rounded-lg bg-white dark:bg-zinc-900 p-4 ring-1 ring-black/5 dark:ring-white/10"
+        >
+          <div class="text-2xl font-bold">238</div>
+          <div class="text-xs text-gray-500 dark:text-zinc-500 uppercase tracking-wider">
+            CTA clicks
+          </div>
+        </div>
+      </div>
+    </main>
+  </body>
+</html>
