@@ -2,11 +2,6 @@
 
 Embeddable video player. OSS-first (MIT). Bun monorepo. Plugin-first architecture built on Mux media-chrome + media-elements.
 
-## Read first
-
-- Full design doc: `vault/brands/techskills-academy/products/_db-products/playerstack.md` (architecture, plugin interface, config schema, MVP/post-MVP plan, monetization, license rationale)
-- Coding standards: `vault/brands/_shared/reference/coding-standards.md` (DRY/SOLID/KISS/security/cleanup)
-
 ## Stack
 
 | Layer              | Choice                                                                                                                 |
