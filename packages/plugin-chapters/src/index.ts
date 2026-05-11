@@ -66,10 +66,19 @@ export const chaptersPlugin: PlayerstackPlugin = {
     };
     ctx.mediaPlayer.addEventListener("timeupdate", onTime);
 
-    const mountTarget = cfg.containerSelector
+    // <player-stack> has overflow:hidden + aspect-ratio:16/9 default styles
+    // (see core/playerstack-element DEFAULT_STYLES), so mounting inside would
+    // clip the list out of view. Default placement: as a sibling immediately
+    // after <player-stack>. The caller can opt into a custom mount via
+    // `containerSelector`.
+    const customTarget = cfg.containerSelector
       ? document.querySelector<HTMLElement>(cfg.containerSelector)
       : null;
-    (mountTarget ?? ctx.container).appendChild(list);
+    if (customTarget) {
+      customTarget.appendChild(list);
+    } else {
+      ctx.container.insertAdjacentElement("afterend", list);
+    }
 
     states.set(ctx, {
       list,

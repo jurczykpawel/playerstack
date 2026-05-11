@@ -120,7 +120,14 @@ export class PlayerstackElement extends HTMLElement {
     const mediaEl = document.createElement(tag);
     mediaEl.slot = "media";
     mediaEl.setAttribute("playsinline", "");
-    mediaEl.setAttribute("crossorigin", "");
+    // Do NOT default `crossorigin` — when set, the browser refuses to load any
+    // resource that doesn't reply with `Access-Control-Allow-Origin`. Most public
+    // MP4 hosts (W3C, GCS, plain S3, etc.) don't ship CORS, so a default would
+    // silently break playback. Opt in via `config.crossorigin` only when you
+    // actually need cross-origin <track> captions, Canvas extraction, or Web Audio.
+    if (config.crossorigin === "anonymous" || config.crossorigin === "use-credentials") {
+      mediaEl.setAttribute("crossorigin", config.crossorigin);
+    }
     if (config.poster) mediaEl.setAttribute("poster", config.poster);
     if (config.title) mediaEl.setAttribute("title", config.title);
     mediaEl.style.width = "100%";

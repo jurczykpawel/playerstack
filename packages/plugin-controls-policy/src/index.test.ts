@@ -29,16 +29,23 @@ describe("controlsPolicyPlugin", () => {
   it("does nothing when no controls config is present", async () => {
     const ctx = makeContext();
     await controlsPolicyPlugin.init(ctx);
+    expect(ctx.container.style.cssText).toBe("");
     expect(ctx.mediaPlayer.style.cssText).toBe("");
     expect(document.querySelector("style[data-playerstack='controls-policy']")).toBeNull();
   });
 
-  it("sets --media-brand, --video-brand, --ps-accent inline on mediaPlayer when accent is configured", async () => {
+  it("sets --media-brand, --video-brand, --ps-accent inline on the container when accent is configured", async () => {
     const ctx = makeContext({ controls: { accent: "#008aff" } });
     await controlsPolicyPlugin.init(ctx);
-    expect(ctx.mediaPlayer.style.getPropertyValue("--media-brand")).toBe("#008aff");
-    expect(ctx.mediaPlayer.style.getPropertyValue("--video-brand")).toBe("#008aff");
-    expect(ctx.mediaPlayer.style.getPropertyValue("--ps-accent")).toBe("#008aff");
+    // Vars must live on <player-stack> (the container) so they cascade to
+    // <media-controller> and <media-control-bar>, which are siblings of the
+    // inner <video> element — putting them on mediaPlayer (the inner element)
+    // would NOT cascade to the control bar.
+    expect(ctx.container.style.getPropertyValue("--media-brand")).toBe("#008aff");
+    expect(ctx.container.style.getPropertyValue("--video-brand")).toBe("#008aff");
+    expect(ctx.container.style.getPropertyValue("--ps-accent")).toBe("#008aff");
+    // mediaPlayer (the inner <video>) must NOT carry these vars.
+    expect(ctx.mediaPlayer.style.getPropertyValue("--media-brand")).toBe("");
   });
 
   it("does not inject a style block into mediaPlayer (selectors won't match light DOM)", async () => {
@@ -70,7 +77,8 @@ describe("controlsPolicyPlugin", () => {
     });
     await controlsPolicyPlugin.init(ctx);
     controlsPolicyPlugin.destroy?.(ctx);
-    expect(ctx.mediaPlayer.style.getPropertyValue("--media-brand")).toBe("");
+    expect(ctx.container.style.getPropertyValue("--media-brand")).toBe("");
+    expect(ctx.container.style.getPropertyValue("--ps-accent")).toBe("");
     expect(ctx.mediaPlayer.hasAttribute("data-ps-id")).toBe(false);
     expect(document.querySelector("style[data-playerstack='controls-policy']")).toBeNull();
   });
@@ -82,16 +90,16 @@ describe("controlsPolicyPlugin", () => {
     await controlsPolicyPlugin.init(a);
     await controlsPolicyPlugin.init(b);
 
-    expect(a.mediaPlayer.style.getPropertyValue("--media-brand")).toBe("#aaaaaa");
-    expect(b.mediaPlayer.style.getPropertyValue("--media-brand")).toBe("#bbbbbb");
+    expect(a.container.style.getPropertyValue("--media-brand")).toBe("#aaaaaa");
+    expect(b.container.style.getPropertyValue("--media-brand")).toBe("#bbbbbb");
     expect(a.mediaPlayer.getAttribute("data-ps-id")).not.toBe(
       b.mediaPlayer.getAttribute("data-ps-id"),
     );
     expect(document.querySelectorAll("style[data-playerstack='controls-policy']").length).toBe(2);
 
     controlsPolicyPlugin.destroy?.(a);
-    expect(a.mediaPlayer.style.getPropertyValue("--media-brand")).toBe("");
-    expect(b.mediaPlayer.style.getPropertyValue("--media-brand")).toBe("#bbbbbb");
+    expect(a.container.style.getPropertyValue("--media-brand")).toBe("");
+    expect(b.container.style.getPropertyValue("--media-brand")).toBe("#bbbbbb");
     expect(document.querySelectorAll("style[data-playerstack='controls-policy']").length).toBe(1);
   });
 });

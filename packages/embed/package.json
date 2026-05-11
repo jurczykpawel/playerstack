@@ -39,7 +39,10 @@
     "@playerstack/plugin-sticky": "workspace:*",
     "@playerstack/plugin-focus-mode": "workspace:*",
     "@playerstack/plugin-analytics": "workspace:*",
-    "@playerstack/plugin-yt-subscribe": "workspace:*"
+    "@playerstack/plugin-yt-subscribe": "workspace:*",
+    "@playerstack/plugin-watermark": "workspace:*",
+    "@playerstack/plugin-custom-css": "workspace:*",
+    "@playerstack/plugin-intro-card": "workspace:*"
   },
   "devDependencies": {
     "esbuild": "^0.28.0"

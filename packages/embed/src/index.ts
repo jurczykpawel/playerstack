@@ -9,9 +9,11 @@ import { actionBarPlugin } from "@playerstack/plugin-action-bar";
 import { emailGatePlugin } from "@playerstack/plugin-email-gate";
 import { savedPositionPlugin } from "@playerstack/plugin-saved-position";
 import { stickyPlugin } from "@playerstack/plugin-sticky";
-import { focusModePlugin } from "@playerstack/plugin-focus-mode";
 import { analyticsPlugin } from "@playerstack/plugin-analytics";
 import { ytSubscribePlugin } from "@playerstack/plugin-yt-subscribe";
+import { watermarkPlugin } from "@playerstack/plugin-watermark";
+import { customCssPlugin } from "@playerstack/plugin-custom-css";
+import { introCardPlugin } from "@playerstack/plugin-intro-card";
 
 Playerstack.use(sourcesPlugin)
   .use(controlsPolicyPlugin)
@@ -22,10 +24,12 @@ Playerstack.use(sourcesPlugin)
   .use(actionBarPlugin)
   .use(chaptersPlugin)
   .use(ctaEndPlugin)
-  .use(focusModePlugin)
   .use(stickyPlugin)
   .use(ytSubscribePlugin)
   .use(analyticsPlugin)
+  .use(watermarkPlugin)
+  .use(customCssPlugin)
+  .use(introCardPlugin)
   .define();
 
 export { Playerstack };

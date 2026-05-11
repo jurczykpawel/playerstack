@@ -14,20 +14,37 @@ test.describe("playground embed", () => {
     const mp4Player = page.locator("player-stack").nth(1);
     await expect(mp4Player).toBeVisible();
     const video = mp4Player.locator("video");
-    await expect(video).toHaveAttribute(
-      "src",
-      "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
-    );
+    await expect(video).toHaveAttribute("src", "https://media.w3.org/2010/05/sintel/trailer.mp4");
   });
 
-  test("controls-policy applies inline brand vars and document-scoped hide CSS", async ({
+  test("MP4 source actually loads (no CORS gate, no crossorigin attribute by default)", async ({
+    page,
+  }) => {
+    // Regression: forcing `crossorigin=""` in core would silently break every
+    // public MP4 host that doesn't ship CORS headers (W3C, GCS, plain S3, …).
+    // Two assertions:
+    //  1. The default <video> must NOT carry a crossorigin attribute.
+    //  2. The asset reaches readyState >= 1 (HAVE_METADATA), proving load.
+    await page.goto("/");
+    const video = page.locator("player-stack").nth(1).locator("video");
+    await expect(video).not.toHaveAttribute("crossorigin", /.*/);
+    await expect
+      .poll(async () => video.evaluate((el: HTMLVideoElement) => el.readyState), {
+        timeout: 10_000,
+      })
+      .toBeGreaterThanOrEqual(1);
+  });
+
+  test("controls-policy applies inline brand vars on container and document-scoped hide CSS", async ({
     page,
   }) => {
     await page.goto("/");
-    // controls-policy plugin sets vars on whatever ctx.mediaPlayer is — now it's the inner <video>.
-    const mp4 = page.locator("player-stack").nth(1).locator("video");
-    await expect(mp4).toHaveCSS("--media-brand", "#008aff");
-    await expect(mp4).toHaveCSS("--ps-accent", "#008aff");
+    // controls-policy plugin sets vars on ctx.container (<player-stack>) so
+    // they cascade to <media-controller> and <media-control-bar>, which are
+    // siblings of the inner <video> element.
+    const playerStack = page.locator("player-stack").nth(1);
+    await expect(playerStack).toHaveCSS("--media-brand", "#008aff");
+    await expect(playerStack).toHaveCSS("--ps-accent", "#008aff");
     // Hide-rules CSS lives in document.head, scoped per-instance.
     const docStyle = page.locator("head style[data-playerstack='controls-policy']");
     await expect(docStyle.first()).toBeAttached();

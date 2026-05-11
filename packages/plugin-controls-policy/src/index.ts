@@ -26,8 +26,13 @@ export const controlsPolicyPlugin: PlayerstackPlugin = {
     const { vars, hideCss } = buildPolicy(controls);
     const varsApplied: string[] = [];
 
+    // CSS vars must live on <player-stack> (the container) so they cascade to
+    // <media-controller> and <media-control-bar>, which are siblings of the
+    // inner <video> — not descendants. Pre-Mux migration ctx.mediaPlayer was
+    // <media-player> wrapping the whole tree, so vars cascaded; post-migration
+    // the inner element is a leaf, so we anchor on the container instead.
     for (const [name, value] of Object.entries(vars)) {
-      ctx.mediaPlayer.style.setProperty(name, value);
+      ctx.container.style.setProperty(name, value);
       varsApplied.push(name);
     }
 
@@ -56,7 +61,7 @@ export const controlsPolicyPlugin: PlayerstackPlugin = {
     const state = states.get(ctx);
     if (!state) return;
     for (const name of state.varsApplied) {
-      ctx.mediaPlayer.style.removeProperty(name);
+      ctx.container.style.removeProperty(name);
     }
     state.styleEl?.remove();
     if (state.id) ctx.mediaPlayer.removeAttribute(PS_ID_ATTR);

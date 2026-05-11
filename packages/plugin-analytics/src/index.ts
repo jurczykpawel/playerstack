@@ -2,10 +2,12 @@ import type { PlayerstackPlugin, PlayerstackContext } from "@playerstack/core";
 
 export interface AnalyticsConfig {
   enabled?: boolean;
-  /** "beacon" sends to endpoint via sendBeacon; "gtag" calls window.gtag. Default: "beacon" if endpoint is set. */
-  provider?: "beacon" | "gtag";
+  /** "beacon" sends to endpoint via sendBeacon; "gtag" calls window.gtag; "console" logs to console. Default: "beacon" if endpoint is set. */
+  provider?: "beacon" | "gtag" | "console";
   /** Required when provider="beacon". */
   endpoint?: string;
+  /** Also log every event to console, regardless of provider. Useful for debugging. */
+  debug?: boolean;
   /** Extra properties merged into every event payload. */
   customProps?: Record<string, unknown>;
   /** Subset of bus events to forward. Default: all known events. */
@@ -34,6 +36,10 @@ export const analyticsPlugin: PlayerstackPlugin = {
 
     const send = (event: string, data: Record<string, unknown> = {}) => {
       const payload = { ...data, ...customProps };
+      if (cfg.debug || provider === "console") {
+        console.log("[playerstack:analytics]", event, { src: ctx.config.src, data: payload, ts: Date.now() });
+      }
+      if (provider === "console") return;
       if (provider === "gtag") {
         const gtag = (globalThis as unknown as { gtag?: (...args: unknown[]) => void }).gtag;
         gtag?.("event", event, payload);

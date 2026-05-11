@@ -4,8 +4,10 @@ import { createEventBus } from "@playerstack/core";
 import type { PlayerstackContext, PlayerstackConfig } from "@playerstack/core";
 
 function makeContext(extra: Partial<PlayerstackConfig> = {}): PlayerstackContext {
+  const wrapper = document.createElement("div");
+  document.body.appendChild(wrapper);
   const container = document.createElement("div");
-  document.body.appendChild(container);
+  wrapper.appendChild(container);
   const mediaPlayer = document.createElement("media-player");
   container.appendChild(mediaPlayer);
   return {
@@ -14,6 +16,12 @@ function makeContext(extra: Partial<PlayerstackConfig> = {}): PlayerstackContext
     mediaPlayer,
     config: { src: "https://youtu.be/dQw4w9WgXcQ", ...extra },
   } as PlayerstackContext;
+}
+
+function findBar(ctx: PlayerstackContext): HTMLElement | null {
+  return (
+    ctx.container.parentElement?.querySelector<HTMLElement>(".playerstack-yt-subscribe") ?? null
+  );
 }
 
 afterEach(() => {
@@ -28,7 +36,19 @@ describe("ytSubscribePlugin", () => {
   it("does nothing when not enabled", async () => {
     const ctx = makeContext();
     await ytSubscribePlugin.init(ctx);
+    expect(findBar(ctx)).toBeNull();
+  });
+
+  it("mounts the bar AFTER <player-stack> as a sibling, NOT inside the container", async () => {
+    // Container has overflow:hidden + aspect-ratio:16/9 default styles, so a
+    // bar mounted inside is clipped out of view. Sibling mount keeps it visible
+    // below the player.
+    const ctx = makeContext({ ytSubscribe: { enabled: true, channelId: "UCABC" } });
+    await ytSubscribePlugin.init(ctx);
     expect(ctx.container.querySelector(".playerstack-yt-subscribe")).toBeNull();
+    expect(ctx.container.nextElementSibling?.classList.contains("playerstack-yt-subscribe")).toBe(
+      true,
+    );
   });
 
   it("renders a subscribe link with channelId in URL", async () => {
@@ -36,7 +56,7 @@ describe("ytSubscribePlugin", () => {
       ytSubscribe: { enabled: true, channelId: "UCABCDEFG" },
     });
     await ytSubscribePlugin.init(ctx);
-    const link = ctx.container.querySelector(
+    const link = findBar(ctx)!.querySelector(
       "a.playerstack-yt-subscribe-link",
     ) as HTMLAnchorElement;
     expect(link).not.toBeNull();
@@ -49,7 +69,7 @@ describe("ytSubscribePlugin", () => {
       ytSubscribe: { enabled: true, channelHandle: "RickAstleyVEVO" },
     });
     await ytSubscribePlugin.init(ctx);
-    const link = ctx.container.querySelector(
+    const link = findBar(ctx)!.querySelector(
       "a.playerstack-yt-subscribe-link",
     ) as HTMLAnchorElement;
     expect(link.href).toContain("@RickAstleyVEVO");
@@ -60,7 +80,7 @@ describe("ytSubscribePlugin", () => {
       ytSubscribe: { enabled: true, channelId: "UCABC" },
     });
     await ytSubscribePlugin.init(ctx);
-    const link = ctx.container.querySelector(
+    const link = findBar(ctx)!.querySelector(
       "a.playerstack-yt-subscribe-link",
     ) as HTMLAnchorElement;
     expect(link.href).toContain("sub_confirmation=1");
@@ -72,7 +92,7 @@ describe("ytSubscribePlugin", () => {
       ytSubscribe: { enabled: true, channelId: "UCABC", label: "Subscribe to my channel" },
     });
     await ytSubscribePlugin.init(ctx);
-    const link = ctx.container.querySelector("a.playerstack-yt-subscribe-link");
+    const link = findBar(ctx)!.querySelector("a.playerstack-yt-subscribe-link");
     expect(link?.textContent).toContain("Subscribe to my channel");
   });
 
@@ -82,12 +102,12 @@ describe("ytSubscribePlugin", () => {
     });
     await ytSubscribePlugin.init(ctx);
     ytSubscribePlugin.destroy?.(ctx);
-    expect(ctx.container.querySelector(".playerstack-yt-subscribe")).toBeNull();
+    expect(findBar(ctx)).toBeNull();
   });
 
   it("requires either channelId or channelHandle (no-op without either)", async () => {
     const ctx = makeContext({ ytSubscribe: { enabled: true } });
     await ytSubscribePlugin.init(ctx);
-    expect(ctx.container.querySelector(".playerstack-yt-subscribe")).toBeNull();
+    expect(findBar(ctx)).toBeNull();
   });
 });

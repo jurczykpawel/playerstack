@@ -61,25 +61,37 @@ import Base from "../layouts/Base.astro";
         <strong>12. Sticky on scroll</strong>
         <span>Pin to corner when you scroll past while it's playing. Scroll the page to see it.</span>
       </button>
-      <button type="button" data-preset="focus-mode">
-        <strong>13. Focus mode</strong>
-        <span>Auto-pause when you switch tabs. Switch back, click play to resume.</span>
-      </button>
       <button type="button" data-preset="yt-subscribe">
-        <strong>14. YT Subscribe bar</strong>
+        <strong>13. YT Subscribe bar</strong>
         <span>Subscribe button below the player linking to a YouTube channel.</span>
       </button>
       <button type="button" data-preset="minimal-controls">
-        <strong>15. Hide controls</strong>
-        <span>Whitelist play+progress only. Hide volume, fullscreen, speed, etc.</span>
+        <strong>14. Hide controls</strong>
+        <span>Play/pause only — no progress, no volume, no fullscreen. Can't skip.</span>
+      </button>
+      <button type="button" data-preset="play-once">
+        <strong>15. Play-once (no controls)</strong>
+        <span>Big overlay to start, then zero controls — user must watch to the end.</span>
       </button>
       <button type="button" data-preset="analytics">
         <strong>16. Analytics tracking</strong>
         <span>Forwards every cta:click / play / pause / ended to a beacon endpoint.</span>
       </button>
+      <button type="button" data-preset="watermark">
+        <strong>17. Watermark / logo overlay</strong>
+        <span>Corner-pinned brand logo with click-through. Image or text mode.</span>
+      </button>
+      <button type="button" data-preset="custom-css">
+        <strong>18. Custom CSS scoping</strong>
+        <span>Arbitrary scoped CSS — rounded corners, frosted control bar, grayscale filter.</span>
+      </button>
+      <button type="button" data-preset="intro-card">
+        <strong>19. Intro card / marketing splash</strong>
+        <span>Pre-roll overlay with badge, title, subtitle, CTA button. Big branded play button.</span>
+      </button>
       <button type="button" data-preset="full-stack">
-        <strong>17. Everything on</strong>
-        <span>All marketing + e-learning + privacy plugins enabled at once.</span>
+        <strong>20. Everything on</strong>
+        <span>All marketing + e-learning + privacy + branding plugins enabled at once.</span>
       </button>
     </div>
 
@@ -87,7 +99,7 @@ import Base from "../layouts/Base.astro";
       <form id="cfg-form">
         <label>
           <span>Source URL</span>
-          <input id="cfg-src" type="url" value="https://youtu.be/dQw4w9WgXcQ" />
+          <input id="cfg-src" type="url" value="https://youtu.be/_cMxraX_5RE" />
         </label>
         <label>
           <span>Title</span>
@@ -158,7 +170,7 @@ import Base from "../layouts/Base.astro";
       const cta: Record<string, unknown> = {};
       if (state.ctaTitle) cta.title = state.ctaTitle;
       if (state.btnLabel && state.btnUrl) cta.button = { label: state.btnLabel, url: state.btnUrl };
-      if (Object.keys(cta).length > 0) cfg.ctaEnd = { enabled: true, ...cta };
+      if (Object.keys(cta).length > 0) cfg.ctaEnd = { enabled: true, ...cta, ...((cfg.ctaEnd as Record<string, unknown>) ?? {}) };
       return cfg;
     }
 
@@ -210,6 +222,100 @@ import Base from "../layouts/Base.astro";
       navigator.clipboard.writeText(txt);
     });
 
+    // ---------------------------------------------------------------------
+    // Toast notifications: see what every plugin emits in real time
+    // ---------------------------------------------------------------------
+    function ensureToastStack(): HTMLElement {
+      let stack = document.getElementById("ps-toast-stack");
+      if (!stack) {
+        stack = document.createElement("div");
+        stack.id = "ps-toast-stack";
+        // Astro scoped CSS doesn't apply to JS-created nodes — inline everything.
+        stack.style.cssText =
+          "position:fixed;bottom:32px;right:32px;z-index:2147483647;" +
+          "display:flex;flex-direction:column-reverse;gap:14px;" +
+          "max-width:min(480px,calc(100vw - 64px));pointer-events:none;" +
+          "font-family:ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;";
+        document.body.appendChild(stack);
+      }
+      return stack;
+    }
+    function showToast(name: string, payload: unknown): void {
+      const stack = ensureToastStack();
+      const t = document.createElement("div");
+      t.style.cssText =
+        "background:#ffffff;color:#0b0d12;padding:18px 20px;" +
+        "border-radius:12px;" +
+        "box-shadow:0 20px 50px rgba(0,138,255,0.45),0 8px 16px rgba(0,0,0,0.6);" +
+        "font-size:15px;line-height:1.5;opacity:0;transform:translateX(40px) scale(0.95);" +
+        "transition:opacity 240ms ease,transform 240ms ease;pointer-events:auto;" +
+        "outline:3px solid #008aff;outline-offset:0;";
+      const head = document.createElement("strong");
+      head.textContent = "✓ " + name;
+      head.style.cssText =
+        "display:block;color:#008aff;font-size:14px;font-weight:800;" +
+        "letter-spacing:0.02em;margin-bottom:10px;" +
+        "font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;";
+      t.appendChild(head);
+      if (payload !== undefined) {
+        const pre = document.createElement("pre");
+        try {
+          pre.textContent =
+            typeof payload === "string" ? payload : JSON.stringify(payload, null, 2);
+        } catch {
+          pre.textContent = String(payload);
+        }
+        pre.style.cssText =
+          "margin:0;padding:10px 12px;background:#f4f6fa;border:1px solid #d8dde6;" +
+          "border-radius:8px;font-size:13px;" +
+          "font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;" +
+          "color:#1a1f2e;white-space:pre-wrap;word-break:break-word;" +
+          "max-height:160px;overflow:auto;";
+        t.appendChild(pre);
+      }
+      stack.prepend(t);
+      requestAnimationFrame(() => {
+        t.style.opacity = "1";
+        t.style.transform = "translateX(0) scale(1)";
+      });
+      setTimeout(() => {
+        t.style.opacity = "0";
+        t.style.transform = "translateX(40px) scale(0.95)";
+      }, 5000);
+      setTimeout(() => t.remove(), 5400);
+      while (stack.children.length > 5) stack.lastChild?.remove();
+    }
+
+    // Spy plugin — listen to every known plugin event and toast it.
+    const PS = (window as unknown as { Playerstack?: { Playerstack?: { use: (p: unknown) => unknown } } }).Playerstack?.Playerstack;
+    if (PS) {
+      const KNOWN_EVENTS = [
+        "thumb:click",
+        "cta:click",
+        "cta:replay",
+        "email-gate:submit",
+        "action-bar:click",
+        "action-bar:dismiss",
+        "chapter:jump",
+        "intro-card:play-click",
+        "intro-card:cta-click",
+        "intro-card:dismiss",
+      ];
+      const spyPlugin = {
+        name: "playground-spy",
+        init(ctx: { events: { on: (n: string, h: (p: unknown) => void) => void } }) {
+          for (const name of KNOWN_EVENTS) {
+            ctx.events.on(name, (payload: unknown) => showToast(name, payload));
+          }
+        },
+      };
+      try {
+        PS.use(spyPlugin);
+      } catch {
+        /* already registered (HMR re-run) */
+      }
+    }
+
     interface Preset {
       src: string;
       title: string;
@@ -245,14 +351,17 @@ import Base from "../layouts/Base.astro";
         ],
       },
       gdpr: {
-        src: "https://youtu.be/dQw4w9WgXcQ",
+        src: "https://youtu.be/_cMxraX_5RE",
         title: "Privacy-first embed",
-        poster: "https://i.ytimg.com/vi/dQw4w9WgXcQ/maxresdefault.jpg",
+        poster: "https://i.ytimg.com/vi/_cMxraX_5RE/maxresdefault.jpg",
         accent: "#008aff",
         clickToLoad: true,
         ctaTitle: "",
         btnLabel: "",
         btnUrl: "",
+        extra: {
+          brandedThumb: { playButtonStyle: "box" },
+        },
         tipTitle: "Zero YouTube cookies until interaction",
         tipSteps: [
           "Open DevTools → Network → filter for 'youtube' BEFORE clicking — should be empty.",
@@ -262,20 +371,27 @@ import Base from "../layouts/Base.astro";
         ],
       },
       branded: {
-        src: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
+        src: "https://media.w3.org/2010/05/sintel/trailer.mp4",
         title: "Branded look",
-        poster: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/images/BigBuckBunny.jpg",
+        poster: "https://media.w3.org/2010/05/sintel/poster.png",
         accent: "#a855f7",
         clickToLoad: false,
         ctaTitle: "",
         btnLabel: "",
         btnUrl: "",
-        tipTitle: "Custom poster + accent color in the player UI",
+        extra: {
+          brandedThumb: {
+            enabled: true,
+            playButtonStyle: "box",
+          },
+        },
+        tipTitle: "Custom poster overlay + big branded play button (Presto-style)",
         tipSteps: [
-          "Wait ~1 second for buffering — the spinner ring is purple (--media-primary-color from accent).",
-          "Hit play. Hover the player to reveal controls.",
-          "The progress bar fill, play button hover state, and slider thumb are all purple.",
-          "Inspect the inner <video> in DevTools — see --media-brand: #a855f7 inline.",
+          "Big rounded-square play button sits in the center, painted with the purple accent color.",
+          "Click anywhere on the overlay → it disappears, the inner <video> shows up, playback starts.",
+          "After play starts, hover the player to reveal the bottom control bar — also purple.",
+          "Try playButtonStyle: 'circle' or 'minimal' in data-config to see the other two styles.",
+          "This is the click-to-play 'cover' overlay — the same branded-thumb plugin powers click-to-load (preset 2/4).",
         ],
       },
       sales: {
@@ -287,6 +403,7 @@ import Base from "../layouts/Base.astro";
         ctaTitle: "Loved it? Get the full course.",
         btnLabel: "Enroll now →",
         btnUrl: "https://example.com/course?utm_source=playground",
+        extra: { ctaEnd: { showReplay: true } },
         tipTitle: "Sales funnel — privacy + end-card combo",
         tipSteps: [
           "Click overlay → YT loads, video auto-plays (one click).",
@@ -313,14 +430,15 @@ import Base from "../layouts/Base.astro";
         ],
       },
       "mp4-cta": {
-        src: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
+        src: "https://media.w3.org/2010/05/sintel/trailer.mp4",
         title: "Lesson 1",
-        poster: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/images/BigBuckBunny.jpg",
+        poster: "https://media.w3.org/2010/05/sintel/poster.png",
         accent: "#f59e0b",
         clickToLoad: false,
         ctaTitle: "Continue to Lesson 2",
         btnLabel: "Next lesson →",
         btnUrl: "https://example.com/lesson-2",
+        extra: { ctaEnd: { showReplay: true } },
         tipTitle: "Self-hosted MP4 with course end-card",
         tipSteps: [
           "Self-hosted MP4 — fully your video, no third-party.",
@@ -330,9 +448,9 @@ import Base from "../layouts/Base.astro";
         ],
       },
       chapters: {
-        src: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
+        src: "https://media.w3.org/2010/05/sintel/trailer.mp4",
         title: "With chapters",
-        poster: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/images/BigBuckBunny.jpg",
+        poster: "https://media.w3.org/2010/05/sintel/poster.png",
         accent: "#06b6d4",
         clickToLoad: false,
         ctaTitle: "",
@@ -342,24 +460,24 @@ import Base from "../layouts/Base.astro";
           chapters: {
             points: [
               { time: 0, label: "Intro" },
-              { time: 30, label: "Build-up" },
-              { time: 90, label: "Battle" },
-              { time: 180, label: "Resolution" },
+              { time: 13, label: "Rising action" },
+              { time: 28, label: "Climax" },
+              { time: 42, label: "Finale" },
             ],
           },
         },
         tipTitle: "4 chapter buttons appear UNDER the player",
         tipSteps: [
-          "Below the video you should see four buttons: 0:00 Intro, 0:30 Build-up, 1:30 Battle, 3:00 Resolution.",
-          "Click 'Battle' (1:30) — the player jumps there immediately.",
+          "Below the video you should see four buttons: 0:00 Intro, 0:13 Rising action, 0:28 Climax, 0:42 Finale.",
+          "Click 'Climax' (0:28) — the player jumps there immediately.",
           "Press play. As time passes the active chapter button gets the .active class.",
           "Watch the cyan accent on the slider fill as you scrub.",
         ],
       },
       "email-gate": {
-        src: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
-        title: "Behind a lead form",
-        poster: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/images/BigBuckBunny.jpg",
+        src: "https://media.w3.org/2010/05/sintel/trailer.mp4",
+        title: "Behind a lead form (open mode)",
+        poster: "https://media.w3.org/2010/05/sintel/poster.png",
         accent: "#ec4899",
         clickToLoad: false,
         ctaTitle: "",
@@ -371,22 +489,29 @@ import Base from "../layouts/Base.astro";
             at: "before",
             title: "Drop your email to watch the rest",
             buttonLabel: "Unlock video →",
+            // No webhookUrl/challengeUrl ⇒ "open mode": form pauses video,
+            // emits email-gate:submit on the bus, NEVER POSTs anywhere.
+            // For production lead capture you set BOTH webhookUrl and
+            // challengeUrl — see /docs/security/email-leads for full server
+            // protocol (Altcha PoW + single-use nonce + rate limit).
           },
         },
-        tipTitle: "Pink overlay covers the player on load",
+        tipTitle: "Pink overlay covers the player on load (open mode — no network call)",
         tipSteps: [
           "BEFORE you can play: heading + email input + 'Unlock video →' button.",
           "Submit a fake email (anything@anything.com works).",
           "Overlay disappears, video starts auto-playing.",
+          "Open DevTools → Network: NOTHING was POSTed. This is 'open mode' — email is only emitted on the in-memory event bus.",
           "Refresh the page — gate stays GONE (localStorage memo per src).",
           "DevTools → Application → Local Storage → playerstack:email-gate:... key with timestamp.",
           "To reset: clear localStorage and reload.",
+          "For production: set both `webhookUrl` AND `challengeUrl` — without challengeUrl the plugin REFUSES to render. Server protocol: /docs/security/email-leads.",
         ],
       },
       "action-bar": {
-        src: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
+        src: "https://media.w3.org/2010/05/sintel/trailer.mp4",
         title: "Mid-video bar",
-        poster: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/images/BigBuckBunny.jpg",
+        poster: "https://media.w3.org/2010/05/sintel/poster.png",
         accent: "#f59e0b",
         clickToLoad: false,
         ctaTitle: "",
@@ -414,9 +539,9 @@ import Base from "../layouts/Base.astro";
         ],
       },
       resume: {
-        src: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
+        src: "https://media.w3.org/2010/05/sintel/trailer.mp4",
         title: "Resume watching",
-        poster: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/images/BigBuckBunny.jpg",
+        poster: "https://media.w3.org/2010/05/sintel/poster.png",
         accent: "#10b981",
         clickToLoad: false,
         ctaTitle: "",
@@ -435,31 +560,38 @@ import Base from "../layouts/Base.astro";
         ],
       },
       autopreview: {
-        src: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
+        src: "https://media.w3.org/2010/05/sintel/trailer.mp4",
         title: "Pauses when scrolled away",
-        poster: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/images/BigBuckBunny.jpg",
-        accent: "#a855f7",
+        poster: "https://media.w3.org/2010/05/sintel/poster.png",
+        accent: "#06b6d4",
         clickToLoad: false,
         ctaTitle: "",
         btnLabel: "",
         btnUrl: "",
         extra: {
           preview: { enabled: true, threshold: 0.5 },
+          brandedThumb: {
+            enabled: true,
+            clickToLoad: false,
+            playButtonStyle: "box",
+            transparent: true,
+            unmuteOnPlay: true,
+            restartOnPlay: true,
+          },
         },
-        tipTitle: "Auto-pause/resume tied to viewport visibility",
+        tipTitle: "Muted preview is visible the whole time, branded play button stays on top",
         tipSteps: [
-          "Click play once (browser autoplay policy requires the gesture for cross-origin video).",
-          "Once playing: scroll down so the player leaves the viewport → it pauses automatically.",
-          "Scroll back so it's at least 50% visible → resumes muted.",
-          "Click the unmute button to hear sound.",
-          "Plugin always sets muted=true on resume so it never blasts audio after a scroll-back.",
-          "If you have prefers-reduced-motion enabled in OS settings, autopreview opts out entirely (no observer).",
+          "Video is silently auto-playing in a loop (muted) — visible behind the slight dim.",
+          "Big rounded-square play button stays anchored center the entire time, painted with the cyan accent.",
+          "Scroll the player out of view → preview pauses. Scroll back ≥50% visible → preview resumes.",
+          "Click the play button → dim disappears, video restarts from 0:00 with audio (unmuteOnPlay + restartOnPlay).",
+          "If you have prefers-reduced-motion enabled in OS settings, autopreview opts out entirely (no observer, no autoplay).",
         ],
       },
       sticky: {
-        src: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
+        src: "https://media.w3.org/2010/05/sintel/trailer.mp4",
         title: "Sticky on scroll",
-        poster: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/images/BigBuckBunny.jpg",
+        poster: "https://media.w3.org/2010/05/sintel/poster.png",
         accent: "#3b82f6",
         clickToLoad: false,
         ctaTitle: "",
@@ -477,29 +609,8 @@ import Base from "../layouts/Base.astro";
           "Click × to dismiss sticky for the rest of this page session.",
         ],
       },
-      "focus-mode": {
-        src: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
-        title: "Pauses when you blur the tab",
-        poster: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/images/BigBuckBunny.jpg",
-        accent: "#6366f1",
-        clickToLoad: false,
-        ctaTitle: "",
-        btnLabel: "",
-        btnUrl: "",
-        extra: {
-          focusMode: { enabled: true, resumeOnVisible: false },
-        },
-        tipTitle: "Tab-blur kills the playback",
-        tipSteps: [
-          "Hit play. Video starts.",
-          "Switch to a different browser tab (Cmd-T new tab, or click another existing tab).",
-          "Switch back. Video is paused.",
-          "Click play to continue (resumeOnVisible is false in this preset).",
-          "Use case: e-learning where you want students actively watching, not background-playing.",
-        ],
-      },
       "yt-subscribe": {
-        src: "https://youtu.be/dQw4w9WgXcQ",
+        src: "https://youtu.be/_cMxraX_5RE",
         title: "With subscribe bar",
         poster: "",
         accent: "#cc0000",
@@ -523,29 +634,56 @@ import Base from "../layouts/Base.astro";
         ],
       },
       "minimal-controls": {
-        src: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
-        title: "Just play + progress",
-        poster: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/images/BigBuckBunny.jpg",
+        src: "https://media.w3.org/2010/05/sintel/trailer.mp4",
+        title: "Play/pause only",
+        poster: "https://media.w3.org/2010/05/sintel/poster.png",
         accent: "#0ea5e9",
         clickToLoad: false,
         ctaTitle: "",
         btnLabel: "",
         btnUrl: "",
         extra: {
-          controls: { show: ["play", "progress"], accent: "#0ea5e9" },
+          controls: { show: ["play"], accent: "#0ea5e9" },
         },
-        tipTitle: "Strip the player UI down to play + progress only",
+        tipTitle: "Strip the player UI down to play/pause only",
         tipSteps: [
-          "Hover the player. The control bar is missing volume / fullscreen / settings / time.",
-          "Only the play button and the progress slider remain.",
-          "DevTools → head → look for <style data-playerstack='controls-policy'>: contains scoped 'display: none' rules per hidden control.",
-          "Useful for landing pages where you don't want the user to mute or skip.",
+          "Hover the player — only the play/pause button is visible. No progress, no volume, no fullscreen.",
+          "User can't skip — there's no seekable timeline.",
+          "User can still pause (unlike play-once / preset 15 which locks playback entirely).",
+          "DevTools → head → look for <style data-playerstack='controls-policy'>: contains scoped 'display: none' rules.",
+        ],
+      },
+      "play-once": {
+        src: "https://media.w3.org/2010/05/sintel/trailer.mp4",
+        title: "Watch to the end",
+        poster: "https://media.w3.org/2010/05/sintel/poster.png",
+        accent: "#dc2626",
+        clickToLoad: true,
+        ctaTitle: "",
+        btnLabel: "",
+        btnUrl: "",
+        extra: {
+          controls: { show: [], accent: "#dc2626" },
+          customCss: {
+            enabled: true,
+            // pointer-events:none on media-controller blocks click-to-pause gestures.
+            // The branded-thumb overlay sits outside media-controller so its click still works.
+            css: "media-controller { pointer-events: none; }",
+          },
+        },
+        tipTitle: "Play-once: no controls after start",
+        tipSteps: [
+          "Click the big red play button overlay — video starts.",
+          "No progress bar, no play/pause, no seeking anywhere.",
+          "Clicking the video does nothing — pointer-events disabled on the controller.",
+          "User must watch to the end.",
+          "Use case: unskippable intro, pre-roll, gated content proof-of-watch.",
         ],
       },
       analytics: {
-        src: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
+        src: "https://media.w3.org/2010/05/sintel/trailer.mp4",
         title: "Tracked playback",
-        poster: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/images/BigBuckBunny.jpg",
+        poster: "https://media.w3.org/2010/05/sintel/poster.png",
         accent: "#22c55e",
         clickToLoad: false,
         ctaTitle: "Subscribe?",
@@ -554,24 +692,110 @@ import Base from "../layouts/Base.astro";
         extra: {
           analytics: {
             enabled: true,
-            endpoint: "https://example.com/api/track",
+            endpoint: "https://httpbin.org/post",
+            debug: true,
             customProps: { source: "playground" },
           },
         },
-        tipTitle: "Every event is sent via navigator.sendBeacon",
+        tipTitle: "sendBeacon POST + console.log side by side",
         tipSteps: [
-          "DevTools → Network → filter for 'track' BEFORE clicking play.",
-          "Hit play → POST to example.com/api/track with body { event: 'play', src, data: {...customProps}, ts }.",
-          "Pause / play / scrub / seek → more beacon POSTs.",
-          "Watch to end → 'ended' event sent. Click the CTA → 'cta:click' beacon with label/url.",
-          "In real apps swap endpoint for your beacon endpoint or set provider: 'gtag' for GA4.",
-          "Note: example.com/api/track returns 404 — that's fine, sendBeacon is fire-and-forget.",
+          "Open DevTools → Console + Network tabs BEFORE clicking play.",
+          "Hit play → Console: [playerstack:analytics] play {...}. Network: POST to httpbin.org/post.",
+          "Pause, resume, watch to end, click CTA → each fires both a log and a beacon.",
+          "debug: true adds console.log on top of any provider — remove it in production.",
+          "Swap endpoint for your own API, or add provider: 'gtag' for GA4.",
+        ],
+      },
+      watermark: {
+        src: "https://media.w3.org/2010/05/sintel/trailer.mp4",
+        title: "Branded playback",
+        poster: "https://media.w3.org/2010/05/sintel/poster.png",
+        accent: "#008aff",
+        clickToLoad: false,
+        ctaTitle: "",
+        btnLabel: "",
+        btnUrl: "",
+        extra: {
+          watermark: {
+            enabled: true,
+            // SVG pill: play-icon circle + brand name, baked-in semi-transparent bg
+            src: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='148' height='34'%3E%3Crect width='148' height='34' rx='17' fill='rgba(0,0,0,0.45)'/%3E%3Ccircle cx='17' cy='17' r='11' fill='none' stroke='white' stroke-width='1.5' opacity='0.8'/%3E%3Cpolygon points='13,12 24,17 13,22' fill='white'/%3E%3Ctext x='38' y='22.5' font-family='system-ui,sans-serif' font-size='13' font-weight='600' fill='white' letter-spacing='1'%3EYour Brand%3C/text%3E%3C/svg%3E",
+            position: "top-right",
+            opacity: 1,
+            width: 148,
+            margin: 14,
+          },
+        },
+        tipTitle: "Corner-pinned brand overlay",
+        tipSteps: [
+          "Top-right: pill badge with play icon circle + 'ACME' brand name — SVG data URI, no external request.",
+          "Hover the player; controls overlay does NOT cover the watermark — it stays anchored on top.",
+          "Switch to fullscreen — the watermark stays in the corner.",
+          "Inspect <player-stack> in DevTools — see <div class='playerstack-watermark'> with the img inside.",
+          "Swap src for your own logo URL (PNG/SVG), or use text: '© Brand' for a plain text pill instead.",
+        ],
+      },
+      "custom-css": {
+        src: "https://media.w3.org/2010/05/sintel/trailer.mp4",
+        title: "Custom CSS scoping",
+        poster: "https://media.w3.org/2010/05/sintel/poster.png",
+        accent: "#a855f7",
+        clickToLoad: false,
+        ctaTitle: "",
+        btnLabel: "",
+        btnUrl: "",
+        extra: {
+          customCss: {
+            enabled: true,
+            css: "border-radius: 20px; box-shadow: 0 0 0 3px #a855f7, 0 20px 60px rgba(168,85,247,0.45); & video { filter: contrast(1.2) saturate(1.5) brightness(1.05); } & media-control-bar { background: rgba(168,85,247,0.25); backdrop-filter: blur(16px); border-top: 1px solid rgba(168,85,247,0.5); }",
+          },
+        },
+        tipTitle: "Arbitrary scoped CSS via native CSS Nesting",
+        tipSteps: [
+          "Player has 20px rounded corners + purple ring outline + purple glow shadow.",
+          "Video itself has boosted contrast + saturation (filter: contrast/saturate/brightness).",
+          "Hover for controls — the bar is purple-tinted frosted glass (backdrop-filter: blur).",
+          "Inspect <head> in DevTools → <style data-playerstack='custom-css'> with your CSS wrapped in player-stack[data-ps-id='ps-N'] { ... }.",
+          "Open another <player-stack> on the page — its CSS is scoped independently, no leakage.",
+          "Reject test: paste '@import url(\"https://evil.test/styles.css\")' into the css field — plugin renders nothing (security).",
+        ],
+      },
+      "intro-card": {
+        src: "https://media.w3.org/2010/05/sintel/trailer.mp4",
+        title: "Lesson 1 — Kick-off",
+        poster: "https://media.w3.org/2010/05/sintel/poster.png",
+        accent: "#a855f7",
+        clickToLoad: false,
+        ctaTitle: "",
+        btnLabel: "",
+        btnUrl: "",
+        extra: {
+          introCard: {
+            enabled: true,
+            badge: "FREE PREVIEW",
+            title: "Lesson 1: Build your first plugin",
+            subtitle: "5 minutes — what you'll learn and why it matters",
+            cta: {
+              label: "Get the full course →",
+              url: "https://example.com/course",
+              utm: "utm_source=intro-card&utm_medium=video",
+            },
+          },
+        },
+        tipTitle: "Pre-roll marketing splash with title + subtitle + CTA + big play button",
+        tipSteps: [
+          "You see a fullscreen dark overlay: 'FREE PREVIEW' badge → big title 'Lesson 1: Build your first plugin' → subtitle line → big purple play button → 'Get the full course →' CTA underneath.",
+          "Click the big play button → overlay disappears, video starts immediately. Emits `intro-card:play-click`.",
+          "Click the CTA → opens example.com/course in a new tab with utm appended. Overlay STAYS so you can come back and play. Emits `intro-card:cta-click`.",
+          "Try theme: 'transparent' or 'light' in data-config to see the other looks.",
+          "Try position: 'bottom' (bar) or 'center' (floating card) instead of fullscreen.",
+          "Add `dismissible: true` and a small × close button appears top-right. Closing emits `intro-card:dismiss`.",
         ],
       },
       "full-stack": {
-        src: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
+        src: "https://media.w3.org/2010/05/sintel/trailer.mp4",
         title: "Everything on",
-        poster: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/images/BigBuckBunny.jpg",
+        poster: "https://media.w3.org/2010/05/sintel/poster.png",
         accent: "#8b5cf6",
         clickToLoad: true,
         ctaTitle: "Liked it?",
@@ -581,8 +805,8 @@ import Base from "../layouts/Base.astro";
           chapters: {
             points: [
               { time: 0, label: "Intro" },
-              { time: 60, label: "Demo" },
-              { time: 180, label: "Wrap-up" },
+              { time: 18, label: "Demo" },
+              { time: 38, label: "Wrap-up" },
             ],
           },
           actionBar: {
@@ -594,16 +818,17 @@ import Base from "../layouts/Base.astro";
           savedPosition: { enabled: true },
           preview: { enabled: false },
           sticky: { enabled: true },
-          focusMode: { enabled: true },
           analytics: { enabled: true, provider: "gtag" },
+          watermark: { enabled: true, text: "© ACME", position: "top-right", opacity: 0.8 },
+          customCss: { enabled: true, css: "border-radius: 12px; overflow: hidden;" },
         },
-        tipTitle: "All 13 plugins firing simultaneously",
+        tipTitle: "All 14 plugins firing simultaneously",
         tipSteps: [
           "Player is gated by clickToLoad — click the play overlay first.",
           "Below the player you see 3 chapter buttons.",
+          "Top-right: watermark '© ACME'. Player itself has rounded corners (custom-css).",
           "Wait 10s into playback → action-bar 'Try the playground →' slides in.",
           "Scroll down while playing → sticky pin to corner.",
-          "Switch tab and back → focus-mode pauses.",
           "Pause + reload → saved-position resumes you where you left off.",
           "Watch to end → CTA-end card 'Liked it? Get the course' shows.",
           "Open DevTools console → analytics is set to provider: 'gtag' (no gtag loaded so it's a no-op, but listeners are attached).",
@@ -735,7 +960,10 @@ import Base from "../layouts/Base.astro";
     font-size: 14px;
   }
   input[type="color"] { width: 100%; height: 36px; border: 1px solid var(--border); border-radius: 6px; background: transparent; }
-  .player-wrap { background: #000; border-radius: 12px; overflow: hidden; aspect-ratio: 16/9; position: relative; }
+  /* No aspect-ratio / overflow here — <player-stack> sets its own 16:9 frame
+     in core's DEFAULT_STYLES. Wrapping it in another aspect-ratio container
+     would clip plugins that mount as siblings (chapters, yt-subscribe). */
+  .player-wrap { display: block; }
   .preset-tip {
     margin-top: 16px;
     padding: 14px 16px;
@@ -770,4 +998,5 @@ import Base from "../layouts/Base.astro";
     cursor: pointer;
     font-weight: 500;
   }
+
 </style>

@@ -22,7 +22,7 @@ Initial release. MIT, plugin-first, framework-agnostic embeddable video player.
   inner element; plugins talk to it via the standard HTML5 media API
   (`play`, `pause`, `ended`, `timeupdate`, `canplay`).
 
-### Plugins (13, all MIT)
+### Plugins (15, all MIT)
 
 Marketing:
 
@@ -45,6 +45,11 @@ Performance & UX:
 - `@playerstack/plugin-controls-policy` — show/hide controls via whitelist; theme via `--ps-accent` / `--ps-bg-opacity` CSS vars; CSS-injection-safe color values
 - `@playerstack/plugin-sticky` — corner-pin on scroll while playing
 
+Branding:
+
+- `@playerstack/plugin-watermark` — corner-pinned logo (image) or text overlay with optional click-through; configurable position, opacity, margin, width
+- `@playerstack/plugin-custom-css` — inject arbitrary CSS scoped to a single `<player-stack>` instance via native CSS Nesting; Presto Pro feature parity. Sanitizes `</style>`, `@import`, `expression(`, `javascript:`
+
 Analytics & integrations:
 
 - `@playerstack/plugin-analytics` — beacon / `gtag` event forwarder
@@ -52,22 +57,22 @@ Analytics & integrations:
 
 ### Bundle
 
-- Standalone `playerstack` UMD pre-registers all 13 marketing/e-learning/performance/analytics plugins
-- 787 KB raw / 231.6 KB gzipped — every Mux media-element bundled so a single `<script>` tag covers every source type
+- Standalone `playerstack` UMD pre-registers all 15 marketing/e-learning/performance/branding/analytics plugins
+- 790 KB raw / 232.3 KB gzipped — every Mux media-element bundled so a single `<script>` tag covers every source type
 - Lazy-loading the wrapper elements per source type (so MP4-only pages skip YouTube/Vimeo/HLS) is on the post-v0.1 roadmap
 
 ### Tests
 
-- 203 unit tests across 15 packages (strict TDD, Vitest + happy-dom)
+- 237 unit tests across 17 packages (strict TDD, Vitest + happy-dom)
 - 4 Playwright E2E tests targeting `apps/playground`
 - All green on CI
 
 ### Documentation
 
-- Astro 6 docs site at `playerstack.sellf.app` — landing, full `/docs` (getting-started, API, recipes, per-plugin pages), interactive `/playground` with 17 presets and per-preset "what to look for" tip panels
+- Astro 6 docs site at `playerstack.sellf.app` — landing, full `/docs` (getting-started, API, recipes, per-plugin pages), interactive `/playground` with 19 presets and per-preset "what to look for" tip panels
 - robots.txt + llms.txt + sitemap + JSON-LD `SoftwareApplication` schema + OG/Twitter meta
 
 ### License
 
-- Core + 14 MVP plugins: **MIT**
+- Core + 16 MVP plugins: **MIT**
 - Premium plugins (post-MVP): `@playerstack-pro/*`, proprietary, separate repo

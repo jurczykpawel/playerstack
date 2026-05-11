@@ -42,7 +42,10 @@ export const ytSubscribePlugin: PlayerstackPlugin = {
       "background:#cc0000;color:#fff;padding:6px 14px;border-radius:4px;text-decoration:none;font-weight:600;";
     bar.appendChild(link);
 
-    ctx.container.appendChild(bar);
+    // Mount as a sibling AFTER <player-stack>: the container has
+    // overflow:hidden + aspect-ratio:16/9 default styles, so anything appended
+    // inside is clipped out of view.
+    ctx.container.insertAdjacentElement("afterend", bar);
     states.set(ctx, { bar });
   },
   destroy(ctx: PlayerstackContext): void {

@@ -21,7 +21,7 @@ This is the standalone bundle for `<script src=...>` use. For composable usage (
 
 ## What's bundled
 
-This bundle pre-registers all 13 plugins:
+This bundle pre-registers all 15 plugins:
 
 - [`@playerstack/plugin-sources`](https://www.npmjs.com/package/@playerstack/plugin-sources) — YouTube, Vimeo, MP4, HLS, WebM, DASH auto-detect
 - [`@playerstack/plugin-controls-policy`](https://www.npmjs.com/package/@playerstack/plugin-controls-policy) — theme + show/hide controls
@@ -36,6 +36,8 @@ This bundle pre-registers all 13 plugins:
 - [`@playerstack/plugin-focus-mode`](https://www.npmjs.com/package/@playerstack/plugin-focus-mode) — auto-pause on tab blur
 - [`@playerstack/plugin-analytics`](https://www.npmjs.com/package/@playerstack/plugin-analytics) — beacon / gtag forwarder
 - [`@playerstack/plugin-yt-subscribe`](https://www.npmjs.com/package/@playerstack/plugin-yt-subscribe) — subscribe-on-YouTube bar
+- [`@playerstack/plugin-watermark`](https://www.npmjs.com/package/@playerstack/plugin-watermark) — corner-pinned logo/text overlay
+- [`@playerstack/plugin-custom-css`](https://www.npmjs.com/package/@playerstack/plugin-custom-css) — arbitrary scoped CSS injection
 
 The Sellf adapter is **not** bundled — install it separately if you need it.
 
@@ -43,7 +45,7 @@ The Sellf adapter is **not** bundled — install it separately if you need it.
 
 | File                      | Size   | Gzipped  |
 | ------------------------- | ------ | -------- |
-| `dist/playerstack.min.js` | 787 KB | 231.6 KB |
+| `dist/playerstack.min.js` | 790 KB | 232.3 KB |
 
 The bundle ships every Mux media-element (native `<video>`, `<youtube-video>`, `<vimeo-video>`, `<hls-video>`) so a single `<script>` tag covers every source type. Lazy-loading wrappers per source type (so MP4-only pages skip YouTube/Vimeo/HLS) is on the post-v0.2 roadmap. If size matters more than convenience, use the scoped `@playerstack/*` packages and bundle only what you need.
 

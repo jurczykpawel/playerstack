@@ -65,11 +65,11 @@ describe("savedPositionPlugin", () => {
     expect(localStorage.getItem("playerstack:pos:https://example.com/v.mp4")).toBe("25");
   });
 
-  it("restores saved position on loaded-metadata", async () => {
+  it("restores saved position on loadedmetadata", async () => {
     localStorage.setItem("playerstack:pos:https://example.com/v.mp4", "42");
     const ctx = makeContext({ savedPosition: { enabled: true } });
     await savedPositionPlugin.init(ctx);
-    ctx.mediaPlayer.dispatchEvent(new Event("loaded-metadata"));
+    ctx.mediaPlayer.dispatchEvent(new Event("loadedmetadata"));
     const player = ctx.mediaPlayer as HTMLElement & { currentTime: number };
     expect(player.currentTime).toBe(42);
   });
@@ -78,7 +78,7 @@ describe("savedPositionPlugin", () => {
     localStorage.setItem("playerstack:pos:https://example.com/v.mp4", "98");
     const ctx = makeContext({ savedPosition: { enabled: true } });
     await savedPositionPlugin.init(ctx);
-    ctx.mediaPlayer.dispatchEvent(new Event("loaded-metadata"));
+    ctx.mediaPlayer.dispatchEvent(new Event("loadedmetadata"));
     const player = ctx.mediaPlayer as HTMLElement & { currentTime: number };
     expect(player.currentTime).toBe(0);
   });

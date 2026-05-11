@@ -1,23 +1,24 @@
 ---
 layout: ../../../layouts/Docs.astro
 title: Plugins — Playerstack
-description: Overview of the 14 first-party plugins shipped with Playerstack.
+description: Overview of the 17 first-party plugins shipped with Playerstack.
 ---
 
 # Plugin overview
 
-Every Playerstack feature beyond "play a video" is a plugin. The standalone bundle pre-registers 13 of them; `sellf-adapter` is opt-in.
+Every Playerstack feature beyond "play a video" is a plugin. The standalone bundle pre-registers 16 of them; `sellf-adapter` is opt-in.
 
 ## Marketing
 
-| Plugin                                       | What it does                                           |
-| -------------------------------------------- | ------------------------------------------------------ |
-| [branded-thumb](/docs/plugins/branded-thumb) | Custom poster + click-to-load (LCP + GDPR)             |
-| [cta-end](/docs/plugins/cta-end)             | Overlay HTML at end of video, button with UTM, replay  |
-| [action-bar](/docs/plugins/action-bar)       | Mid-video dismissible banner with CTA                  |
-| [email-gate](/docs/plugins/email-gate)       | Lead capture: pause and require email to keep watching |
-| [yt-subscribe](/docs/plugins/yt-subscribe)   | Subscribe-on-YouTube bar below the player              |
-| [autopreview](/docs/plugins/autopreview)     | Muted autoplay when in viewport                        |
+| Plugin                                       | What it does                                                      |
+| -------------------------------------------- | ----------------------------------------------------------------- |
+| [intro-card](/docs/plugins/intro-card)       | Pre-roll splash with title, subtitle, badge, CTA, big play button |
+| [branded-thumb](/docs/plugins/branded-thumb) | Custom poster + click-to-load (LCP + GDPR)                        |
+| [cta-end](/docs/plugins/cta-end)             | Overlay HTML at end of video, button with UTM, replay             |
+| [action-bar](/docs/plugins/action-bar)       | Mid-video dismissible banner with CTA                             |
+| [email-gate](/docs/plugins/email-gate)       | Lead capture: pause and require email to keep watching            |
+| [yt-subscribe](/docs/plugins/yt-subscribe)   | Subscribe-on-YouTube bar below the player                         |
+| [autopreview](/docs/plugins/autopreview)     | Muted autoplay when in viewport                                   |
 
 ## E-Learning
 
@@ -34,6 +35,13 @@ Every Playerstack feature beyond "play a video" is a plugin. The standalone bund
 | [sources](/docs/plugins/sources)                 | Auto-detects YT/Vimeo/MP4/HLS/WebM/DASH from one URL |
 | [controls-policy](/docs/plugins/controls-policy) | Theme color, show/hide controls                      |
 | [sticky](/docs/plugins/sticky)                   | Pin to viewport corner when scrolled past            |
+
+## Branding
+
+| Plugin                                 | What it does                                                                  |
+| -------------------------------------- | ----------------------------------------------------------------------------- |
+| [watermark](/docs/plugins/watermark)   | Corner-pinned logo or text overlay, optional click-through                    |
+| [custom-css](/docs/plugins/custom-css) | Inject arbitrary scoped CSS — escape hatch for anything controls-policy lacks |
 
 ## Analytics & Integrations
 

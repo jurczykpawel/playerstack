@@ -40,8 +40,10 @@ export const actionBarPlugin: PlayerstackPlugin = {
       removeTimeListener?.();
       removeTimeListener = null;
       const bar = renderBar(cfg, ctx);
-      const wrapper = ensurePositionedParent(ctx.mediaPlayer);
-      wrapper.appendChild(bar);
+      // Mount on <player-stack> directly — has position:relative + aspect-ratio
+      // + overflow from core DEFAULT_STYLES. Mounting inside <media-controller>
+      // would interleave with Mux's shadow DOM stacking.
+      ctx.container.appendChild(bar);
     };
 
     const atPercent = cfg.atPercent;
@@ -137,13 +139,4 @@ function appendUtm(url: string, utm?: string): string {
   if (!utm) return url;
   const sep = url.includes("?") ? "&" : "?";
   return `${url}${sep}${utm}`;
-}
-
-function ensurePositionedParent(mediaPlayer: HTMLElement): HTMLElement {
-  const parent = mediaPlayer.parentElement;
-  if (parent) {
-    if (!parent.style.position) parent.style.position = "relative";
-    return parent;
-  }
-  return mediaPlayer;
 }

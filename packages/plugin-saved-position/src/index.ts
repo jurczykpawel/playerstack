@@ -62,15 +62,17 @@ export const savedPositionPlugin: PlayerstackPlugin = {
       localStorage.removeItem(key);
     };
 
+    // Native HTML5 media events are non-hyphenated. Vidstack used "loaded-metadata"
+    // pre-migration; Mux media-elements + native <video> dispatch "loadedmetadata".
     ctx.mediaPlayer.addEventListener("timeupdate", onTime);
-    ctx.mediaPlayer.addEventListener("loaded-metadata", onLoadedMetadata);
+    ctx.mediaPlayer.addEventListener("loadedmetadata", onLoadedMetadata);
     ctx.mediaPlayer.addEventListener("ended", onEnded);
 
     states.set(ctx, {
       cleanup: () => {
         if (saveTimer) clearTimeout(saveTimer);
         ctx.mediaPlayer.removeEventListener("timeupdate", onTime);
-        ctx.mediaPlayer.removeEventListener("loaded-metadata", onLoadedMetadata);
+        ctx.mediaPlayer.removeEventListener("loadedmetadata", onLoadedMetadata);
         ctx.mediaPlayer.removeEventListener("ended", onEnded);
       },
     });

@@ -29,8 +29,10 @@ export const ctaEndPlugin: PlayerstackPlugin = {
     const onEnded = () => {
       removeOverlay(ctx);
       const overlay = renderOverlay(ctx, cfg);
-      const wrapper = ensurePositionedParent(ctx.mediaPlayer);
-      wrapper.appendChild(overlay);
+      // Mount on <player-stack> (ctx.container) — has position:relative +
+      // aspect-ratio + overflow from core DEFAULT_STYLES. Mounting inside
+      // <media-controller> would tangle with Mux's shadow DOM stacking.
+      ctx.container.appendChild(overlay);
     };
     ctx.mediaPlayer.addEventListener("ended", onEnded);
 
@@ -51,7 +53,9 @@ function renderOverlay(ctx: PlayerstackContext, cfg: CtaEndConfig): HTMLElement 
   const overlay = document.createElement("div");
   overlay.className = "playerstack-cta";
   overlay.style.cssText =
-    "position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;background:rgba(0,0,0,0.7);color:#fff;padding:24px;text-align:center;";
+    "position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;" +
+    "justify-content:center;gap:16px;background:rgba(0,0,0,0.7);color:#fff;" +
+    "padding:24px;text-align:center;z-index:3;";
 
   if (cfg.title) {
     const h = document.createElement("h3");
@@ -111,13 +115,4 @@ function appendUtm(url: string, utm?: string): string {
   if (!utm) return url;
   const sep = url.includes("?") ? "&" : "?";
   return `${url}${sep}${utm}`;
-}
-
-function ensurePositionedParent(mediaPlayer: HTMLElement): HTMLElement {
-  const parent = mediaPlayer.parentElement;
-  if (parent) {
-    if (!parent.style.position) parent.style.position = "relative";
-    return parent;
-  }
-  return mediaPlayer;
 }

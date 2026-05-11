@@ -2,6 +2,14 @@ export interface PlayerstackConfig {
   src: string;
   poster?: string;
   title?: string;
+  /**
+   * Opt-in CORS mode for the inner media element. Default is unset — most
+   * public MP4 hosts (W3C, GCS, plain S3, …) don't ship CORS headers, so
+   * forcing `crossorigin` would silently break playback. Only set this when
+   * you genuinely need cross-origin `<track>` captions, Canvas extraction,
+   * or Web Audio.
+   */
+  crossorigin?: "anonymous" | "use-credentials";
   [key: string]: unknown;
 }
 

@@ -17,7 +17,7 @@ import PlayerStack from "./PlayerStack.vue";
 
 const sources = [
   "https://youtu.be/_cMxraX_5RE",
-  "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
+  "https://media.w3.org/2010/05/sintel/trailer.mp4",
   "https://vimeo.com/76979871",
 ];
 let idx = 0;

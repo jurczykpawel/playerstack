@@ -4,8 +4,11 @@ import { createEventBus } from "@playerstack/core";
 import type { PlayerstackContext, PlayerstackConfig } from "@playerstack/core";
 
 function makeContext(extra: Partial<PlayerstackConfig> = {}): PlayerstackContext {
+  const wrapper = document.createElement("div");
+  document.body.appendChild(wrapper);
   const container = document.createElement("div");
-  document.body.appendChild(container);
+  container.id = "ps-container";
+  wrapper.appendChild(container);
   const mediaPlayer = document.createElement("media-player") as HTMLElement & {
     currentTime: number;
   };
@@ -17,6 +20,13 @@ function makeContext(extra: Partial<PlayerstackConfig> = {}): PlayerstackContext
     mediaPlayer,
     config: { src: "https://example.com/v.mp4", ...extra },
   } as PlayerstackContext;
+}
+
+function findChaptersList(ctx: PlayerstackContext): HTMLElement | null {
+  return (
+    ctx.container.parentElement?.querySelector<HTMLElement>(".playerstack-chapters") ??
+    ctx.container.querySelector<HTMLElement>(".playerstack-chapters")
+  );
 }
 
 afterEach(() => {
@@ -31,7 +41,7 @@ describe("chaptersPlugin", () => {
   it("does nothing when chapters config is missing", async () => {
     const ctx = makeContext();
     await chaptersPlugin.init(ctx);
-    expect(ctx.container.querySelector(".playerstack-chapters")).toBeNull();
+    expect(findChaptersList(ctx)).toBeNull();
   });
 
   it("renders one button per chapter point", async () => {
@@ -45,10 +55,26 @@ describe("chaptersPlugin", () => {
       },
     });
     await chaptersPlugin.init(ctx);
-    const buttons = ctx.container.querySelectorAll(".playerstack-chapter");
+    const list = findChaptersList(ctx)!;
+    const buttons = list.querySelectorAll(".playerstack-chapter");
     expect(buttons.length).toBe(3);
     expect(buttons[0]?.textContent).toContain("Intro");
     expect(buttons[1]?.textContent).toContain("Body");
+  });
+
+  it("mounts the list AFTER <player-stack> as a sibling, NOT inside the container", async () => {
+    // The container has overflow:hidden + aspect-ratio:16/9 default styles
+    // (set by core in DEFAULT_STYLES). Mounting chapters inside would clip
+    // them out of view. Sibling mount keeps the list visible below the player.
+    const ctx = makeContext({
+      chapters: { points: [{ time: 0, label: "Intro" }] },
+    });
+    await chaptersPlugin.init(ctx);
+    expect(ctx.container.querySelector(".playerstack-chapters")).toBeNull();
+    const list = ctx.container.parentElement?.querySelector(".playerstack-chapters");
+    expect(list).not.toBeNull();
+    // Specifically: list is the next sibling of <player-stack>.
+    expect(ctx.container.nextElementSibling).toBe(list);
   });
 
   it("clicking a chapter sets mediaPlayer.currentTime", async () => {
@@ -56,7 +82,7 @@ describe("chaptersPlugin", () => {
       chapters: { points: [{ time: 30, label: "Body" }] },
     });
     await chaptersPlugin.init(ctx);
-    const btn = ctx.container.querySelector(".playerstack-chapter") as HTMLButtonElement;
+    const btn = findChaptersList(ctx)!.querySelector(".playerstack-chapter") as HTMLButtonElement;
     btn.click();
     expect((ctx.mediaPlayer as unknown as { currentTime: number }).currentTime).toBe(30);
   });
@@ -75,7 +101,7 @@ describe("chaptersPlugin", () => {
     const player = ctx.mediaPlayer as HTMLElement & { currentTime: number };
     player.currentTime = 35;
     ctx.mediaPlayer.dispatchEvent(new Event("timeupdate"));
-    const buttons = ctx.container.querySelectorAll(".playerstack-chapter");
+    const buttons = findChaptersList(ctx)!.querySelectorAll(".playerstack-chapter");
     expect(buttons[0]?.classList.contains("active")).toBe(false);
     expect(buttons[1]?.classList.contains("active")).toBe(true);
     expect(buttons[2]?.classList.contains("active")).toBe(false);
@@ -88,7 +114,7 @@ describe("chaptersPlugin", () => {
     const handler = vi.fn();
     ctx.events.on("chapter:jump", handler);
     await chaptersPlugin.init(ctx);
-    const btn = ctx.container.querySelector(".playerstack-chapter") as HTMLButtonElement;
+    const btn = findChaptersList(ctx)!.querySelector(".playerstack-chapter") as HTMLButtonElement;
     btn.click();
     expect(handler).toHaveBeenCalledWith({ time: 30, label: "Body" });
   });
@@ -99,6 +125,6 @@ describe("chaptersPlugin", () => {
     });
     await chaptersPlugin.init(ctx);
     chaptersPlugin.destroy?.(ctx);
-    expect(ctx.container.querySelector(".playerstack-chapters")).toBeNull();
+    expect(findChaptersList(ctx)).toBeNull();
   });
 });

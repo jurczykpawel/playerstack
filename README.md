@@ -3,7 +3,7 @@
 [![CI](https://github.com/jurczykpawel/playerstack/actions/workflows/ci.yml/badge.svg)](https://github.com/jurczykpawel/playerstack/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![npm](https://img.shields.io/npm/v/playerstack.svg)](https://www.npmjs.com/package/playerstack)
-[![Tests](https://img.shields.io/badge/tests-205%20unit%20%2B%204%20e2e-brightgreen.svg)](#testing)
+[![Tests](https://img.shields.io/badge/tests-237%20unit%20%2B%204%20e2e-brightgreen.svg)](#testing)
 
 Embeddable video player for any HTML page. One script tag. YouTube, Vimeo, MP4, HLS. Brand it, add CTAs, gate emails — all via plugins. **MIT.**
 
@@ -38,6 +38,7 @@ Presto Player has the marketing layer — only for WordPress.
 
 | Plugin                              | What it does                                                                    |
 | ----------------------------------- | ------------------------------------------------------------------------------- |
+| `@playerstack/plugin-intro-card`    | Pre-roll marketing splash: title, subtitle, badge, CTA, big play button         |
 | `@playerstack/plugin-branded-thumb` | Custom poster + click-to-load (LCP + GDPR — no third-party cookies until click) |
 | `@playerstack/plugin-cta-end`       | Overlay HTML at end of video, button with UTM, replay                           |
 | `@playerstack/plugin-action-bar`    | Mid-video dismissible banner with CTA button                                    |
@@ -61,6 +62,13 @@ Presto Player has the marketing layer — only for WordPress.
 | `@playerstack/plugin-controls-policy` | Theme color, show/hide controls via whitelist                   |
 | `@playerstack/plugin-sticky`          | Pin to viewport corner when scrolled past during playback       |
 
+**Branding**
+
+| Plugin                           | What it does                                                                  |
+| -------------------------------- | ----------------------------------------------------------------------------- |
+| `@playerstack/plugin-watermark`  | Corner-pinned logo or text overlay with optional click-through                |
+| `@playerstack/plugin-custom-css` | Inject arbitrary scoped CSS — escape hatch for anything controls-policy lacks |
+
 **Analytics & Integrations**
 
 | Plugin                              | What it does                                                       |
@@ -68,7 +76,7 @@ Presto Player has the marketing layer — only for WordPress.
 | `@playerstack/plugin-analytics`     | Forward events to a beacon endpoint or `gtag` (Google Analytics 4) |
 | `@playerstack/plugin-sellf-adapter` | Fetch config from a Sellf product endpoint (opt-in)                |
 
-The standalone `playerstack` bundle pre-registers all 13 marketing/e-learning/performance/analytics plugins. Use scoped packages directly for a custom bundle.
+The standalone `playerstack` bundle pre-registers all 16 marketing/e-learning/performance/branding/analytics plugins. Use scoped packages directly for a custom bundle.
 
 ## Repo layout
 
@@ -80,10 +88,21 @@ packages/
   plugin-autopreview/         @playerstack/plugin-autopreview
   plugin-branded-thumb/       @playerstack/plugin-branded-thumb
   plugin-cta-end/             @playerstack/plugin-cta-end
+  plugin-action-bar/          @playerstack/plugin-action-bar
+  plugin-email-gate/          @playerstack/plugin-email-gate
+  plugin-chapters/            @playerstack/plugin-chapters
+  plugin-saved-position/      @playerstack/plugin-saved-position
+  plugin-sticky/              @playerstack/plugin-sticky
+  plugin-focus-mode/          @playerstack/plugin-focus-mode
+  plugin-analytics/           @playerstack/plugin-analytics
+  plugin-yt-subscribe/        @playerstack/plugin-yt-subscribe
+  plugin-watermark/           @playerstack/plugin-watermark
+  plugin-custom-css/          @playerstack/plugin-custom-css
+  plugin-intro-card/          @playerstack/plugin-intro-card
   plugin-sellf-adapter/       @playerstack/plugin-sellf-adapter
   embed/                      playerstack (standalone UMD bundle)
 apps/
-  playground/                 local Vite dev demo
+  playground/                 local Vite dev demo (Playwright e2e target)
   docs/                       Astro site (playerstack.sellf.app)
 ```
 
@@ -138,7 +157,7 @@ Each wrapper exposes a real `<video>` (or iframe for YT/Vimeo), so browser autop
 
 ## License
 
-- Core + 6 MVP plugins: **MIT**
+- Core + 16 MVP plugins: **MIT**
 - Premium plugins (post-MVP): `@playerstack-pro/*`, proprietary
 - Site / docs: MIT
 

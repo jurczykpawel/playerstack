@@ -11,7 +11,7 @@ Playerstack is a thin layer on top of Mux's media-chrome and media-elements with
 <player-stack src="https://youtu.be/dQw4w9WgXcQ"></player-stack>
 ```
 
-## Plugins (all 13 ship in the standalone bundle, all MIT)
+## Plugins (all 16 ship in the standalone bundle, all MIT)
 - `@playerstack/plugin-sources` — auto-detects YouTube, Vimeo, MP4, HLS, WebM, DASH
 - `@playerstack/plugin-controls-policy` — theme color, show/hide controls
 - `@playerstack/plugin-autopreview` — muted autoplay in viewport, respects prefers-reduced-motion
@@ -25,12 +25,15 @@ Playerstack is a thin layer on top of Mux's media-chrome and media-elements with
 - `@playerstack/plugin-focus-mode` — auto-pause on tab blur
 - `@playerstack/plugin-analytics` — beacon / gtag forwarder
 - `@playerstack/plugin-yt-subscribe` — subscribe-on-YouTube bar
+- `@playerstack/plugin-watermark` — corner-pinned logo/text overlay
+- `@playerstack/plugin-custom-css` — arbitrary scoped CSS injection (Presto Pro parity)
+- `@playerstack/plugin-intro-card` — pre-roll marketing splash (title, subtitle, badge, CTA, big play button)
 
 ## Stack
 Bun monorepo. TypeScript strict. Engine: Mux media-chrome + media-elements (MIT). esbuild bundler. Astro docs site.
 
 ## License
-MIT for core and all 13 plugins. Premium plugins (post-MVP) are proprietary.
+MIT for core and all 16 plugins. Premium plugins (post-MVP) are proprietary.
 
 ## Links
 - Site: https://playerstack.sellf.app

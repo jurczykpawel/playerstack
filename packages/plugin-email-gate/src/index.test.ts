@@ -5,6 +5,10 @@ import type { PlayerstackContext, PlayerstackConfig } from "@playerstack/core";
 
 function makeContext(extra: Partial<PlayerstackConfig> = {}): PlayerstackContext {
   const container = document.createElement("div");
+  document.body.appendChild(container);
+  // Use a fake custom element tag so happy-dom doesn't enforce HTMLVideoElement's
+  // readonly duration/currentTime getters. The plugin only relies on
+  // addEventListener/dispatchEvent + duck-typed currentTime/duration/pause/play.
   const mediaPlayer = document.createElement("media-player") as unknown as HTMLElement & {
     pause: ReturnType<typeof vi.fn>;
     play: ReturnType<typeof vi.fn>;
@@ -43,7 +47,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
-  document.querySelectorAll(".playerstack-email-gate").forEach((el) => el.remove());
+  document.body.innerHTML = "";
 });
 
 describe("emailGatePlugin", () => {
@@ -57,7 +61,7 @@ describe("emailGatePlugin", () => {
     expect(ctx.container.querySelector(".playerstack-email-gate")).toBeNull();
   });
 
-  it("with at='before': shows form immediately and pauses video", async () => {
+  it("with at='before' (open mode, no webhook): shows form immediately and pauses video", async () => {
     const ctx = makeContext({ emailGate: { enabled: true, at: "before" } });
     await emailGatePlugin.init(ctx);
     expect(ctx.container.querySelector(".playerstack-email-gate")).not.toBeNull();
@@ -73,7 +77,34 @@ describe("emailGatePlugin", () => {
     expect(ctx.container.querySelector("button[type='submit']")).not.toBeNull();
   });
 
-  it("submitting valid email emits email-gate:submit and removes overlay", async () => {
+  it("renders an off-screen honeypot field", async () => {
+    const ctx = makeContext({ emailGate: { enabled: true, at: "before" } });
+    await emailGatePlugin.init(ctx);
+    const honey = ctx.container.querySelector("input[name='website']") as HTMLInputElement;
+    expect(honey).not.toBeNull();
+    expect(honey.tabIndex).toBe(-1);
+    expect(honey.style.position).toBe("absolute");
+  });
+
+  it("filled honeypot makes submit silently succeed (overlay removed, no event, no fetch)", async () => {
+    const fetchMock = vi.fn();
+    globalThis.fetch = fetchMock as unknown as typeof fetch;
+    const ctx = makeContext({ emailGate: { enabled: true, at: "before" } });
+    const handler = vi.fn();
+    ctx.events.on("email-gate:submit", handler);
+    await emailGatePlugin.init(ctx);
+
+    const form = ctx.container.querySelector("form") as HTMLFormElement;
+    (form.querySelector("input[type='email']") as HTMLInputElement).value = "real@x.com";
+    (form.querySelector("input[name='website']") as HTMLInputElement).value = "bot-filled-this";
+    form.dispatchEvent(new Event("submit", { cancelable: true, bubbles: true }));
+
+    expect(ctx.container.querySelector(".playerstack-email-gate")).toBeNull();
+    expect(handler).not.toHaveBeenCalled();
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("submitting valid email in open mode emits email-gate:submit and removes overlay", async () => {
     const ctx = makeContext({ emailGate: { enabled: true, at: "before" } });
     const handler = vi.fn();
     ctx.events.on("email-gate:submit", handler);
@@ -84,6 +115,8 @@ describe("emailGatePlugin", () => {
     input.value = "test@example.com";
     form.dispatchEvent(new Event("submit", { cancelable: true, bubbles: true }));
 
+    // open-mode handler resolves synchronously through the form's submit handler
+    await new Promise((r) => setTimeout(r, 10));
     expect(handler).toHaveBeenCalledWith({ email: "test@example.com" });
     expect(ctx.container.querySelector(".playerstack-email-gate")).toBeNull();
   });
@@ -109,6 +142,8 @@ describe("emailGatePlugin", () => {
     (form.querySelector("input[type='email']") as HTMLInputElement).value = "u@example.com";
     form.dispatchEvent(new Event("submit", { cancelable: true, bubbles: true }));
 
+    await new Promise((r) => setTimeout(r, 10));
+
     const b = makeContext(cfg);
     await emailGatePlugin.init(b);
     expect(b.container.querySelector(".playerstack-email-gate")).toBeNull();
@@ -120,37 +155,30 @@ describe("emailGatePlugin", () => {
     await emailGatePlugin.init(ctx);
     expect(ctx.container.querySelector(".playerstack-email-gate")).toBeNull();
 
-    // Simulate timeupdate at 49% — still hidden
     player.currentTime = 49;
     ctx.mediaPlayer.dispatchEvent(new Event("timeupdate"));
     expect(ctx.container.querySelector(".playerstack-email-gate")).toBeNull();
 
-    // Cross threshold
     player.currentTime = 51;
     ctx.mediaPlayer.dispatchEvent(new Event("timeupdate"));
     expect(ctx.container.querySelector(".playerstack-email-gate")).not.toBeNull();
   });
 
-  it("optional webhookUrl receives a POST with the email payload", async () => {
-    const fetchMock = vi.fn(() => Promise.resolve({ ok: true } as Response));
-    globalThis.fetch = fetchMock as unknown as typeof fetch;
+  it("REFUSES to render when webhookUrl is set without challengeUrl (secure-by-default)", async () => {
+    const errSpy = vi.spyOn(console, "error").mockImplementation(() => {});
     const ctx = makeContext({
       emailGate: {
         enabled: true,
         at: "before",
         webhookUrl: "https://example.com/lead",
+        // challengeUrl intentionally missing
       },
     });
     await emailGatePlugin.init(ctx);
-    const form = ctx.container.querySelector("form") as HTMLFormElement;
-    (form.querySelector("input[type='email']") as HTMLInputElement).value = "x@y.com";
-    form.dispatchEvent(new Event("submit", { cancelable: true, bubbles: true }));
-
-    expect(fetchMock).toHaveBeenCalled();
-    const call = fetchMock.mock.calls[0] as [string, RequestInit] | undefined;
-    expect(call?.[0]).toBe("https://example.com/lead");
-    expect(call?.[1].method).toBe("POST");
-    expect(call?.[1].body).toContain("x@y.com");
+    expect(ctx.container.querySelector(".playerstack-email-gate")).toBeNull();
+    expect(errSpy).toHaveBeenCalled();
+    expect(errSpy.mock.calls[0]?.[0]).toMatch(/secure verification|challengeUrl/i);
+    errSpy.mockRestore();
   });
 
   it("destroy removes the overlay", async () => {

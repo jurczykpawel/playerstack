@@ -33,5 +33,5 @@ When the browser parses the `<player-stack>` element, the `sources` plugin valid
 ## Try
 
 - Replace the `src` with a Vimeo URL: `https://vimeo.com/123456789`
-- Replace with an MP4: `https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4`
+- Replace with an MP4: `https://media.w3.org/2010/05/sintel/trailer.mp4`
 - Replace with HLS: `https://example.com/stream.m3u8`
