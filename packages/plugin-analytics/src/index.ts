@@ -37,7 +37,11 @@ export const analyticsPlugin: PlayerstackPlugin = {
     const send = (event: string, data: Record<string, unknown> = {}) => {
       const payload = { ...data, ...customProps };
       if (cfg.debug || provider === "console") {
-        console.log("[playerstack:analytics]", event, { src: ctx.config.src, data: payload, ts: Date.now() });
+        console.log("[playerstack:analytics]", event, {
+          src: ctx.config.src,
+          data: payload,
+          ts: Date.now(),
+        });
       }
       if (provider === "console") return;
       if (provider === "gtag") {

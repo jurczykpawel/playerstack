@@ -88,8 +88,8 @@ describe("stickyPlugin", () => {
   it("removes sticky and placeholder when ratio crosses exit threshold", async () => {
     const ctx = makeContext({ sticky: { enabled: true } });
     await stickyPlugin.init(ctx);
-    triggers[0]?.(0);   // go sticky
-    triggers[0]?.(1);   // return to view (ratio=1 > exitThreshold=0.5)
+    triggers[0]?.(0); // go sticky
+    triggers[0]?.(1); // return to view (ratio=1 > exitThreshold=0.5)
     expect(ctx.container.classList.contains("playerstack-sticky")).toBe(false);
     expect(ctx.container.parentElement?.querySelector("[aria-hidden='true']")).toBeNull();
   });
