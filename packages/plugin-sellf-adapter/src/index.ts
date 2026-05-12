@@ -1,8 +1,33 @@
 import type { ConfigProvider, PlayerstackConfig } from "@playerstack/core";
+import { normalizeRemoteConfig } from "./normalize";
+
+export { normalizeRemoteConfig } from "./normalize";
+
+export interface SellfAdapterEndpoints {
+  /** Analytics beacon endpoint. Wired into `analytics.endpoint` after normalization. */
+  analytics?: string;
+  /** Lead-capture endpoints. Wired into `emailGate.webhookUrl` + `challengeUrl`. */
+  emailGate?: {
+    webhook: string;
+    challenge: string;
+  };
+}
 
 export interface SellfAdapterOptions {
   baseUrl: string;
   fetchOptions?: RequestInit;
+  /**
+   * Trusted endpoints supplied by the integrator. Always wins over anything
+   * the remote API tries to set, so the adapter never POSTs analytics or
+   * lead data to a URL it didn't pick.
+   */
+  endpoints?: SellfAdapterEndpoints;
+  /**
+   * Disable the remote-config allowlist and pass the API response through
+   * unchanged. Only use when the API and adapter run inside the same trust
+   * boundary (internal dashboard, integration tests). Default: `false`.
+   */
+  trustRemote?: boolean;
 }
 
 export function createSellfConfigProvider(opts: SellfAdapterOptions): ConfigProvider {
@@ -25,8 +50,17 @@ export function createSellfConfigProvider(opts: SellfAdapterOptions): ConfigProv
         throw new Error(`[playerstack:sellf] HTTP ${response.status} from ${url}`);
       }
 
-      const remote = (await response.json()) as Record<string, unknown>;
-      const merged: Record<string, unknown> = { ...remote, ...inline };
+      const raw = (await response.json()) as unknown;
+      const remote: Partial<PlayerstackConfig> = opts.trustRemote
+        ? (raw as Partial<PlayerstackConfig>)
+        : normalizeRemoteConfig(raw);
+
+      // Adapter-supplied endpoints always win over anything remote sent.
+      const withEndpoints = applyEndpoints(remote, opts.endpoints);
+
+      // Inline DOM attributes win over remote — they're authored at integration
+      // time, not pulled from the API.
+      const merged: Record<string, unknown> = { ...withEndpoints, ...inline };
 
       if (typeof merged.src !== "string" || merged.src.length === 0) {
         throw new Error('[playerstack:sellf] response is missing required "src"');
@@ -46,4 +80,34 @@ function readInlineAttrs(element: HTMLElement): Partial<PlayerstackConfig> {
   if (poster !== null) result.poster = poster;
   if (title !== null) result.title = title;
   return result;
+}
+
+function applyEndpoints(
+  cfg: Partial<PlayerstackConfig>,
+  endpoints: SellfAdapterEndpoints | undefined,
+): Partial<PlayerstackConfig> {
+  if (!endpoints) return cfg;
+  const out: Record<string, unknown> = { ...cfg };
+
+  if (endpoints.analytics) {
+    const current =
+      typeof out.analytics === "object" && out.analytics !== null && !Array.isArray(out.analytics)
+        ? (out.analytics as Record<string, unknown>)
+        : {};
+    out.analytics = { ...current, endpoint: endpoints.analytics };
+  }
+
+  if (endpoints.emailGate) {
+    const current =
+      typeof out.emailGate === "object" && out.emailGate !== null && !Array.isArray(out.emailGate)
+        ? (out.emailGate as Record<string, unknown>)
+        : {};
+    out.emailGate = {
+      ...current,
+      webhookUrl: endpoints.emailGate.webhook,
+      challengeUrl: endpoints.emailGate.challenge,
+    };
+  }
+
+  return out as Partial<PlayerstackConfig>;
 }

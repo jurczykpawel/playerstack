@@ -19,6 +19,14 @@ import { setConfigProviderForElement } from "@playerstack/core";
 const provider = createSellfConfigProvider({
   baseUrl: "https://sellf.app",
   fetchOptions: { credentials: "include" }, // optional
+  // Endpoints supplied by you — always win over anything the API returns.
+  endpoints: {
+    analytics: "https://sellf.app/track",
+    emailGate: {
+      webhook: "https://sellf.app/leads/submit",
+      challenge: "https://sellf.app/leads/challenge",
+    },
+  },
 });
 
 setConfigProviderForElement(provider);
@@ -55,6 +63,9 @@ The Sellf endpoint must return a JSON object that conforms to `PlayerstackConfig
   "poster": "https://cdn.example.com/poster.webp",
   "title": "Lesson 1",
   "controls": { "accent": "#008aff" },
+  "customCss": {
+    "tokens": { "--ps-accent": "#008aff", "--ps-radius": "12px" }
+  },
   "ctaEnd": {
     "enabled": true,
     "button": { "label": "Next lesson", "url": "..." }
@@ -63,6 +74,28 @@ The Sellf endpoint must return a JSON object that conforms to `PlayerstackConfig
 ```
 
 `src` is required. Anything else is optional.
+
+## What the API may and may not control
+
+By default the adapter applies an allowlist to the API response and drops any field outside the documented contract before merging. Concretely, the API may set:
+
+- `src`, `poster`, `title`, `crossorigin`
+- `controls` (`accent`, `show`, `hide`)
+- `customCss.tokens` (validated `--ps-*` CSS custom properties)
+- typed plugin configs: `actionBar`, `ctaEnd`, `introCard`, `brandedThumb`, `watermark`, `analytics` (`enabled`/`debug`/`customProps`/`forwardBusEvents`), `emailGate` (`enabled`/`at`/`title`/`buttonLabel`/`storageKey`), `preview`, `autopreview`, `savedPosition`, `focusMode`, `sticky`, `chapters`, `ytSubscribe`, `twitch.parent`
+
+The API may **not** set:
+
+- `customCss.trustedCss`, `customCss.css`, `customCss.acknowledgeTrusted` — raw CSS belongs in your codebase
+- `actionBar.html`, `ctaEnd.html`, `introCard.html` — raw HTML belongs in your codebase
+- `analytics.endpoint` — supplied via `SellfAdapterOptions.endpoints.analytics`
+- `emailGate.webhookUrl`, `emailGate.challengeUrl` — supplied via `SellfAdapterOptions.endpoints.emailGate`
+
+If you genuinely want the API to control all of it (private dashboard, fully trusted environment), opt out:
+
+```ts
+createSellfConfigProvider({ baseUrl: "...", trustRemote: true });
+```
 
 ## Errors
 
