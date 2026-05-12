@@ -4,7 +4,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![Tests](https://img.shields.io/badge/tests-237%20unit%20%2B%204%20e2e-brightgreen.svg)](#testing)
 
-Embeddable video player for any HTML page. One script tag. YouTube, Vimeo, MP4, HLS. Brand it, add CTAs, gate emails — all via plugins. **MIT.**
+Embeddable video player for any HTML page. One script tag. YouTube, Vimeo, Wistia, Twitch, Bunny Stream, MP4, HLS. Brand it, add CTAs, gate emails — all via plugins. **MIT.**
 
 > **Status:** v0.1.0 (initial release, 2026-05-09)
 
@@ -23,7 +23,7 @@ Embeddable video player for any HTML page. One script tag. YouTube, Vimeo, MP4, 
 </player-stack>
 ```
 
-That's it. The custom element registers itself, parses the URL, mounts the right Mux media element underneath (`<video>` for MP4/WebM, `<youtube-video>`, `<vimeo-video>`, or `<hls-video>`) inside `<media-controller>`, and applies the plugins from `data-config`.
+That's it. The custom element registers itself, parses the URL, mounts the right Mux media element underneath (`<video>` for MP4/WebM, `<youtube-video>`, `<vimeo-video>`, `<wistia-video>`, `<twitch-video>`, or `<hls-video>`) inside `<media-controller>`, and applies the plugins from `data-config`.
 
 ## Why
 

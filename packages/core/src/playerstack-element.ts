@@ -2,6 +2,8 @@ import "media-chrome";
 import "youtube-video-element";
 import "vimeo-video-element";
 import "hls-video-element";
+import "wistia-video-element";
+import "twitch-video-element";
 
 import { createEventBus, type EventBus } from "./events";
 import { createInlineConfigProvider, type ConfigProvider, type PlayerstackConfig } from "./config";
@@ -11,7 +13,13 @@ import { isSafeHttpUrl } from "./safe-html";
 const OBSERVED_ATTRS = ["src", "poster", "title"] as const;
 
 /** Tag name a plugin can request the inner media element to use. */
-export type MediaElementTag = "video" | "youtube-video" | "vimeo-video" | "hls-video";
+export type MediaElementTag =
+  | "video"
+  | "youtube-video"
+  | "vimeo-video"
+  | "hls-video"
+  | "wistia-video"
+  | "twitch-video";
 
 let registeredPlugins: readonly PlayerstackPlugin[] = [];
 let configProvider: ConfigProvider = createInlineConfigProvider();
@@ -33,6 +41,8 @@ function detectElementTag(src: string): MediaElementTag {
   if (!src) return "video";
   if (/youtube\.com|youtu\.be|youtube-nocookie\.com/i.test(src)) return "youtube-video";
   if (/vimeo\.com/i.test(src)) return "vimeo-video";
+  if (/(?:wistia\.com|wi\.st)\/(?:medias|embed)\//i.test(src)) return "wistia-video";
+  if (/(?:^|\/\/)(?:www\.|go\.|player\.)?twitch\.tv\//i.test(src)) return "twitch-video";
   if (/\.m3u8(\?|$)/i.test(src)) return "hls-video";
   return "video";
 }
@@ -142,6 +152,21 @@ export class PlayerstackElement extends HTMLElement {
     mediaEl.style.width = "100%";
     mediaEl.style.height = "100%";
 
+    // Twitch embed requires the host page domain in `parent` for CORS.
+    // Caller supplies `config.twitch.parent` (single string or array).
+    if (tag === "twitch-video") {
+      const twitchCfg = (config as { twitch?: { parent?: string | string[] } }).twitch;
+      const parents = Array.isArray(twitchCfg?.parent)
+        ? twitchCfg.parent
+        : twitchCfg?.parent
+          ? [twitchCfg.parent]
+          : [];
+      const safeParents = parents.filter((p) => typeof p === "string" && /^[a-z0-9.-]+$/i.test(p));
+      if (safeParents.length > 0) {
+        mediaEl.setAttribute("parent", safeParents.join(","));
+      }
+    }
+
     // Preview-mode initial attributes — must be set BEFORE the element connects
     // for the browser autoplay policy to honor them.
     const preview = (config as { preview?: { enabled?: boolean; loopUntilInteraction?: boolean } })
@@ -194,7 +219,9 @@ player-stack media-controller {
 player-stack video,
 player-stack youtube-video,
 player-stack vimeo-video,
-player-stack hls-video {
+player-stack hls-video,
+player-stack wistia-video,
+player-stack twitch-video {
   width: 100%;
   height: 100%;
   object-fit: contain;

@@ -40,4 +40,48 @@ describe("resolveSource", () => {
     expect(resolveSource("youtube/abc12345678")).toBeNull();
     expect(resolveSource("vimeo/123456789")).toBeNull();
   });
+
+  it("resolves Wistia URLs", () => {
+    expect(resolveSource("https://wesleyluyten.wistia.com/medias/oifkgmxnkb")).toMatchObject({
+      type: "wistia",
+      id: "oifkgmxnkb",
+    });
+  });
+
+  it("resolves Twitch VOD URLs", () => {
+    expect(resolveSource("https://www.twitch.tv/videos/106400740")).toMatchObject({
+      type: "twitch",
+      kind: "video",
+      id: "106400740",
+    });
+  });
+
+  it("resolves Twitch channel URLs", () => {
+    expect(resolveSource("https://www.twitch.tv/shroud")).toMatchObject({
+      type: "twitch",
+      kind: "channel",
+      id: "shroud",
+    });
+  });
+
+  it("classifies Bunny CDN HLS URLs with provider=bunny", () => {
+    expect(resolveSource("https://vz-abc123.b-cdn.net/library/playlist.m3u8")).toMatchObject({
+      type: "hls",
+      provider: "bunny",
+      zone: "vz-abc123.b-cdn.net",
+    });
+  });
+
+  it("classifies Bunny CDN MP4 URLs with provider=bunny", () => {
+    expect(resolveSource("https://cdn.b-cdn.net/some/clip.mp4")).toMatchObject({
+      type: "mp4",
+      provider: "bunny",
+    });
+  });
+
+  it("rejects Bunny iframe embed with a dedicated error", () => {
+    expect(() => resolveSource("https://iframe.mediadelivery.net/embed/12345/abcdef")).toThrow(
+      /Bunny iframe embed/i,
+    );
+  });
 });

@@ -27,7 +27,9 @@
     "media-chrome": "^4.19.0",
     "youtube-video-element": "^1.9.0",
     "vimeo-video-element": "^1.7.1",
-    "hls-video-element": "^1.5.11"
+    "hls-video-element": "^1.5.11",
+    "wistia-video-element": "^1.4.0",
+    "twitch-video-element": "^0.2.0"
   },
   "devDependencies": {
     "vitest": "^3.2.4",
