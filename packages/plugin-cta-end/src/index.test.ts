@@ -126,4 +126,29 @@ describe("ctaEndPlugin", () => {
     ctaEndPlugin.destroy?.(ctx);
     expect(ctx.container.querySelector(".playerstack-cta")).toBeNull();
   });
+
+  it("ctaEnd.html is rendered through the core sanitizer (non-whitelisted tags removed)", async () => {
+    const ctx = makeContext({
+      ctaEnd: {
+        enabled: true,
+        html: '<p>safe</p><script>x()</script><img src=x onerror="x()"><iframe src="https://example.com"></iframe>',
+      },
+    });
+    await ctaEndPlugin.init(ctx);
+    fireEnded(ctx.mediaPlayer);
+    const html = ctx.container.querySelector(".playerstack-cta-html")?.innerHTML ?? "";
+    expect(html).not.toMatch(/<script/i);
+    expect(html).not.toMatch(/onerror/i);
+    expect(html).not.toMatch(/<iframe/i);
+    expect(html).toContain("<p>safe</p>");
+  });
+
+  it("does not render the CTA button when url is not http(s)", async () => {
+    const ctx = makeContext({
+      ctaEnd: { enabled: true, button: { label: "x", url: "javascript:x" } },
+    });
+    await ctaEndPlugin.init(ctx);
+    fireEnded(ctx.mediaPlayer);
+    expect(ctx.container.querySelector("a.playerstack-cta-button")).toBeNull();
+  });
 });

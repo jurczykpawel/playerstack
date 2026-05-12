@@ -1,4 +1,4 @@
-import type { PlayerstackPlugin, PlayerstackContext } from "@playerstack/core";
+import { isSafeHttpUrl, type PlayerstackPlugin, type PlayerstackContext } from "@playerstack/core";
 
 export type PlayButtonStyle = "minimal" | "box" | "circle";
 
@@ -49,7 +49,7 @@ export const brandedThumbPlugin: PlayerstackPlugin = {
 
     // Solid poster image only in cover mode. Transparent mode keeps whatever is
     // underneath visible (autopreview muted loop, custom CSS bg, etc).
-    if (poster && !transparent) {
+    if (isSafeHttpUrl(poster) && !transparent) {
       const img = document.createElement("img");
       img.src = poster;
       img.alt = "";

@@ -164,7 +164,7 @@ describe("emailGatePlugin", () => {
     expect(ctx.container.querySelector(".playerstack-email-gate")).not.toBeNull();
   });
 
-  it("REFUSES to render when webhookUrl is set without challengeUrl (secure-by-default)", async () => {
+  it("does not render when webhookUrl is set without challengeUrl", async () => {
     const errSpy = vi.spyOn(console, "error").mockImplementation(() => {});
     const ctx = makeContext({
       emailGate: {
@@ -177,7 +177,26 @@ describe("emailGatePlugin", () => {
     await emailGatePlugin.init(ctx);
     expect(ctx.container.querySelector(".playerstack-email-gate")).toBeNull();
     expect(errSpy).toHaveBeenCalled();
-    expect(errSpy.mock.calls[0]?.[0]).toMatch(/secure verification|challengeUrl/i);
+    expect(errSpy.mock.calls[0]?.[0]).toMatch(/challengeUrl/);
+    errSpy.mockRestore();
+  });
+
+  it("does not render when webhookUrl or challengeUrl is not an http(s) URL", async () => {
+    const errSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+    const cases: Array<[string, string]> = [
+      ["javascript:x", "https://example.com/c"],
+      ["https://example.com/w", "javascript:x"],
+      ["/relative/webhook", "/relative/challenge"],
+    ];
+    for (const [webhookUrl, challengeUrl] of cases) {
+      document.body.innerHTML = "";
+      const ctx = makeContext({
+        emailGate: { enabled: true, at: "before", webhookUrl, challengeUrl },
+      });
+      await emailGatePlugin.init(ctx);
+      expect(ctx.container.querySelector(".playerstack-email-gate")).toBeNull();
+    }
+    expect(errSpy).toHaveBeenCalled();
     errSpy.mockRestore();
   });
 

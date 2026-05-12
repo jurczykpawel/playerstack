@@ -50,19 +50,20 @@ class PlayerstackShortcode
 
         $config = [];
         if (!empty($atts['accent'])) {
-            $config['controls'] = ['accent' => $atts['accent']];
+            $config['controls'] = ['accent' => sanitize_hex_color($atts['accent']) ?: $atts['accent']];
         }
         if ($atts['click_to_load'] === 'true' || $atts['click_to_load'] === '1') {
             $config['brandedThumb'] = ['enabled' => true, 'clickToLoad' => true];
         }
-        if (!empty($atts['cta_label']) && !empty($atts['cta_url'])) {
+        $cta_url = esc_url_raw($atts['cta_url']);
+        if (!empty($atts['cta_label']) && !empty($cta_url)) {
             $config['ctaEnd'] = [
                 'enabled' => true,
-                'title' => $atts['cta_title'] ?: '',
+                'title' => sanitize_text_field($atts['cta_title']),
                 'button' => array_filter([
-                    'label' => $atts['cta_label'],
-                    'url' => $atts['cta_url'],
-                    'utm' => $atts['cta_utm'],
+                    'label' => sanitize_text_field($atts['cta_label']),
+                    'url' => $cta_url,
+                    'utm' => sanitize_text_field($atts['cta_utm']),
                 ]),
                 'showReplay' => true,
             ];
@@ -78,7 +79,9 @@ class PlayerstackShortcode
             $attributes[] = 'title="' . esc_attr($atts['title']) . '"';
         }
         if (!empty($config)) {
-            $attributes[] = "data-config='" . wp_json_encode($config) . "'";
+            // JSON goes inside a single-quoted attribute, so escape any single
+            // quotes/HTML metacharacters that wp_json_encode emits.
+            $attributes[] = "data-config='" . esc_attr(wp_json_encode($config)) . "'";
         }
 
         return sprintf(

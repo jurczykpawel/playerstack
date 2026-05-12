@@ -1,4 +1,9 @@
-import type { PlayerstackPlugin, PlayerstackContext } from "@playerstack/core";
+import {
+  buildSafeCtaUrl,
+  sanitizeHtml,
+  type PlayerstackPlugin,
+  type PlayerstackContext,
+} from "@playerstack/core";
 
 export interface CtaButton {
   label: string;
@@ -68,23 +73,26 @@ function renderOverlay(ctx: PlayerstackContext, cfg: CtaEndConfig): HTMLElement 
   if (cfg.html) {
     const wrap = document.createElement("div");
     wrap.className = "playerstack-cta-html";
-    wrap.innerHTML = cfg.html;
+    wrap.innerHTML = sanitizeHtml(cfg.html);
     overlay.appendChild(wrap);
   }
 
   if (cfg.button) {
-    const link = document.createElement("a");
-    link.className = "playerstack-cta-button";
-    link.href = appendUtm(cfg.button.url, cfg.button.utm);
-    link.textContent = cfg.button.label;
-    link.target = "_blank";
-    link.rel = "noopener noreferrer";
-    link.style.cssText =
-      "background:var(--ps-accent,#008aff);color:#fff;padding:12px 24px;border-radius:6px;text-decoration:none;font-weight:600;";
-    link.addEventListener("click", () => {
-      ctx.events.emit("cta:click", { label: cfg.button!.label, url: link.href });
-    });
-    overlay.appendChild(link);
+    const safeUrl = buildSafeCtaUrl(cfg.button.url, cfg.button.utm);
+    if (safeUrl) {
+      const link = document.createElement("a");
+      link.className = "playerstack-cta-button";
+      link.href = safeUrl;
+      link.textContent = cfg.button.label;
+      link.target = "_blank";
+      link.rel = "noopener noreferrer";
+      link.style.cssText =
+        "background:var(--ps-accent,#008aff);color:#fff;padding:12px 24px;border-radius:6px;text-decoration:none;font-weight:600;";
+      link.addEventListener("click", () => {
+        ctx.events.emit("cta:click", { label: cfg.button!.label, url: link.href });
+      });
+      overlay.appendChild(link);
+    }
   }
 
   if (cfg.showReplay) {
@@ -109,10 +117,4 @@ function renderOverlay(ctx: PlayerstackContext, cfg: CtaEndConfig): HTMLElement 
 function removeOverlay(ctx: PlayerstackContext): void {
   const overlay = ctx.container.querySelector(".playerstack-cta");
   overlay?.remove();
-}
-
-function appendUtm(url: string, utm?: string): string {
-  if (!utm) return url;
-  const sep = url.includes("?") ? "&" : "?";
-  return `${url}${sep}${utm}`;
 }

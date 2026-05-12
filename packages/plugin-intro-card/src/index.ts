@@ -1,4 +1,10 @@
-import type { PlayerstackPlugin, PlayerstackContext } from "@playerstack/core";
+import {
+  buildSafeCtaUrl,
+  isSafeHttpUrl,
+  sanitizeHtml,
+  type PlayerstackPlugin,
+  type PlayerstackContext,
+} from "@playerstack/core";
 
 export type IntroCardPosition = "fullscreen" | "bottom" | "center";
 export type IntroCardTheme = "dark" | "light" | "transparent";
@@ -14,7 +20,7 @@ export interface IntroCardConfig {
   badge?: string;
   title?: string;
   subtitle?: string;
-  /** Arbitrary HTML rendered above the play button. Treat the source as trusted. */
+  /** HTML rendered above the play button. Routed through the core sanitizer. */
   html?: string;
   cta?: IntroCardCta;
   /** Optional background image for the overlay. */
@@ -108,7 +114,7 @@ function buildOverlay(cfg: IntroCardConfig): HTMLElement {
   overlay.setAttribute("data-theme", cfg.theme ?? "dark");
   overlay.style.cssText = baseOverlayCss(cfg.position ?? "fullscreen", cfg.theme ?? "dark");
 
-  if (cfg.image) {
+  if (isSafeHttpUrl(cfg.image)) {
     const bg = document.createElement("img");
     bg.className = "playerstack-intro-card-bg";
     bg.src = cfg.image;
@@ -158,20 +164,21 @@ function buildOverlay(cfg: IntroCardConfig): HTMLElement {
   if (cfg.html) {
     const custom = document.createElement("div");
     custom.className = "playerstack-intro-card-html";
-    custom.innerHTML = cfg.html;
+    custom.innerHTML = sanitizeHtml(cfg.html);
     content.appendChild(custom);
   }
 
   const playBtn = buildPlayButton();
   content.appendChild(playBtn);
 
-  if (isHttpUrl(cfg.cta?.url)) {
+  const safeCtaUrl = buildSafeCtaUrl(cfg.cta?.url, cfg.cta?.utm);
+  if (safeCtaUrl && cfg.cta) {
     const cta = document.createElement("a");
     cta.className = "playerstack-intro-card-cta";
-    cta.href = appendUtm(cfg.cta!.url, cfg.cta!.utm);
+    cta.href = safeCtaUrl;
     cta.target = "_blank";
     cta.rel = "noopener noreferrer";
-    cta.textContent = cfg.cta!.label;
+    cta.textContent = cfg.cta.label;
     cta.style.cssText =
       "padding:10px 18px;background:var(--ps-accent,#008aff);color:#fff;border-radius:8px;" +
       "text-decoration:none;font-weight:600;font-size:15px;";
@@ -239,20 +246,4 @@ function baseOverlayCss(position: IntroCardPosition, theme: IntroCardTheme): str
     "z-index:3;display:flex;align-items:center;justify-content:center;" +
     "overflow:hidden;cursor:default;font-family:inherit;"
   );
-}
-
-function appendUtm(url: string, utm?: string): string {
-  if (!utm) return url;
-  const sep = url.includes("?") ? "&" : "?";
-  return `${url}${sep}${utm}`;
-}
-
-function isHttpUrl(url: string | undefined): url is string {
-  if (!url) return false;
-  try {
-    const parsed = new URL(url);
-    return parsed.protocol === "http:" || parsed.protocol === "https:";
-  } catch {
-    return false;
-  }
 }

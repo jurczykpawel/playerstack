@@ -10,3 +10,5 @@ bun.lock
 apps/docs/public/playground.ts
 apps/docs/public/playerstack.min.js
 apps/docs/public/playerstack.min.js.map
+apps/playground/playerstack.min.js
+apps/playground/playerstack.min.js.map

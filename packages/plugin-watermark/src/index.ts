@@ -1,4 +1,4 @@
-import type { PlayerstackPlugin, PlayerstackContext } from "@playerstack/core";
+import { isSafeHttpUrl, type PlayerstackPlugin, type PlayerstackContext } from "@playerstack/core";
 
 export type WatermarkPosition = "top-left" | "top-right" | "bottom-left" | "bottom-right";
 
@@ -35,9 +35,11 @@ export const watermarkPlugin: PlayerstackPlugin = {
   init(ctx: PlayerstackContext): void {
     const cfg = (ctx.config as { watermark?: WatermarkConfig }).watermark;
     if (!cfg?.enabled) return;
-    if (!cfg.src && !cfg.text) return;
+    // Image mode requires a parseable http(s) URL; text mode is unaffected.
+    const safeImageSrc = isSafeHttpUrl(cfg.src) ? cfg.src : undefined;
+    if (!safeImageSrc && !cfg.text) return;
 
-    const overlay = buildOverlay(cfg);
+    const overlay = buildOverlay(cfg, safeImageSrc);
     // Mount on <player-stack> directly — has position:relative + aspect-ratio
     // + overflow from core DEFAULT_STYLES. Mounting inside <media-controller>
     // would tangle with Mux's shadow DOM stacking.
@@ -53,8 +55,8 @@ export const watermarkPlugin: PlayerstackPlugin = {
   },
 };
 
-function buildOverlay(cfg: WatermarkConfig): HTMLElement {
-  const safeHref = isHttpUrl(cfg.href) ? cfg.href : undefined;
+function buildOverlay(cfg: WatermarkConfig, safeImageSrc: string | undefined): HTMLElement {
+  const safeHref = isSafeHttpUrl(cfg.href) ? cfg.href : undefined;
   const root = document.createElement(safeHref ? "a" : "div");
   root.className = "playerstack-watermark";
 
@@ -75,9 +77,9 @@ function buildOverlay(cfg: WatermarkConfig): HTMLElement {
     `opacity:${opacity};`;
   applyPosition(root, position, margin);
 
-  if (cfg.src) {
+  if (safeImageSrc) {
     const img = document.createElement("img");
-    img.src = cfg.src;
+    img.src = safeImageSrc;
     img.alt = "";
     img.loading = "lazy";
     img.decoding = "async";
@@ -103,14 +105,4 @@ function applyPosition(el: HTMLElement, position: WatermarkPosition, margin: str
 function clampOpacity(value: unknown): string {
   if (typeof value !== "number" || !Number.isFinite(value)) return String(DEFAULT_OPACITY);
   return String(Math.max(0, Math.min(1, value)));
-}
-
-function isHttpUrl(href: string | undefined): href is string {
-  if (!href) return false;
-  try {
-    const url = new URL(href);
-    return url.protocol === "http:" || url.protocol === "https:";
-  } catch {
-    return false;
-  }
 }

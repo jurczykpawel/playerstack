@@ -154,6 +154,8 @@ Built on the Mux media ecosystem (all MIT, all wrapped, never forked):
 
 Each wrapper exposes a real `<video>` (or iframe for YT/Vimeo), so browser autoplay policy, standard HTML5 events (`play`, `pause`, `ended`, `timeupdate`, `canplay`), and DOM attributes work out of the box. Plugins talk to the inner element via the same API regardless of source.
 
+Playerstack is designed to embed on third-party pages. Config-driven inputs (HTML snippets, URLs, theming) are validated before they reach the DOM — see each plugin's README for the per-field contract.
+
 ## License
 
 - Core + 16 MVP plugins: **MIT**

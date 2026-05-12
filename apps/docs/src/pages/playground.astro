@@ -668,7 +668,8 @@ import Base from "../layouts/Base.astro";
             enabled: true,
             // pointer-events:none on media-controller blocks click-to-pause gestures.
             // The branded-thumb overlay sits outside media-controller so its click still works.
-            css: "media-controller { pointer-events: none; }",
+            trustedCss: "media-controller { pointer-events: none; }",
+            acknowledgeTrusted: true,
           },
         },
         tipTitle: "Play-once: no controls after start",
@@ -747,7 +748,9 @@ import Base from "../layouts/Base.astro";
         extra: {
           customCss: {
             enabled: true,
-            css: "border-radius: 20px; box-shadow: 0 0 0 3px #a855f7, 0 20px 60px rgba(168,85,247,0.45); & video { filter: contrast(1.2) saturate(1.5) brightness(1.05); } & media-control-bar { background: rgba(168,85,247,0.25); backdrop-filter: blur(16px); border-top: 1px solid rgba(168,85,247,0.5); }",
+            trustedCss:
+              "border-radius: 20px; box-shadow: 0 0 0 3px #a855f7, 0 20px 60px rgba(168,85,247,0.45); & video { filter: contrast(1.2) saturate(1.5) brightness(1.05); } & media-control-bar { background: rgba(168,85,247,0.25); backdrop-filter: blur(16px); border-top: 1px solid rgba(168,85,247,0.5); }",
+            acknowledgeTrusted: true,
           },
         },
         tipTitle: "Arbitrary scoped CSS via native CSS Nesting",
@@ -820,7 +823,11 @@ import Base from "../layouts/Base.astro";
           sticky: { enabled: true },
           analytics: { enabled: true, provider: "gtag" },
           watermark: { enabled: true, text: "© ACME", position: "top-right", opacity: 0.8 },
-          customCss: { enabled: true, css: "border-radius: 12px; overflow: hidden;" },
+          customCss: {
+            enabled: true,
+            trustedCss: "border-radius: 12px; overflow: hidden;",
+            acknowledgeTrusted: true,
+          },
         },
         tipTitle: "All 14 plugins firing simultaneously",
         tipSteps: [

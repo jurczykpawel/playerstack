@@ -1,16 +1,19 @@
 ---
 layout: ../../../layouts/Docs.astro
 title: custom-css — Playerstack
-description: Inject arbitrary CSS scoped to a single Playerstack instance — the escape hatch for any styling controls-policy doesn't cover.
+description: Two-tier styling for Playerstack — safe theme tokens for untrusted input, raw CSS escape hatch for developer-authored stylesheets.
 ---
 
 # custom-css
 
 > npm: [`@playerstack/plugin-custom-css`](https://www.npmjs.com/package/@playerstack/plugin-custom-css)
 
-The escape hatch for any styling that [`controls-policy`](/docs/plugins/controls-policy) (theme color + show/hide controls) doesn't cover. Drop in arbitrary CSS that only affects this `<player-stack>` instance.
+Two-tier styling on top of [`controls-policy`](/docs/plugins/controls-policy):
 
-## Quickstart
+1. **`tokens`** — a safe, validated CSS-custom-property API. Use this for any theming that comes from a CMS, SaaS dashboard, or untrusted JSON.
+2. **`trustedCss`** — a raw-CSS escape hatch for developer-authored stylesheets. Requires an explicit `acknowledgeTrusted: true`.
+
+## Quickstart — safe tokens
 
 ```html
 <player-stack
@@ -18,24 +21,47 @@ The escape hatch for any styling that [`controls-policy`](/docs/plugins/controls
   data-config='{
     "customCss": {
       "enabled": true,
-      "css": "border-radius: 16px; box-shadow: 0 8px 24px rgba(0,0,0,0.4); & video { filter: contrast(1.1); }"
+      "tokens": {
+        "--ps-accent": "#008aff",
+        "--ps-radius": "12px"
+      }
     }
   }'
 ></player-stack>
 ```
 
+## Quickstart — trusted raw CSS
+
+```html
+<player-stack
+  src="https://example.com/v.mp4"
+  data-config='{
+    "customCss": {
+      "enabled": true,
+      "trustedCss": "border-radius: 16px; box-shadow: 0 8px 24px rgba(0,0,0,0.4); & video { filter: contrast(1.1); }",
+      "acknowledgeTrusted": true
+    }
+  }'
+></player-stack>
+```
+
+Without `acknowledgeTrusted: true` the raw CSS is dropped and a console warning is logged. This is intentional: raw CSS on a third-party embed is enough to swap brand colors, hide controls, or shift layout, so we want the call site to declare trust explicitly.
+
 ## Config
 
 `config.customCss`:
 
-| Field     | Type      | Default | Description                                                                                           |
-| --------- | --------- | ------- | ----------------------------------------------------------------------------------------------------- |
-| `enabled` | `boolean` | `false` | Plugin is a no-op unless `true`                                                                       |
-| `css`     | `string`  | —       | Raw CSS, automatically scoped to this player instance via CSS Nesting. Use `&` to target descendants. |
+| Field                | Type                     | Default | Description                                                                                                                        |
+| -------------------- | ------------------------ | ------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| `enabled`            | `boolean`                | `false` | Plugin is a no-op unless `true`                                                                                                    |
+| `tokens`             | `Record<string, string>` | `{}`    | Safe theming. Keys must be `--ps-*`. Values are validated; unsafe entries silently dropped.                                        |
+| `trustedCss`         | `string`                 | —       | Raw CSS, scoped to this player instance via CSS Nesting. Requires `acknowledgeTrusted: true`.                                      |
+| `acknowledgeTrusted` | `boolean`                | `false` | Required to apply `trustedCss`. The verbose name is intentional.                                                                   |
+| `css`                | `string`                 | —       | _Deprecated._ Same shape as `trustedCss` but logs a warning. Still gated on `acknowledgeTrusted: true`. Removed in a future major. |
 
 ## How scoping works
 
-Your CSS is wrapped in `player-stack[data-ps-id="<unique-id>"] { ... }` and injected as a `<style data-playerstack="custom-css">` in `<head>`. Each `<player-stack>` on the page gets its own scope, so styles never leak between instances.
+`trustedCss` is wrapped in `player-stack:has([data-ps-id="<unique-id>"]) { ... }` and injected as a `<style data-playerstack="custom-css">` in `<head>`. Each `<player-stack>` on the page gets its own scope, so styles never leak between instances.
 
 The wrapper uses native CSS Nesting (browser baseline since 2023). Inside your CSS you can:
 
@@ -75,17 +101,6 @@ border-radius: 16px;
 // Force a thicker progress bar
 "& media-time-range { --media-range-track-height: 6px; }";
 ```
-
-## Security
-
-The plugin rejects (renders nothing) when the CSS contains:
-
-- `</style>` — would escape the injected `<style>` block
-- `@import` — pulls remote stylesheets, exfiltration / supply-chain risk
-- `expression(` — legacy IE; harmless today but signals tampering intent
-- `javascript:` — XSS via `url(javascript:…)` in legacy contexts
-
-This plugin is meant for trusted CSS provided by the embedder (config provider, brand settings). Don't pipe arbitrary user input into it without your own validation on top.
 
 ## Coordinating with controls-policy
 

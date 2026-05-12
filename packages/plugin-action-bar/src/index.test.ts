@@ -114,4 +114,32 @@ describe("actionBarPlugin", () => {
     actionBarPlugin.destroy?.(ctx);
     expect(ctx.container.querySelector(".playerstack-action-bar")).toBeNull();
   });
+
+  it("actionBar.html is rendered through the core sanitizer (non-whitelisted tags removed)", async () => {
+    const ctx = makeContext({
+      actionBar: {
+        enabled: true,
+        showAt: "start",
+        html: '<em>ok</em><script>x()</script><img onerror="x()" src=x>',
+      },
+    });
+    await actionBarPlugin.init(ctx);
+    const bar = ctx.container.querySelector(".playerstack-action-bar");
+    const html = bar?.innerHTML ?? "";
+    expect(html).not.toMatch(/<script/i);
+    expect(html).not.toMatch(/onerror/i);
+    expect(html).toContain("<em>ok</em>");
+  });
+
+  it("does not render the CTA link when button url is not http(s)", async () => {
+    const ctx = makeContext({
+      actionBar: {
+        enabled: true,
+        showAt: "start",
+        button: { label: "x", url: "javascript:x" },
+      },
+    });
+    await actionBarPlugin.init(ctx);
+    expect(ctx.container.querySelector("a.playerstack-action-bar-button")).toBeNull();
+  });
 });

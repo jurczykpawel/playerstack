@@ -1,4 +1,4 @@
-import type { PlayerstackPlugin, PlayerstackContext } from "@playerstack/core";
+import { isSafeHttpUrl, type PlayerstackPlugin, type PlayerstackContext } from "@playerstack/core";
 import { solveChallenge } from "altcha-lib";
 import type { LeadsChallenge, LeadsSubmission } from "./types";
 
@@ -41,15 +41,24 @@ export const emailGatePlugin: PlayerstackPlugin = {
     const cfg = (ctx.config as { emailGate?: EmailGateConfig }).emailGate;
     if (!cfg?.enabled) return;
 
-    // SECURE-BY-DEFAULT: webhook without challenge is refused. Better to break
-    // the gate visibly than silently expose an unauthenticated POST endpoint.
+    // Both URLs are required together. Plugin will not render with just one.
     if (cfg.webhookUrl && !cfg.challengeUrl) {
       console.error(
-        "[playerstack] email-gate: `webhookUrl` requires `challengeUrl` for proof-of-work + nonce protection. " +
-          "Refusing to render to avoid exposing an unauthenticated lead-capture endpoint. " +
-          "See https://playerstack.sellf.app/docs/security/email-leads",
+        "[playerstack] email-gate: `webhookUrl` requires `challengeUrl`. Plugin disabled. " +
+          "See https://playerstack.sellf.app/docs/email-gate for the contract.",
       );
       return;
+    }
+
+    // If either URL is configured, both must be parseable http(s) URLs.
+    // Mixed / invalid URLs disable the plugin entirely — no partial fetches.
+    if (cfg.webhookUrl || cfg.challengeUrl) {
+      if (!isSafeHttpUrl(cfg.webhookUrl) || !isSafeHttpUrl(cfg.challengeUrl)) {
+        console.error(
+          "[playerstack] email-gate: `webhookUrl` and `challengeUrl` must both be http(s) URLs. Plugin disabled.",
+        );
+        return;
+      }
     }
 
     const memoKey = `${cfg.storageKey ?? "playerstack:email-gate"}:${ctx.config.src}`;

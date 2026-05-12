@@ -1,4 +1,4 @@
-import type { PlayerstackPlugin, PlayerstackContext } from "@playerstack/core";
+import { isSafeHttpUrl, type PlayerstackPlugin, type PlayerstackContext } from "@playerstack/core";
 
 export interface AnalyticsConfig {
   enabled?: boolean;
@@ -33,6 +33,13 @@ export const analyticsPlugin: PlayerstackPlugin = {
 
     const provider = cfg.provider ?? (cfg.endpoint ? "beacon" : "gtag");
     const customProps = cfg.customProps ?? {};
+
+    if (provider === "beacon" && !isSafeHttpUrl(cfg.endpoint)) {
+      console.warn(
+        "[playerstack:analytics] endpoint must be an http(s) URL when provider is 'beacon'. Plugin disabled.",
+      );
+      return;
+    }
 
     const send = (event: string, data: Record<string, unknown> = {}) => {
       const payload = { ...data, ...customProps };

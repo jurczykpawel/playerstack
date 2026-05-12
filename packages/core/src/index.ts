@@ -9,6 +9,7 @@ export { createInlineConfigProvider } from "./config";
 export type { ConfigProvider, PlayerstackConfig } from "./config";
 export { Playerstack } from "./playerstack";
 export type { PlayerstackApi } from "./playerstack";
+export { sanitizeHtml, isSafeHttpUrl, buildSafeCtaUrl } from "./safe-html";
 
 if (typeof window !== "undefined" && !customElements.get("player-stack")) {
   definePlayerstackElement();

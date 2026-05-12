@@ -1,4 +1,9 @@
-import type { PlayerstackPlugin, PlayerstackContext } from "@playerstack/core";
+import {
+  buildSafeCtaUrl,
+  sanitizeHtml,
+  type PlayerstackPlugin,
+  type PlayerstackContext,
+} from "@playerstack/core";
 
 export interface ActionBarButton {
   label: string;
@@ -99,24 +104,27 @@ function renderBar(cfg: ActionBarConfig, ctx: PlayerstackContext): HTMLElement {
   }
   if (cfg.html) {
     const html = document.createElement("span");
-    html.innerHTML = cfg.html;
+    html.innerHTML = sanitizeHtml(cfg.html);
     text.appendChild(html);
   }
   bar.appendChild(text);
 
   if (cfg.button) {
-    const link = document.createElement("a");
-    link.className = "playerstack-action-bar-button";
-    link.href = appendUtm(cfg.button.url, cfg.button.utm);
-    link.target = "_blank";
-    link.rel = "noopener noreferrer";
-    link.textContent = cfg.button.label;
-    link.style.cssText =
-      "padding:6px 12px;background:var(--ps-accent,#008aff);color:#fff;border-radius:6px;text-decoration:none;font-weight:600;font-size:13px;flex-shrink:0;";
-    link.addEventListener("click", () => {
-      ctx.events.emit("action-bar:click", { label: cfg.button!.label, url: link.href });
-    });
-    bar.appendChild(link);
+    const safeUrl = buildSafeCtaUrl(cfg.button.url, cfg.button.utm);
+    if (safeUrl) {
+      const link = document.createElement("a");
+      link.className = "playerstack-action-bar-button";
+      link.href = safeUrl;
+      link.target = "_blank";
+      link.rel = "noopener noreferrer";
+      link.textContent = cfg.button.label;
+      link.style.cssText =
+        "padding:6px 12px;background:var(--ps-accent,#008aff);color:#fff;border-radius:6px;text-decoration:none;font-weight:600;font-size:13px;flex-shrink:0;";
+      link.addEventListener("click", () => {
+        ctx.events.emit("action-bar:click", { label: cfg.button!.label, url: link.href });
+      });
+      bar.appendChild(link);
+    }
   }
 
   const close = document.createElement("button");
@@ -133,10 +141,4 @@ function renderBar(cfg: ActionBarConfig, ctx: PlayerstackContext): HTMLElement {
   bar.appendChild(close);
 
   return bar;
-}
-
-function appendUtm(url: string, utm?: string): string {
-  if (!utm) return url;
-  const sep = url.includes("?") ? "&" : "?";
-  return `${url}${sep}${utm}`;
 }

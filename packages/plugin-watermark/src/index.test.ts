@@ -114,18 +114,38 @@ describe("watermarkPlugin", () => {
     expect(link.querySelector("img")).not.toBeNull();
   });
 
-  it("rejects href that is not http(s)", async () => {
+  it("does not wrap in <a> when href is not an http(s) URL", async () => {
     const ctx = makeContext({
       watermark: {
         enabled: true,
         text: "x",
-        href: "javascript:alert(1)" as string,
+        href: "javascript:x" as string,
       },
     });
     await watermarkPlugin.init(ctx);
     const wm = ctx.container.querySelector(".playerstack-watermark");
     expect(wm).not.toBeNull();
     expect(wm!.tagName).not.toBe("A");
+  });
+
+  it("does not render an <img> when watermark.src is not an http(s) URL", async () => {
+    const ctx = makeContext({
+      watermark: { enabled: true, src: "javascript:x" as string },
+    });
+    await watermarkPlugin.init(ctx);
+    expect(ctx.container.querySelector(".playerstack-watermark img")).toBeNull();
+    expect(ctx.container.querySelector(".playerstack-watermark")).toBeNull();
+  });
+
+  it("falls back to text mode when src is invalid but text is present", async () => {
+    const ctx = makeContext({
+      watermark: { enabled: true, src: "javascript:x" as string, text: "© ACME" },
+    });
+    await watermarkPlugin.init(ctx);
+    const wm = ctx.container.querySelector(".playerstack-watermark");
+    expect(wm).not.toBeNull();
+    expect(wm?.querySelector("img")).toBeNull();
+    expect(wm?.textContent).toBe("© ACME");
   });
 
   it("destroy removes the overlay", async () => {

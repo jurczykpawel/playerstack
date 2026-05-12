@@ -6,6 +6,7 @@ import "hls-video-element";
 import { createEventBus, type EventBus } from "./events";
 import { createInlineConfigProvider, type ConfigProvider, type PlayerstackConfig } from "./config";
 import { createPluginRegistry, type PlayerstackPlugin } from "./plugins";
+import { isSafeHttpUrl } from "./safe-html";
 
 const OBSERVED_ATTRS = ["src", "poster", "title"] as const;
 
@@ -61,9 +62,13 @@ export class PlayerstackElement extends HTMLElement {
     if (!this.mediaPlayer) return;
     if (value === null) {
       this.mediaPlayer.removeAttribute(name);
-    } else {
-      this.mediaPlayer.setAttribute(name, value);
+      return;
     }
+    if ((name === "src" || name === "poster") && !isSafeHttpUrl(value)) {
+      this.mediaPlayer.removeAttribute(name);
+      return;
+    }
+    this.mediaPlayer.setAttribute(name, value);
   }
 
   private async boot(): Promise<void> {
@@ -87,6 +92,7 @@ export class PlayerstackElement extends HTMLElement {
       registry.register(plugin);
     }
 
+    let pluginsOk = true;
     try {
       await registry.init({
         events,
@@ -95,12 +101,15 @@ export class PlayerstackElement extends HTMLElement {
         config,
       });
     } catch (err) {
+      pluginsOk = false;
       console.error("[playerstack] plugin init failed:", err);
     }
 
     const deferredSrc = (config as { brandedThumb?: { clickToLoad?: boolean } }).brandedThumb
       ?.clickToLoad;
-    if (!deferredSrc && !mediaEl.hasAttribute("src")) {
+    // If plugin init threw, don't write a fallback `src` — the sources
+    // plugin owns the resolution decision and we must not override it.
+    if (pluginsOk && !deferredSrc && !mediaEl.hasAttribute("src")) {
       mediaEl.setAttribute("src", config.src);
     }
 
@@ -128,7 +137,7 @@ export class PlayerstackElement extends HTMLElement {
     if (config.crossorigin === "anonymous" || config.crossorigin === "use-credentials") {
       mediaEl.setAttribute("crossorigin", config.crossorigin);
     }
-    if (config.poster) mediaEl.setAttribute("poster", config.poster);
+    if (isSafeHttpUrl(config.poster)) mediaEl.setAttribute("poster", config.poster);
     if (config.title) mediaEl.setAttribute("title", config.title);
     mediaEl.style.width = "100%";
     mediaEl.style.height = "100%";

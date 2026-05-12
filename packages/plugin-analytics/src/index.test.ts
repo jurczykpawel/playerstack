@@ -49,13 +49,13 @@ describe("analyticsPlugin", () => {
 
   it("with endpoint: sends sendBeacon on cta:click", async () => {
     const ctx = makeContext({
-      analytics: { enabled: true, endpoint: "/api/track" },
+      analytics: { enabled: true, endpoint: "https://example.com/api/track" },
     });
     await analyticsPlugin.init(ctx);
     ctx.events.emit("cta:click", { label: "Buy", url: "https://example.com/buy" });
     expect(beaconMock).toHaveBeenCalled();
     const [url, body] = beaconMock.mock.calls[0] ?? [];
-    expect(url).toBe("/api/track");
+    expect(url).toBe("https://example.com/api/track");
     const payload = JSON.parse(body as string);
     expect(payload.event).toBe("cta:click");
     expect(payload.data.label).toBe("Buy");
@@ -63,7 +63,7 @@ describe("analyticsPlugin", () => {
 
   it("forwards thumb:click and cta:replay events", async () => {
     const ctx = makeContext({
-      analytics: { enabled: true, endpoint: "/api/track" },
+      analytics: { enabled: true, endpoint: "https://example.com/api/track" },
     });
     await analyticsPlugin.init(ctx);
     ctx.events.emit("thumb:click", undefined);
@@ -73,7 +73,7 @@ describe("analyticsPlugin", () => {
 
   it("forwards native play / pause / ended events on mediaPlayer", async () => {
     const ctx = makeContext({
-      analytics: { enabled: true, endpoint: "/api/track" },
+      analytics: { enabled: true, endpoint: "https://example.com/api/track" },
     });
     await analyticsPlugin.init(ctx);
     ctx.mediaPlayer.dispatchEvent(new Event("play"));
@@ -96,7 +96,7 @@ describe("analyticsPlugin", () => {
     const ctx = makeContext({
       analytics: {
         enabled: true,
-        endpoint: "/track",
+        endpoint: "https://example.com/track",
         customProps: { courseId: "abc-123" },
       },
     });
@@ -108,12 +108,30 @@ describe("analyticsPlugin", () => {
 
   it("destroy stops listeners — no further events get reported", async () => {
     const ctx = makeContext({
-      analytics: { enabled: true, endpoint: "/track" },
+      analytics: { enabled: true, endpoint: "https://example.com/track" },
     });
     await analyticsPlugin.init(ctx);
     analyticsPlugin.destroy?.(ctx);
     ctx.events.emit("thumb:click", undefined);
     ctx.mediaPlayer.dispatchEvent(new Event("play"));
     expect(beaconMock).not.toHaveBeenCalled();
+  });
+
+  it("does not initialize when provider='beacon' and endpoint is not an http(s) URL", async () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    for (const endpoint of [
+      "/api/track",
+      "javascript:x",
+      "data:text/plain,x",
+      undefined as unknown as string,
+    ]) {
+      beaconMock.mockClear();
+      const ctx = makeContext({ analytics: { enabled: true, endpoint } });
+      await analyticsPlugin.init(ctx);
+      ctx.events.emit("cta:click", { label: "x", url: "y" });
+      expect(beaconMock).not.toHaveBeenCalled();
+    }
+    expect(warn).toHaveBeenCalled();
+    warn.mockRestore();
   });
 });

@@ -134,6 +134,17 @@ describe("brandedThumbPlugin", () => {
     expect(overlay.querySelector("img")).not.toBeNull();
   });
 
+  it("does not render the poster <img> when poster is not an http(s) URL", async () => {
+    const ctx = makeContext({
+      poster: "javascript:x",
+      brandedThumb: { enabled: true },
+    });
+    await brandedThumbPlugin.init(ctx);
+    const overlay = ctx.container.querySelector(".playerstack-thumb") as HTMLElement;
+    expect(overlay).not.toBeNull();
+    expect(overlay.querySelector("img")).toBeNull();
+  });
+
   it("unmuteOnPlay: sets muted=false on the inner element on click", async () => {
     // Use case: autopreview muted-loops the video, click play should unmute.
     const ctx = makeContext({

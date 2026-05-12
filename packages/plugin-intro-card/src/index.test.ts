@@ -234,6 +234,30 @@ describe("introCardPlugin", () => {
     expect(ctx.container.querySelector(".playerstack-intro-card")).toBeNull();
   });
 
+  it("introCard.html is rendered through the core sanitizer (non-whitelisted tags removed)", async () => {
+    const ctx = makeContext({
+      introCard: {
+        enabled: true,
+        html: '<em>safe</em><script>x()</script><img src=x onerror="x()"><iframe src="https://example.com"></iframe>',
+      },
+    });
+    await introCardPlugin.init(ctx);
+    const wrap = ctx.container.querySelector(".playerstack-intro-card-html");
+    const html = wrap?.innerHTML ?? "";
+    expect(html).not.toMatch(/<script/i);
+    expect(html).not.toMatch(/onerror/i);
+    expect(html).not.toMatch(/<iframe/i);
+    expect(html).toContain("<em>safe</em>");
+  });
+
+  it("does not render the background <img> when image URL is not http(s)", async () => {
+    const ctx = makeContext({
+      introCard: { enabled: true, image: "javascript:x", title: "x" },
+    });
+    await introCardPlugin.init(ctx);
+    expect(ctx.container.querySelector("img.playerstack-intro-card-bg")).toBeNull();
+  });
+
   it("mounts the overlay as a direct child of <player-stack> (ctx.container), not inside <media-controller>", async () => {
     // Mux <media-controller> has its own shadow DOM with internal z-index for
     // native UI. Mounting overlay there can hide it under controls. Core sets

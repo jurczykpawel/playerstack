@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { sourcesPlugin } from "./index";
 import { createEventBus } from "@playerstack/core";
-import type { PlayerstackContext } from "@playerstack/core";
+import type { PlayerstackContext, PlayerstackConfig } from "@playerstack/core";
 
-function makeContext(src: string): PlayerstackContext {
+function makeContext(src: string, extra: Partial<PlayerstackConfig> = {}): PlayerstackContext {
   const container = document.createElement("div");
   const mediaPlayer = document.createElement("media-player");
   container.appendChild(mediaPlayer);
@@ -11,7 +11,7 @@ function makeContext(src: string): PlayerstackContext {
     events: createEventBus(),
     container,
     mediaPlayer,
-    config: { src },
+    config: { src, ...extra },
   } as PlayerstackContext;
 }
 
@@ -49,5 +49,20 @@ describe("sourcesPlugin", () => {
   it("throws when the source cannot be resolved", async () => {
     const ctx = makeContext("https://example.com/v.avi");
     await expect(sourcesPlugin.init(ctx)).rejects.toThrow(/cannot resolve/i);
+  });
+
+  it("throws when src is unresolvable even with brandedThumb.clickToLoad=true", async () => {
+    const ctx = makeContext("not-a-supported-source:x", {
+      brandedThumb: { enabled: true, clickToLoad: true },
+    } as unknown as Partial<PlayerstackConfig>);
+    await expect(sourcesPlugin.init(ctx)).rejects.toThrow(/cannot resolve/i);
+  });
+
+  it("with brandedThumb.clickToLoad=true and a resolvable src: does not set src attribute yet", async () => {
+    const ctx = makeContext("https://example.com/v.mp4", {
+      brandedThumb: { enabled: true, clickToLoad: true },
+    } as unknown as Partial<PlayerstackConfig>);
+    await sourcesPlugin.init(ctx);
+    expect(ctx.mediaPlayer.getAttribute("src")).toBeNull();
   });
 });
