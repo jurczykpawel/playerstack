@@ -20,12 +20,13 @@ afterEach(() => {
   delete (globalThis as { gtag?: unknown }).gtag;
 });
 
+type MockMediaPlayer = HTMLElement & { currentTime: number; duration: number };
+
 function makeContext(extra: Partial<PlayerstackConfig> = {}): PlayerstackContext {
   const container = document.createElement("div");
-  const mediaPlayer = document.createElement("media-player") as unknown as HTMLElement & {
-    currentTime: number;
-  };
+  const mediaPlayer = document.createElement("media-player") as unknown as MockMediaPlayer;
   mediaPlayer.currentTime = 0;
+  mediaPlayer.duration = NaN;
   container.appendChild(mediaPlayer);
   return {
     events: createEventBus(),
@@ -115,6 +116,131 @@ describe("analyticsPlugin", () => {
     ctx.events.emit("thumb:click", undefined);
     ctx.mediaPlayer.dispatchEvent(new Event("play"));
     expect(beaconMock).not.toHaveBeenCalled();
+  });
+
+  it("quartile tracking: emits progress on 25/50/75/100 crossings (default)", async () => {
+    const ctx = makeContext({
+      analytics: { enabled: true, endpoint: "https://example.com/track" },
+    });
+    const media = ctx.mediaPlayer as unknown as MockMediaPlayer;
+    media.duration = 100;
+    await analyticsPlugin.init(ctx);
+
+    const events: { event: string; data: Record<string, unknown> }[] = [];
+    beaconMock.mockImplementation((_url, body) => {
+      events.push(JSON.parse(body as string));
+      return true;
+    });
+
+    for (const t of [10, 25, 40, 50, 70, 75, 99, 100]) {
+      media.currentTime = t;
+      media.dispatchEvent(new Event("timeupdate"));
+    }
+
+    const progressEvents = events.filter((e) => e.event === "progress");
+    expect(progressEvents.map((e) => e.data.percent)).toEqual([25, 50, 75, 100]);
+  });
+
+  it("quartile tracking: each threshold fires only once per session", async () => {
+    const ctx = makeContext({
+      analytics: { enabled: true, endpoint: "https://example.com/track" },
+    });
+    const media = ctx.mediaPlayer as unknown as MockMediaPlayer;
+    media.duration = 100;
+    await analyticsPlugin.init(ctx);
+
+    media.currentTime = 30;
+    media.dispatchEvent(new Event("timeupdate"));
+    media.currentTime = 30;
+    media.dispatchEvent(new Event("timeupdate"));
+    media.currentTime = 35;
+    media.dispatchEvent(new Event("timeupdate"));
+
+    const calls = beaconMock.mock.calls
+      .map(([, b]) => JSON.parse(b as string) as { event: string })
+      .filter((e) => e.event === "progress");
+    expect(calls).toHaveLength(1);
+  });
+
+  it("quartile tracking: resets on loadedmetadata so a new video gets fresh thresholds", async () => {
+    const ctx = makeContext({
+      analytics: { enabled: true, endpoint: "https://example.com/track" },
+    });
+    const media = ctx.mediaPlayer as unknown as MockMediaPlayer;
+    media.duration = 100;
+    await analyticsPlugin.init(ctx);
+
+    media.currentTime = 30;
+    media.dispatchEvent(new Event("timeupdate"));
+    media.dispatchEvent(new Event("loadedmetadata"));
+    media.currentTime = 30;
+    media.dispatchEvent(new Event("timeupdate"));
+
+    const calls = beaconMock.mock.calls
+      .map(([, b]) => JSON.parse(b as string) as { event: string; data: { percent: number } })
+      .filter((e) => e.event === "progress");
+    expect(calls).toHaveLength(2);
+    expect(calls.every((c) => c.data.percent === 25)).toBe(true);
+  });
+
+  it("quartile tracking: quartiles=false disables it entirely", async () => {
+    const ctx = makeContext({
+      analytics: { enabled: true, endpoint: "https://example.com/track", quartiles: false },
+    });
+    const media = ctx.mediaPlayer as unknown as MockMediaPlayer;
+    media.duration = 100;
+    await analyticsPlugin.init(ctx);
+
+    media.currentTime = 50;
+    media.dispatchEvent(new Event("timeupdate"));
+    media.currentTime = 99;
+    media.dispatchEvent(new Event("timeupdate"));
+
+    const progress = beaconMock.mock.calls
+      .map(([, b]) => JSON.parse(b as string) as { event: string })
+      .filter((e) => e.event === "progress");
+    expect(progress).toHaveLength(0);
+  });
+
+  it("quartile tracking: custom thresholds override the defaults", async () => {
+    const ctx = makeContext({
+      analytics: {
+        enabled: true,
+        endpoint: "https://example.com/track",
+        quartiles: [10, 90],
+      },
+    });
+    const media = ctx.mediaPlayer as unknown as MockMediaPlayer;
+    media.duration = 100;
+    await analyticsPlugin.init(ctx);
+
+    for (const t of [5, 10, 50, 89, 90, 100]) {
+      media.currentTime = t;
+      media.dispatchEvent(new Event("timeupdate"));
+    }
+
+    const percents = beaconMock.mock.calls
+      .map(([, b]) => JSON.parse(b as string) as { event: string; data: { percent: number } })
+      .filter((e) => e.event === "progress")
+      .map((e) => e.data.percent);
+    expect(percents).toEqual([10, 90]);
+  });
+
+  it("quartile tracking: skips when duration is not finite (live / unknown)", async () => {
+    const ctx = makeContext({
+      analytics: { enabled: true, endpoint: "https://example.com/track" },
+    });
+    const media = ctx.mediaPlayer as unknown as MockMediaPlayer;
+    media.duration = NaN;
+    await analyticsPlugin.init(ctx);
+
+    media.currentTime = 1000;
+    media.dispatchEvent(new Event("timeupdate"));
+
+    const progress = beaconMock.mock.calls
+      .map(([, b]) => JSON.parse(b as string) as { event: string })
+      .filter((e) => e.event === "progress");
+    expect(progress).toHaveLength(0);
   });
 
   it("does not initialize when provider='beacon' and endpoint is not an http(s) URL", async () => {

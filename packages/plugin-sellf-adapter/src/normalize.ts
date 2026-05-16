@@ -187,6 +187,14 @@ function normalizeAnalytics(c: Record<string, unknown>): Record<string, unknown>
   pickBool(c, "debug", out);
   pickStringArray(c, "forwardBusEvents", out);
   pickStringArray(c, "forwardMediaEvents", out);
+  if (typeof c.quartiles === "boolean") {
+    out.quartiles = c.quartiles;
+  } else if (Array.isArray(c.quartiles)) {
+    const nums = c.quartiles.filter(
+      (n): n is number => typeof n === "number" && Number.isFinite(n) && n > 0 && n <= 100,
+    );
+    if (nums.length > 0) out.quartiles = nums;
+  }
   if (isObject(c.customProps)) {
     // Allow scalar-only custom props (strings, numbers, booleans). Nested
     // objects / arrays are dropped so adapter callers can't smuggle complex

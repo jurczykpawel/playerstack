@@ -149,6 +149,22 @@ describe("normalizeRemoteConfig", () => {
         customProps: { courseId: "abc" },
       });
     });
+
+    it("keeps quartiles when boolean or a clean number array; rejects garbage entries", () => {
+      const passBool = normalizeRemoteConfig({ analytics: { quartiles: false } });
+      expect((passBool.analytics as Record<string, unknown>).quartiles).toBe(false);
+
+      const passArr = normalizeRemoteConfig({
+        analytics: { quartiles: [10, 50, 90, 150, -5, "75", 100] },
+      });
+      expect((passArr.analytics as Record<string, unknown>).quartiles).toEqual([10, 50, 90, 100]);
+
+      const empty = normalizeRemoteConfig({ analytics: { quartiles: ["nope", -1] } });
+      expect((empty.analytics as Record<string, unknown>).quartiles).toBeUndefined();
+
+      const bogus = normalizeRemoteConfig({ analytics: { quartiles: "all" } });
+      expect((bogus.analytics as Record<string, unknown>).quartiles).toBeUndefined();
+    });
   });
 
   describe("emailGate", () => {
