@@ -77,7 +77,7 @@ jobs:
       deployments: write
     steps:
       - name: Download docs dist
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: docs-dist
           path: apps/docs/dist
