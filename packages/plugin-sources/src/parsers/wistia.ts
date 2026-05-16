@@ -24,11 +24,8 @@ export function parseWistia(input: string): WistiaSource | null {
   if (url.protocol !== "http:" && url.protocol !== "https:") return null;
   if (!WISTIA_HOST.test(url.hostname) && !WISTIA_SHORT_HOST.test(url.hostname)) return null;
 
-  const match = WISTIA_PATH.exec(url.pathname);
-  if (!match) return null;
-
-  const id = match[1];
-  if (!WISTIA_ID.test(id)) return null;
+  const id = WISTIA_PATH.exec(url.pathname)?.[1];
+  if (!id || !WISTIA_ID.test(id)) return null;
 
   return { type: "wistia", id };
 }

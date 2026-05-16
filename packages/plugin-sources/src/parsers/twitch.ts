@@ -47,16 +47,16 @@ export function parseTwitch(input: string): TwitchSource | null {
   }
 
   // twitch.tv/videos/{id}
-  const videoMatch = /^\/videos\/([0-9]+)/.exec(url.pathname);
-  if (videoMatch) return { type: "twitch", kind: "video", id: videoMatch[1] };
+  const videoId = /^\/videos\/([0-9]+)/.exec(url.pathname)?.[1];
+  if (videoId) return { type: "twitch", kind: "video", id: videoId };
 
   // twitch.tv/{channel}/clip/{slug}
-  const clipMatch = /^\/([A-Za-z0-9_]{3,25})\/clip\/([A-Za-z0-9_-]{6,80})/.exec(url.pathname);
-  if (clipMatch) return { type: "twitch", kind: "clip", id: clipMatch[2] };
+  const clipSlug = /^\/([A-Za-z0-9_]{3,25})\/clip\/([A-Za-z0-9_-]{6,80})/.exec(url.pathname)?.[2];
+  if (clipSlug) return { type: "twitch", kind: "clip", id: clipSlug };
 
   // twitch.tv/{channel}
-  const channelMatch = /^\/([A-Za-z0-9_]{3,25})$/.exec(url.pathname.replace(/\/$/, ""));
-  if (channelMatch) return { type: "twitch", kind: "channel", id: channelMatch[1] };
+  const channel = /^\/([A-Za-z0-9_]{3,25})$/.exec(url.pathname.replace(/\/$/, ""))?.[1];
+  if (channel) return { type: "twitch", kind: "channel", id: channel };
 
   return null;
 }
