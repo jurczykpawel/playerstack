@@ -14,7 +14,7 @@ Embeddable video player. OSS-first (MIT). Bun monorepo. Plugin-first architectur
 | Bundler            | esbuild → UMD + ESM                                                                                                    |
 | Tests unit         | Vitest + happy-dom (strict TDD)                                                                                        |
 | Tests E2E          | Playwright (Day 14)                                                                                                    |
-| Docs (post-MVP)    | Astro on `playerstack.techskills.academy`                                                                                       |
+| Docs (post-MVP)    | Astro on `playerstack.techskills.academy`                                                                              |
 | Backend (post-MVP) | Hono + CF Workers + D1 + R2                                                                                            |
 
 ## Rules
