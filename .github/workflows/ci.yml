@@ -87,7 +87,7 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: pages deploy apps/docs/dist --project-name=playerstack-docs --branch=main
+          command: pages deploy apps/docs/dist --project-name=playerstack --branch=main
 
       - name: Smoke test
-        run: curl -sf https://playerstack.sellf.app/ -o /dev/null
+        run: curl -sf https://playerstack.techskills.academy/ -o /dev/null

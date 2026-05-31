@@ -51,7 +51,7 @@ The bundle ships every Mux media-element (native `<video>`, `<youtube-video>`, `
 
 ## Custom config
 
-Full config schema is documented in the [main README](https://github.com/jurczykpawel/playerstack#readme) and on [playerstack.sellf.app/docs](https://playerstack.sellf.app/docs).
+Full config schema is documented in the [main README](https://github.com/jurczykpawel/playerstack#readme) and on [playerstack.techskills.academy/docs](https://playerstack.techskills.academy/docs).
 
 ## License
 

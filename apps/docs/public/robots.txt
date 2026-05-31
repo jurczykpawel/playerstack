@@ -5,4 +5,4 @@ Allow: /
 # https://www.cloudflare.com/learning/bots/content-signals/
 Content-Signals: search=yes, ai-input=yes, ai-train=yes
 
-Sitemap: https://playerstack.sellf.app/sitemap-index.xml
+Sitemap: https://playerstack.techskills.academy/sitemap-index.xml

@@ -45,7 +45,7 @@ export const emailGatePlugin: PlayerstackPlugin = {
     if (cfg.webhookUrl && !cfg.challengeUrl) {
       console.error(
         "[playerstack] email-gate: `webhookUrl` requires `challengeUrl`. Plugin disabled. " +
-          "See https://playerstack.sellf.app/docs/email-gate for the contract.",
+          "See https://playerstack.techskills.academy/docs/email-gate for the contract.",
       );
       return;
     }

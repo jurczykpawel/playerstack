@@ -54,6 +54,11 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
   </head>
   <body>
     <slot />
+    <footer class="tsa-ecosystem">
+      Part of the <a href="https://techskills.academy">TechSkills Academy</a> ecosystem
+      · <a href="https://techskills.academy/produkty">All products</a>
+      · <a href="https://techskills.academy/#open-source">Open source</a>
+    </footer>
   </body>
 </html>
 
@@ -90,4 +95,12 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
     overflow-x: auto;
   }
   h1, h2, h3 { letter-spacing: -0.01em; }
+  .tsa-ecosystem {
+    border-top: 1px solid var(--border);
+    margin-top: 48px;
+    padding: 24px 16px;
+    text-align: center;
+    font-size: 0.85rem;
+    color: var(--muted);
+  }
 </style>

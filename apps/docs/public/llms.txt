@@ -36,7 +36,7 @@ Bun monorepo. TypeScript strict. Engine: Mux media-chrome + media-elements (MIT)
 MIT for core and all 16 plugins. Premium plugins (post-MVP) are proprietary.
 
 ## Links
-- Site: https://playerstack.sellf.app
+- Site: https://playerstack.techskills.academy
 - GitHub: https://github.com/jurczykpawel/playerstack
 - npm (UMD bundle): https://www.npmjs.com/package/playerstack
 - Engine UI: https://github.com/muxinc/media-chrome

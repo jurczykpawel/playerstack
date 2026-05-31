@@ -2,7 +2,7 @@ import { defineConfig } from "astro/config";
 import sitemap from "@astrojs/sitemap";
 
 export default defineConfig({
-  site: "https://playerstack.sellf.app",
+  site: "https://playerstack.techskills.academy",
   integrations: [sitemap()],
   server: {
     host: true,
