@@ -14,7 +14,7 @@ Embeddable video player. OSS-first (MIT). Bun monorepo. Plugin-first architectur
 | Bundler            | esbuild → UMD + ESM                                                                                                    |
 | Tests unit         | Vitest + happy-dom (strict TDD)                                                                                        |
 | Tests E2E          | Playwright (Day 14)                                                                                                    |
-| Docs (post-MVP)    | Astro on `playerstack.sellf.app`                                                                                       |
+| Docs (post-MVP)    | Astro on `playerstack.techskills.academy`                                                                                       |
 | Backend (post-MVP) | Hono + CF Workers + D1 + R2                                                                                            |
 
 ## Rules
@@ -63,7 +63,7 @@ tests/
 
 ## Domain & hosting
 
-- Production domain: `playerstack.sellf.app` (Cloudflare DNS, A record on `sellf.app` zone)
+- Production domain: `playerstack.techskills.academy` (Cloudflare DNS, A record on `sellf.app` zone)
 - CDN: jsDelivr via npm (`https://cdn.jsdelivr.net/npm/playerstack@VERSION/dist/playerstack.min.js`)
 - Docs: Cloudflare Pages or mikrus + Caddy (TBD Day 11-12)
 

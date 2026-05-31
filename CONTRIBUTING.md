@@ -18,7 +18,7 @@ bun run test                        # all packages
 - `packages/plugin-*` — first-party plugins (sources, controls-policy, autopreview, branded-thumb, cta-end, sellf-adapter)
 - `packages/embed` — standalone UMD/ESM/CJS bundle (`playerstack` on npm)
 - `apps/playground` — local Vite dev demo
-- `apps/docs` — Astro site for [playerstack.sellf.app](https://playerstack.sellf.app)
+- `apps/docs` — Astro site for [playerstack.techskills.academy](https://playerstack.techskills.academy)
 - `tests/e2e` — Playwright suite
 
 ## Strict TDD

@@ -102,7 +102,7 @@ packages/
   embed/                      playerstack (standalone UMD bundle)
 apps/
   playground/                 local Vite dev demo (Playwright e2e target)
-  docs/                       Astro site (playerstack.sellf.app)
+  docs/                       Astro site (playerstack.techskills.academy)
 ```
 
 ## Custom plugins
