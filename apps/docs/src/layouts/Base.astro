@@ -1,4 +1,6 @@
 ---
+import Analytics from "../components/Analytics.astro";
+
 interface Props {
   title: string;
   description?: string;
@@ -51,14 +53,19 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
         url: Astro.site?.toString(),
       })}
     />
+    <Analytics location="head" />
   </head>
   <body>
+    <Analytics location="body" />
     <slot />
     <footer class="tsa-ecosystem">
       Part of the <a href="https://techskills.academy">TechSkills Academy</a> ecosystem
       · <a href="https://techskills.academy/narzedzia">All tools</a>
       · <a href="https://techskills.academy/#ekosystem">Open source</a>
     </footer>
+    <div class="tsa-footer-meta">
+      <a href="#cookie-preferences" data-cc="show-preferences">Cookie preferences</a>
+    </div>
   </body>
 </html>
 
@@ -103,4 +110,11 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
     font-size: 0.85rem;
     color: var(--muted);
   }
+  .tsa-footer-meta {
+    padding: 0 16px 24px;
+    text-align: center;
+    font-size: 0.8rem;
+    color: var(--muted);
+  }
+  .tsa-footer-meta a { color: var(--muted); }
 </style>

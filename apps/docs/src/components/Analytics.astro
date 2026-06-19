@@ -1,0 +1,126 @@
+---
+/**
+ * Analytics.astro — privacy-first analytics + consent for the Playerstack docs site.
+ *
+ * Build-time configured via PUBLIC_* env vars (read with import.meta.env):
+ *   - PUBLIC_GTM_ID            → GTM web container (server-side GA4 via Consent Mode V2)
+ *   - PUBLIC_UMAMI_WEBSITE_ID  → Umami website id (client-side, self-hosted)
+ *   - PUBLIC_UMAMI_SRC         → Umami script src (defaults to TSA self-hosted instance)
+ *
+ * If no IDs are set the build stays green and nothing is emitted (no banner, no trackers).
+ *
+ * Render twice in the layout:
+ *   <Analytics location="head" />  → in <head>: Consent Mode V2 defaults + config globals
+ *   <Analytics location="body" />  → top of <body>: consent manager + "show preferences" link
+ *
+ * Consent: GTM (GA4) AND Umami are gated on the "analytics" category. No Meta Pixel.
+ */
+const { location = "head" } = Astro.props as { location?: "head" | "body" };
+
+const gtmId = import.meta.env.PUBLIC_GTM_ID || "";
+const umamiId = import.meta.env.PUBLIC_UMAMI_WEBSITE_ID || "";
+const umamiSrc = import.meta.env.PUBLIC_UMAMI_SRC || "https://stats.techskills.academy/script.js";
+
+const enabled = Boolean(gtmId || umamiId);
+const cfg = { gtmId, umamiId, umamiSrc };
+---
+
+{
+  enabled && location === "head" && (
+    <script is:inline define:vars={{ cfg }}>
+      {
+        // Expose build-time config to the consent manager.
+        (function () {
+          var w = window;
+          w.__PLAYERSTACK_ANALYTICS__ = cfg;
+          if (cfg.gtmId) {
+            // GTM Consent Mode V2 defaults — everything denied until the visitor opts in.
+            w.dataLayer = w.dataLayer || [];
+            var gtag = function () {
+              w.dataLayer.push(arguments);
+            };
+            w.gtag = gtag;
+            gtag("consent", "default", {
+              ad_storage: "denied",
+              ad_user_data: "denied",
+              ad_personalization: "denied",
+              analytics_storage: "denied",
+              functionality_storage: "granted",
+              personalization_storage: "denied",
+              security_storage: "granted",
+              wait_for_update: 500,
+            });
+            w.dataLayer.push({ source_brand: "playerstack" });
+            w.__playerstack_gtm_id = cfg.gtmId;
+          }
+          if (cfg.umamiId) {
+            // Umami is loaded by the consent manager only after analytics consent.
+            w.__playerstack_umami_id = cfg.umamiId;
+            w.__playerstack_umami_src = cfg.umamiSrc;
+          }
+        })();
+      }
+    </script>
+  )
+}
+
+{
+  enabled && location === "body" && (
+    <script>
+      {
+        // Lazy-load the consent manager; it governs GTM + Umami cookie categories and
+        // powers the footer "Cookies" link (data-cc="show-preferences").
+        const w = window as Window & {
+          requestIdleCallback?: (cb: () => void, opts?: { timeout: number }) => void;
+        };
+        let loaded: Promise<typeof import("../lib/cookieconsent-init")> | null = null;
+        const loadCC = () => {
+          if (!loaded) {
+            loaded = import("../lib/cookieconsent-init").then(async (mod) => {
+              await mod.initCookieConsent();
+              return mod;
+            });
+          }
+          return loaded;
+        };
+        const hasConsent = () => {
+          if (document.cookie.includes("playerstack_consent=")) return true;
+          try {
+            return !!localStorage.getItem("playerstack_cc_v1");
+          } catch {
+            return false;
+          }
+        };
+        const ric = w.requestIdleCallback;
+        const scheduleCC = () => {
+          if (hasConsent()) {
+            loadCC();
+          } else if (typeof ric === "function") {
+            ric(loadCC, { timeout: 10000 });
+          } else {
+            window.setTimeout(loadCC, 4000);
+          }
+        };
+        if (document.readyState === "complete") {
+          scheduleCC();
+        } else {
+          window.addEventListener("load", scheduleCC, { once: true });
+        }
+        document.addEventListener(
+          "click",
+          (e) => {
+            const t =
+              e.target instanceof Element
+                ? e.target.closest('[data-cc="show-preferences"], a[href="#cookie-preferences"]')
+                : null;
+            if (t) {
+              e.preventDefault();
+              loadCC().then((mod) => mod.showCookiePreferences());
+            }
+          },
+          { capture: true },
+        );
+      }
+    </script>
+  )
+}
