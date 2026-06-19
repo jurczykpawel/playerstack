@@ -103,9 +103,9 @@ const updateGtag = (cookie: ConsentCookie) => {
   if (typeof window.gtag === "function") {
     window.gtag("consent", "update", {
       analytics_storage: has("analytics") ? "granted" : "denied",
-      ad_storage: "denied",
-      ad_user_data: "denied",
-      ad_personalization: "denied",
+      ad_storage: has("marketing") ? "granted" : "denied",
+      ad_user_data: has("marketing") ? "granted" : "denied",
+      ad_personalization: has("marketing") ? "granted" : "denied",
       functionality_storage: "granted",
       security_storage: "granted",
     });
@@ -116,8 +116,10 @@ const updateGtag = (cookie: ConsentCookie) => {
     cookie_categories: cats,
     source_brand: "playerstack",
   });
-  if (has("analytics")) {
+  if (has("analytics") || has("marketing")) {
     loadGtm();
+  }
+  if (has("analytics")) {
     loadUmami();
   }
 };
@@ -175,6 +177,12 @@ export async function initCookieConsent() {
           cookies: [{ name: /^_ga/ }, { name: "_gid" }],
         },
       },
+      marketing: {
+        enabled: false,
+        autoClear: {
+          cookies: [{ name: "_fbp" }, { name: "_fbc" }],
+        },
+      },
     },
     language: {
       default: "en",
@@ -210,6 +218,12 @@ export async function initCookieConsent() {
                 description:
                   "Google Analytics 4 (server-side, first-party) and Umami self-hosted. GA4 stores `_ga` (24 months) and `_gid` (24 hours). Umami is cookieless. No cross-site tracking.",
                 linkedCategory: "analytics",
+              },
+              {
+                title: "Marketing",
+                description:
+                  "Meta Pixel — ad measurement and audience building (remarketing), _fbp/_fbc cookies.",
+                linkedCategory: "marketing",
               },
               {
                 title: "More info",
