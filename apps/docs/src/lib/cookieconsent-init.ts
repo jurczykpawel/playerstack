@@ -202,8 +202,7 @@ export async function initCookieConsent() {
               },
               {
                 title: "Strictly necessary",
-                description:
-                  "Required for the site to function (consent storage). Always on.",
+                description: "Required for the site to function (consent storage). Always on.",
                 linkedCategory: "necessary",
               },
               {
