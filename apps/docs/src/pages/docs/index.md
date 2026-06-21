@@ -19,7 +19,7 @@ Playerstack is an embeddable video player you drop onto any HTML page with one `
 
 ```html
 <script
-  src="https://cdn.jsdelivr.net/npm/playerstack@0.1.0/dist/playerstack.min.js"
+  src="https://playerstack.techskills.academy/playerstack.min.js"
   defer
 ></script>
 

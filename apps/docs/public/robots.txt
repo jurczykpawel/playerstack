@@ -1,8 +1,8 @@
 User-agent: *
 Allow: /
 
-# Content-Signals: AI training and search are both allowed
-# https://www.cloudflare.com/learning/bots/content-signals/
-Content-Signals: search=yes, ai-input=yes, ai-train=yes
+# AI training and search both allowed.
+# Content signals are managed at the Cloudflare edge (search=yes, ai-input=yes, ai-train=yes);
+# the literal Content-Signals directive is omitted here because it is not part of the robots.txt standard.
 
 Sitemap: https://playerstack.techskills.academy/sitemap-index.xml

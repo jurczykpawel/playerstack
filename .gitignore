@@ -34,3 +34,7 @@ apps/docs/public/playerstack.min.js
 apps/docs/public/playerstack.min.js.map
 apps/playground/playerstack.min.js
 apps/playground/playerstack.min.js.map
+
+# Private task tracking / working docs (never commit)
+priv/
+docs/superpowers/

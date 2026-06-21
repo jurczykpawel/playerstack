@@ -1,79 +1,757 @@
 ---
+import "@fontsource-variable/inter";
+import "@fontsource-variable/space-grotesk";
+import "@fontsource-variable/jetbrains-mono";
+import interFont from "@fontsource-variable/inter/files/inter-latin-wght-normal.woff2";
+import displayFont from "@fontsource-variable/space-grotesk/files/space-grotesk-latin-wght-normal.woff2";
 import Base from "../layouts/Base.astro";
+import { en } from "../content/landing";
 
-const quickstart = `<script src="https://cdn.jsdelivr.net/npm/playerstack@0.1.0/dist/playerstack.min.js" defer></` + `script>
+const c = en;
 
-<player-stack
-  src="https://youtu.be/dQw4w9WgXcQ"
-  data-config='{"controls":{"accent":"#008aff"}}'>
-</player-stack>`;
+// Inline Lucide icons (stroke 1.75) — no emoji as icons (workspace rule).
+const icon: Record<string, string> = {
+  github:
+    '<path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 .5 5 .5 5 .5c-.3 1.15-.3 2.35 0 3.5A5.4 5.4 0 0 0 4 7.5c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4"/><path d="M9 18c-4.51 2-5-2-7-2"/>',
+  arrow:
+    '<path d="M5 12h14"/><path d="m12 5 7 7-7 7"/>',
+  copy:
+    '<rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>',
+  check: '<path d="M20 6 9 17l-5-5"/>',
+  plus: '<path d="M5 12h14"/><path d="M12 5v14"/>',
+  megaphone:
+    '<path d="m3 11 18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/>',
+  grad:
+    '<path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/>',
+  zap: '<path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z"/>',
+  palette:
+    '<circle cx="13.5" cy="6.5" r=".5" fill="currentColor"/><circle cx="17.5" cy="10.5" r=".5" fill="currentColor"/><circle cx="8.5" cy="7.5" r=".5" fill="currentColor"/><circle cx="6.5" cy="12.5" r=".5" fill="currentColor"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.563-2.512 5.563-5.563C21.5 6.012 17.488 2 12 2z"/>',
+  chart:
+    '<path d="M3 3v16a2 2 0 0 0 2 2h16"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/>',
+};
+
+const groupIcon = ["megaphone", "grad", "zap", "palette", "chart"];
 ---
 
-<Base title="Playerstack — embeddable video player">
-  <main>
-    <header class="hero">
-      <h1>Playerstack</h1>
-      <p class="lead">
-        Embeddable video player. One script tag. YouTube, Vimeo, MP4, HLS. Brand it,
-        add CTAs, gate emails — all via plugins. MIT.
-      </p>
-      <div class="cta-row">
-        <a class="cta primary" href="/docs">Documentation →</a>
-        <a class="cta" href="/playground">Live playground</a>
-        <a class="cta" href="https://github.com/jurczykpawel/playerstack" target="_blank" rel="noreferrer">GitHub</a>
+<Base title={c.meta.title} description={c.meta.description}>
+  <Fragment slot="head">
+    <link rel="preload" href={displayFont} as="font" type="font/woff2" crossorigin="anonymous" />
+    <link rel="preload" href={interFont} as="font" type="font/woff2" crossorigin="anonymous" />
+  </Fragment>
+  <script is:inline>document.documentElement.classList.add("js");</script>
+  <a href="#main" class="skip">Skip to content</a>
+
+  <header class="nav" id="nav">
+    <div class="nav-inner">
+      <a href="#top" class="brand" aria-label="Playerstack home">
+        <span class="brand-dot" aria-hidden="true"></span>
+        Playerstack
+      </a>
+      <nav class="nav-links" aria-label="Primary">
+        {c.nav.links.map((l) => <a href={l.href}>{l.label}</a>)}
+      </nav>
+      <a class="nav-gh" href={c.nav.github} target="_blank" rel="noreferrer" aria-label="Playerstack on GitHub">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" set:html={icon.github} />
+        <span>GitHub</span>
+      </a>
+    </div>
+  </header>
+
+  <main id="main">
+    <span id="top"></span>
+
+    <!-- HERO -->
+    <section class="hero">
+      <div class="hero-glow" aria-hidden="true"></div>
+      <div class="wrap hero-inner reveal">
+        <p class="eyebrow">{c.hero.eyebrow}</p>
+        <h1 class="hero-title">{c.hero.title}</h1>
+        <p class="hero-lead">{c.hero.lead}</p>
+        <div class="hero-cta">
+          <a class="btn btn-primary" href={c.hero.primary.href}>
+            {c.hero.primary.label}
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" set:html={icon.arrow} />
+          </a>
+          <a class="btn btn-ghost" href={c.hero.secondary.href}>{c.hero.secondary.label}</a>
+        </div>
+        <button class="install" type="button" data-copy={c.hero.install} aria-label="Copy the embed script tag">
+          <code>{c.hero.install}</code>
+          <svg class="install-ico" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" set:html={icon.copy} />
+        </button>
+        <a class="install-note" href={c.hero.selfHost.href}>{c.hero.selfHost.label}</a>
       </div>
-    </header>
-
-    <section>
-      <h2>Quickstart</h2>
-      <pre><code>{quickstart}</code></pre>
     </section>
 
-    <section>
-      <h2>What it does</h2>
-      <ul>
-        <li><strong>Sources auto-detect</strong> — paste a YouTube, Vimeo, MP4, or HLS URL, it just works.</li>
-        <li><strong>Branding</strong> — color theme, custom poster, click-to-load (LCP + GDPR).</li>
-        <li><strong>CTAs</strong> — overlay HTML at end of video, button with UTM, replay.</li>
-        <li><strong>Autopreview</strong> — muted autoplay when in viewport, pause when out.</li>
-        <li><strong>Plugin-first</strong> — every feature is a plugin you can swap or extend.</li>
-      </ul>
+    <!-- LIVING DEMO -->
+    <section class="demo" id="living-demo">
+      <div class="wrap">
+        <header class="sec-head reveal">
+          <p class="eyebrow">{c.livingDemo.eyebrow}</p>
+          <h2>{c.livingDemo.title}</h2>
+          <p class="sec-lead">{c.livingDemo.lead}</p>
+        </header>
+
+        <div class="demo-grid">
+          <div class="demo-stage">
+            <div class="stage-card">
+              <div class="stage-bar" aria-hidden="true">
+                <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+                <span class="stage-url">{c.livingDemo.srcLabel}</span>
+              </div>
+              <div class="player-host" id="demo-host" aria-label="Live Playerstack demo"></div>
+              <ol class="rail" id="demo-rail" aria-hidden="true">
+                {c.livingDemo.steps.map((s, i) => (
+                  <li data-i={i}><span>{s.label}</span></li>
+                ))}
+              </ol>
+            </div>
+          </div>
+
+          <ol class="steps" id="demo-steps">
+            {c.livingDemo.steps.map((s, i) => (
+              <li class="step reveal" data-i={i} id={`step-${i}`}>
+                <div class="step-head">
+                  <span class="chip">{s.key}</span>
+                  <h3>{s.title}</h3>
+                </div>
+                <p>{s.blurb}</p>
+                <pre class="code" aria-label={`Configuration after enabling ${s.key}`}><code>{s.code.map((line) => (
+                  <span class={`cl${line.add ? " add" : ""}`} style={`--ind:${line.indent ?? 0}`}>{line.text}</span>
+                ))}</code></pre>
+              </li>
+            ))}
+          </ol>
+        </div>
+        <p class="demo-closer reveal">{c.livingDemo.closer}</p>
+      </div>
     </section>
 
-    <section>
-      <h2>Why</h2>
-      <p>
-        Plyr and the Mux media-elements are great engines for developers — no marketing layer.
-        Presto Player has the marketing layer — only for WordPress. Playerstack is
-        the modern, framework-agnostic combination of both.
-      </p>
+    <!-- SOURCES -->
+    <section class="sources">
+      <div class="wrap sec-narrow">
+        <header class="sec-head reveal">
+          <p class="eyebrow">{c.sources.eyebrow}</p>
+          <h2>{c.sources.title}</h2>
+          <p class="sec-lead">{c.sources.lead}</p>
+        </header>
+        <ul class="badges reveal">
+          {c.sources.items.map((s, i) => (
+            <li style={`--d:${i * 45}ms`}>{s}</li>
+          ))}
+        </ul>
+      </div>
     </section>
 
-    <footer>
-      <p>MIT. Built on Mux's <a href="https://github.com/muxinc/media-chrome" target="_blank" rel="noreferrer">media-chrome</a> and <a href="https://github.com/muxinc/media-elements" target="_blank" rel="noreferrer">media-elements</a>.</p>
-    </footer>
+    <!-- PLUGINS -->
+    <section class="plugins" id="plugins">
+      <div class="wrap">
+        <header class="sec-head reveal">
+          <p class="eyebrow">{c.plugins.eyebrow}</p>
+          <h2>{c.plugins.title}</h2>
+          <p class="sec-lead">{c.plugins.lead}</p>
+        </header>
+        {c.plugins.groups.map((g, gi) => (
+          <div class="pgroup reveal">
+            <div class="pgroup-label">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" set:html={icon[groupIcon[gi]]} />
+              <span>{g.label}</span>
+            </div>
+            <div class="pgrid">
+              {g.items.map((p) => (
+                <article class="pcard">
+                  <h3>{p.name}</h3>
+                  <code class="pkg">@playerstack/plugin-{p.pkg}</code>
+                  <p>{p.desc}</p>
+                </article>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+
+    <!-- WHY -->
+    <section class="why">
+      <div class="wrap">
+        <header class="sec-head reveal">
+          <p class="eyebrow">{c.why.eyebrow}</p>
+          <h2>{c.why.title}</h2>
+        </header>
+        <div class="why-grid">
+          {c.why.cards.map((card, i) => (
+            <article class={`why-card reveal${i === 2 ? " highlight" : ""}`}>
+              <h3>{card.title}</h3>
+              <p>{card.body}</p>
+            </article>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    <!-- FRAMEWORKS -->
+    <section class="frameworks" id="frameworks">
+      <div class="wrap fw-grid">
+        <div class="fw-text reveal">
+          <p class="eyebrow">{c.frameworks.eyebrow}</p>
+          <h2>{c.frameworks.title}</h2>
+          <p class="sec-lead">{c.frameworks.lead}</p>
+          <ul class="fw-chips">
+            {c.frameworks.items.map((f) => <li>{f}</li>)}
+          </ul>
+        </div>
+        <div class="fw-code reveal">
+          <div class="stage-bar" aria-hidden="true">
+            <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+            <span class="stage-url">index.html</span>
+          </div>
+          <pre class="code"><code>{c.frameworks.snippet}</code></pre>
+          <button class="copy-snip" type="button" data-copy={c.frameworks.snippet}>
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" set:html={icon.copy} />
+            <span>Copy</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- TRUST -->
+    <section class="trust">
+      <div class="wrap trust-row reveal">
+        {c.trust.items.map((t) => (
+          <div class="trust-item">
+            <span class="trust-val">{t.value}</span>
+            <span class="trust-lab">{t.label}</span>
+          </div>
+        ))}
+      </div>
+    </section>
+
+    <!-- FAQ -->
+    <section class="faq">
+      <div class="wrap sec-narrow">
+        <header class="sec-head reveal">
+          <p class="eyebrow">{c.faq.eyebrow}</p>
+          <h2>{c.faq.title}</h2>
+        </header>
+        <div class="faq-list reveal">
+          {c.faq.items.map((f) => (
+            <details>
+              <summary>
+                <span>{f.q}</span>
+                <svg class="faq-ico" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" set:html={icon.plus} />
+              </summary>
+              <p>{f.a}</p>
+            </details>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    <!-- FINAL CTA -->
+    <section class="final">
+      <div class="final-glow" aria-hidden="true"></div>
+      <div class="wrap final-inner reveal">
+        <p class="eyebrow">{c.finalCta.eyebrow}</p>
+        <h2>{c.finalCta.title}</h2>
+        <p class="sec-lead">{c.finalCta.lead}</p>
+        <div class="hero-cta">
+          <a class="btn btn-primary" href={c.finalCta.primary.href}>
+            {c.finalCta.primary.label}
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" set:html={icon.arrow} />
+          </a>
+          <a class="btn btn-ghost" href={c.finalCta.secondary.href}>{c.finalCta.secondary.label}</a>
+          <a class="btn btn-ghost" href={c.finalCta.github} target="_blank" rel="noreferrer" aria-label="Playerstack on GitHub">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" set:html={icon.github} />
+            GitHub
+          </a>
+        </div>
+      </div>
+    </section>
   </main>
-</Base>
 
-<style>
-  main { max-width: 920px; margin: 0 auto; padding: 64px 24px; }
-  .hero { padding: 32px 0 48px; }
-  h1 { font-size: 56px; margin: 0 0 8px; line-height: 1; }
-  .lead { font-size: 19px; color: var(--muted); max-width: 640px; margin: 0 0 24px; }
-  .cta-row { display: flex; gap: 12px; flex-wrap: wrap; }
-  .cta {
-    display: inline-block;
-    padding: 12px 20px;
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    text-decoration: none;
-    color: var(--fg);
-    font-weight: 500;
-  }
-  .cta.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
-  section { padding: 32px 0; border-top: 1px solid var(--border); }
-  section h2 { font-size: 24px; color: var(--accent); margin: 0 0 16px; }
-  ul { margin: 0; padding-left: 20px; }
-  li { margin: 8px 0; }
-  footer { padding: 32px 0; border-top: 1px solid var(--border); color: var(--muted); }
-</style>
+  <!-- Step configs for the Living Demo controller -->
+  <script
+    type="application/json"
+    id="demo-config"
+    set:html={JSON.stringify({
+      src: "/demo.mp4",
+      poster: "/demo-poster.webp",
+      steps: c.livingDemo.steps.map((s) => ({ config: s.config, action: s.action ?? null })),
+    })}
+  />
+
+  <script>
+    // -------- Reveal on scroll (IntersectionObserver + CSS) --------
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const reveals = document.querySelectorAll<HTMLElement>(".reveal");
+    if (reduce) {
+      reveals.forEach((el) => el.classList.add("in"));
+    } else {
+      const ro = new IntersectionObserver(
+        (entries) => {
+          for (const e of entries) {
+            if (e.isIntersecting) {
+              e.target.classList.add("in");
+              ro.unobserve(e.target);
+            }
+          }
+        },
+        { rootMargin: "0px 0px -10% 0px", threshold: 0.15 },
+      );
+      reveals.forEach((el) => ro.observe(el));
+    }
+
+    // -------- Copy buttons --------
+    document.querySelectorAll<HTMLElement>("[data-copy]").forEach((btn) => {
+      btn.addEventListener("click", async () => {
+        const text = btn.getAttribute("data-copy") ?? "";
+        try {
+          await navigator.clipboard.writeText(text);
+          btn.classList.add("copied");
+          setTimeout(() => btn.classList.remove("copied"), 1400);
+        } catch {
+          /* clipboard unavailable */
+        }
+      });
+    });
+
+    // -------- Living Demo controller --------
+    type DemoStepCfg = { config: Record<string, unknown>; action: "end" | null };
+    type DemoCfg = { src: string; poster: string; steps: DemoStepCfg[] };
+    const cfgEl = document.getElementById("demo-config");
+    const host = document.getElementById("demo-host");
+    const stepEls = Array.from(document.querySelectorAll<HTMLElement>(".step"));
+    const railEls = Array.from(document.querySelectorAll<HTMLElement>(".rail li"));
+
+    // The 800 KB player bundle is the page's heaviest asset and the demo sits below
+    // the fold, so load it lazily (when the demo nears the viewport, or on idle).
+    let bundlePromise: Promise<void> | null = null;
+    const loadBundle = () => {
+      if (bundlePromise) return bundlePromise;
+      bundlePromise = new Promise<void>((resolve, reject) => {
+        if ((window as unknown as { Playerstack?: unknown }).Playerstack) return resolve();
+        const s = document.createElement("script");
+        s.src = "/playerstack.min.js";
+        s.onload = () => resolve();
+        s.onerror = () => reject(new Error("bundle failed"));
+        document.head.appendChild(s);
+      });
+      return bundlePromise;
+    };
+
+    if (cfgEl && host) {
+      const cfg = JSON.parse(cfgEl.textContent ?? "{}") as DemoCfg;
+      let current = -1;
+
+      // Drive event-only plugins (cta-end) into their visible state. The plugin listens
+      // for `ended` on the media element; muted autoplay is unreliable, so once the video
+      // is ready we seek to the last frame and dispatch `ended` to render the end card.
+      const driveToEnd = (el: HTMLElement) => {
+        let tries = 0;
+        const tick = () => {
+          const v = el.querySelector<HTMLVideoElement>("video");
+          if (!v) {
+            if (tries++ < 40) requestAnimationFrame(tick);
+            return;
+          }
+          const fire = () => {
+            try {
+              v.muted = true;
+              if (isFinite(v.duration) && v.duration > 0) v.currentTime = Math.max(0, v.duration - 0.05);
+            } catch {
+              /* ignore */
+            }
+            v.dispatchEvent(new Event("ended"));
+          };
+          // The media element is appended before plugins finish initializing, so
+          // re-fire `ended` a few times until the cta-end listener is attached and
+          // its overlay appears.
+          let n = 0;
+          const id = setInterval(() => {
+            fire();
+            if (++n >= 8 || el.querySelector(".playerstack-cta")) {
+              clearInterval(id);
+            }
+          }, 200);
+        };
+        tick();
+      };
+
+      const renderPlayer = (i: number) => {
+        const step = cfg.steps[i] ?? { config: {}, action: null };
+        host.innerHTML = "";
+        const el = document.createElement("player-stack");
+        // sources + branded-thumb validate absolute http(s) URLs, so resolve here
+        el.setAttribute("src", new URL(cfg.src, location.origin).href);
+        el.setAttribute("poster", new URL(cfg.poster, location.origin).href);
+        el.setAttribute("title", "Playerstack");
+        if (Object.keys(step.config).length > 0) {
+          el.setAttribute("data-config", JSON.stringify(step.config));
+        }
+        host.appendChild(el);
+        if (step.action === "end") driveToEnd(el);
+      };
+
+      const setActive = (i: number) => {
+        if (i === current) return;
+        current = i;
+        stepEls.forEach((s, si) => s.classList.toggle("active", si === i));
+        railEls.forEach((r, ri) => r.classList.toggle("on", ri <= i));
+        renderPlayer(i);
+      };
+
+      const initDemo = () => {
+        // Show a working player; default to the final, fully-loaded state.
+        setActive(reduce ? cfg.steps.length - 1 : 0);
+        if (!reduce) {
+          const so = new IntersectionObserver(
+            (entries) => {
+              for (const e of entries) {
+                if (e.isIntersecting) {
+                  setActive(Number((e.target as HTMLElement).dataset.i ?? "0"));
+                }
+              }
+            },
+            { rootMargin: "-50% 0px -50% 0px", threshold: 0 },
+          );
+          stepEls.forEach((s) => so.observe(s));
+        }
+      };
+
+      let started = false;
+      const start = () => {
+        if (started) return;
+        started = true;
+        loadBundle().then(initDemo).catch(() => {});
+      };
+
+      // Observe the player host (well below the fold), not the whole section, so the
+      // heavy bundle stays out of the initial paint and the hero text remains the LCP.
+      const lo = new IntersectionObserver(
+        (entries) => {
+          if (entries.some((e) => e.isIntersecting)) {
+            lo.disconnect();
+            start();
+          }
+        },
+        { rootMargin: "150px 0px" },
+      );
+      lo.observe(host);
+      // Reduced-motion users get no scroll morph, so load on idle to show the final state.
+      if (reduce) {
+        (window.requestIdleCallback ?? ((cb: () => void) => setTimeout(cb, 1500)))(() => start());
+      }
+    }
+
+    // -------- Nav shadow on scroll --------
+    const nav = document.getElementById("nav");
+    if (nav) {
+      const onScroll = () => nav.classList.toggle("scrolled", window.scrollY > 8);
+      onScroll();
+      window.addEventListener("scroll", onScroll, { passive: true });
+    }
+  </script>
+
+  <style is:global>
+    :root {
+      --bg-base: #0a0c12;
+      --bg-elevated: #10131c;
+      --bg-floating: #161a26;
+      --border-subtle: rgba(255, 255, 255, 0.07);
+      --border-medium: rgba(255, 255, 255, 0.13);
+      --text-primary: #f5f7fc;
+      --text-secondary: #aab2c3;
+      --text-tertiary: #8b93a5;
+      --accent: #008aff;
+      --accent-strong: #0a6fd6;
+      --accent-hover: #2f9dff;
+      --accent-muted: rgba(0, 138, 255, 0.14);
+      --font-display: "Space Grotesk Variable", system-ui, sans-serif;
+      --font-sans: "Inter Variable", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      --font-mono: "JetBrains Mono Variable", ui-monospace, "SF Mono", Menlo, monospace;
+      --maxw: 1180px;
+    }
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--bg-base);
+      color: var(--text-secondary);
+      font-family: var(--font-sans);
+      -webkit-font-smoothing: antialiased;
+    }
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+    }
+  </style>
+
+  <style>
+    .wrap { max-width: var(--maxw); margin: 0 auto; padding-inline: 24px; }
+    .sec-narrow { max-width: 880px; }
+
+    .skip {
+      position: absolute; left: -999px; top: 0; z-index: 200;
+      background: var(--accent); color: #fff; padding: 10px 16px; border-radius: 0 0 8px 0;
+    }
+    .skip:focus { left: 0; }
+
+    /* ---------- Nav ---------- */
+    .nav {
+      position: sticky; top: 0; z-index: 100;
+      backdrop-filter: blur(14px);
+      background: rgba(10, 12, 18, 0.6);
+      border-bottom: 1px solid transparent;
+      transition: border-color 240ms ease, background 240ms ease;
+    }
+    .nav.scrolled { border-bottom-color: var(--border-subtle); background: rgba(10, 12, 18, 0.82); }
+    .nav-inner {
+      max-width: var(--maxw); margin: 0 auto; padding: 14px 24px;
+      display: flex; align-items: center; gap: 28px;
+    }
+    .brand {
+      font-family: var(--font-display); font-weight: 600; font-size: 19px;
+      color: var(--text-primary); text-decoration: none; letter-spacing: -0.02em;
+      display: inline-flex; align-items: center; gap: 9px;
+    }
+    .brand-dot {
+      width: 11px; height: 11px; border-radius: 50%;
+      background: var(--accent); box-shadow: 0 0 0 4px var(--accent-muted);
+    }
+    .nav-links { margin-left: auto; display: flex; gap: 26px; }
+    .nav-links a {
+      color: var(--text-secondary); text-decoration: none; font-size: 14.5px; font-weight: 450;
+      transition: color 160ms ease;
+    }
+    .nav-links a:hover { color: var(--text-primary); }
+    .nav-gh {
+      display: inline-flex; align-items: center; gap: 8px;
+      color: var(--text-primary); text-decoration: none; font-size: 14px; font-weight: 500;
+      padding: 8px 14px; border: 1px solid var(--border-medium); border-radius: 999px;
+      transition: background 160ms ease, border-color 160ms ease;
+    }
+    .nav-gh:hover { background: rgba(255, 255, 255, 0.05); border-color: var(--border-medium); }
+    @media (max-width: 800px) {
+      .nav-links { display: none; }
+      .nav-gh span { display: none; }
+      .nav-gh { margin-left: auto; padding: 9px; }
+    }
+
+    /* ---------- Shared ---------- */
+    .eyebrow {
+      font-size: 13px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase;
+      color: var(--accent); margin: 0 0 14px;
+    }
+    h1, h2, h3 { font-family: var(--font-display); color: var(--text-primary); letter-spacing: -0.025em; }
+    .sec-head { max-width: 720px; margin: 0 0 56px; }
+    .sec-head h2 { font-size: clamp(28px, 4vw, 42px); line-height: 1.08; margin: 0 0 18px; font-weight: 600; }
+    .sec-lead { font-size: clamp(16px, 1.6vw, 18px); line-height: 1.6; color: var(--text-secondary); margin: 0; }
+    section { padding-block: clamp(72px, 11vw, 132px); }
+
+    .reveal { transition: opacity 700ms cubic-bezier(.2,.7,.2,1), transform 700ms cubic-bezier(.2,.7,.2,1); }
+    html.js .reveal { opacity: 0; transform: translateY(22px); }
+    html.js .reveal.in { opacity: 1; transform: none; }
+
+    .btn {
+      display: inline-flex; align-items: center; gap: 9px; cursor: pointer;
+      font-family: var(--font-sans); font-size: 15.5px; font-weight: 550;
+      padding: 13px 24px; border-radius: 999px; text-decoration: none;
+      border: 1px solid transparent; transition: transform 180ms ease, background 180ms ease, border-color 180ms ease;
+    }
+    .btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+    .btn-primary { background: var(--accent-strong); color: #fff; }
+    .btn-primary:hover { filter: brightness(1.08); transform: translateY(-2px); }
+    .btn-primary svg { transition: transform 180ms ease; }
+    .btn-primary:hover svg { transform: translateX(3px); }
+    .btn-ghost { color: var(--text-primary); border-color: var(--border-medium); }
+    .btn-ghost:hover { background: rgba(255, 255, 255, 0.05); transform: translateY(-2px); }
+
+    /* ---------- Hero ---------- */
+    .hero { position: relative; padding-top: clamp(64px, 9vw, 104px); padding-bottom: clamp(40px, 6vw, 72px); overflow: hidden; }
+    .hero-glow {
+      position: absolute; inset: -30% 0 auto 0; height: 720px; pointer-events: none; z-index: 0;
+      background:
+        radial-gradient(620px 420px at 50% -4%, rgba(0, 138, 255, 0.22), transparent 70%),
+        radial-gradient(820px 520px at 82% 8%, rgba(120, 70, 255, 0.10), transparent 72%);
+    }
+    .hero-inner { position: relative; z-index: 1; text-align: center; max-width: 860px; margin-inline: auto; }
+    .hero .eyebrow { display: inline-block; }
+    .hero-title {
+      font-size: clamp(40px, 7vw, 76px); line-height: 1.02; font-weight: 600; margin: 0 0 22px;
+      background: linear-gradient(180deg, #ffffff 30%, #b9c2d6 130%);
+      -webkit-background-clip: text; background-clip: text; color: transparent;
+    }
+    .hero-lead { font-size: clamp(17px, 2vw, 20px); line-height: 1.55; color: var(--text-secondary); max-width: 660px; margin: 0 auto 34px; }
+    .hero-cta { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
+    .install {
+      margin: 30px auto 0; display: flex; align-items: center; gap: 12px; cursor: pointer;
+      max-width: 560px; text-align: left;
+      background: var(--bg-elevated); border: 1px solid var(--border-subtle); border-radius: 10px;
+      padding: 12px 16px; font-family: var(--font-mono); font-size: 12.5px; color: var(--text-secondary);
+      transition: border-color 160ms ease;
+    }
+    .install:hover { border-color: var(--border-medium); }
+    .install:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+    .install code {
+      color: var(--text-primary); background: none; padding: 0; font-family: inherit;
+      white-space: pre-wrap; word-break: break-word; line-height: 1.5; flex: 1;
+    }
+    .install-ico { color: var(--text-tertiary); transition: color 160ms ease; flex-shrink: 0; }
+    .install:hover .install-ico { color: var(--text-secondary); }
+    .install.copied .install-ico { color: #34d399; }
+    .install-note { display: block; margin: 14px auto 0; font-size: 13.5px; color: var(--text-tertiary); text-decoration: none; }
+    .install-note:hover { color: var(--text-secondary); text-decoration: underline; }
+
+    /* ---------- Code blocks ---------- */
+    .code {
+      background: #070910; border: 1px solid var(--border-subtle); border-radius: 0 0 14px 14px;
+      margin: 0; padding: 18px 20px; overflow-x: auto;
+      font-family: var(--font-mono); font-size: 13.5px; line-height: 1.7; color: #c9d2e3;
+      white-space: pre;
+    }
+    .code .cl { display: block; padding-left: calc(var(--ind, 0) * 16px); transition: color 200ms ease, opacity 200ms ease; }
+    .code .cl.add { color: var(--accent); }
+
+    .stage-bar {
+      display: flex; align-items: center; gap: 7px;
+      background: var(--bg-floating); border: 1px solid var(--border-subtle); border-bottom: none;
+      border-radius: 14px 14px 0 0; padding: 11px 15px;
+    }
+    .stage-bar .dot { width: 11px; height: 11px; border-radius: 50%; background: rgba(255,255,255,0.13); }
+    .stage-url { margin-left: 10px; font-family: var(--font-mono); font-size: 12px; color: var(--text-tertiary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+    /* ---------- Living demo ---------- */
+    .demo-grid { display: grid; grid-template-columns: 1.05fr 0.95fr; gap: 56px; align-items: start; }
+    .demo-stage { position: sticky; top: max(84px, calc(50vh - 215px)); }
+    .stage-card { border-radius: 16px; }
+    .stage-card .stage-bar { border-radius: 16px 16px 0 0; }
+    .player-host {
+      position: relative; aspect-ratio: 16 / 9; background: #04060c;
+      border: 1px solid var(--border-subtle); border-top: none;
+      overflow: hidden;
+    }
+    .player-host player-stack, .player-host video { width: 100%; height: 100%; display: block; }
+    .rail {
+      list-style: none; margin: 0; padding: 16px; display: flex; gap: 8px; flex-wrap: wrap;
+      background: var(--bg-elevated); border: 1px solid var(--border-subtle); border-top: none;
+      border-radius: 0 0 16px 16px;
+    }
+    .rail li {
+      font-size: 12.5px; font-weight: 500; color: var(--text-tertiary);
+      padding: 5px 11px; border-radius: 999px; border: 1px solid var(--border-subtle);
+      transition: color 240ms ease, background 240ms ease, border-color 240ms ease;
+    }
+    .rail li.on { color: var(--accent); background: var(--accent-muted); border-color: transparent; }
+
+    .steps { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 26px; }
+    .step {
+      border: 1px solid var(--border-subtle); border-radius: 16px; padding: 26px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.018), transparent);
+      transition: border-color 280ms ease, background 280ms ease, transform 280ms ease;
+    }
+    .step.active { border-color: var(--accent); background: linear-gradient(180deg, var(--accent-muted), transparent 60%); }
+    .step-head { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; flex-wrap: wrap; }
+    .chip {
+      font-family: var(--font-mono); font-size: 12px; color: var(--accent);
+      background: var(--accent-muted); padding: 3px 10px; border-radius: 6px;
+    }
+    .step h3 { font-size: 20px; margin: 0; font-weight: 600; }
+    .step > p { margin: 0 0 18px; font-size: 15px; line-height: 1.6; }
+    .step .code { border-radius: 12px; border: 1px solid var(--border-subtle); }
+    .demo-closer { margin: 48px auto 0; text-align: center; max-width: 620px; color: var(--text-secondary); font-size: 16px; }
+
+    @media (max-width: 900px) {
+      .demo-grid { grid-template-columns: 1fr; gap: 28px; }
+      .demo-stage { position: sticky; top: 70px; z-index: 5; margin: 0 -8px; }
+      .stage-card { box-shadow: 0 18px 40px rgba(0,0,0,0.5); }
+    }
+
+    /* ---------- Sources ---------- */
+    .badges { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 12px; }
+    .badges li {
+      font-family: var(--font-mono); font-size: 14px; color: var(--text-primary);
+      padding: 11px 18px; border-radius: 10px;
+      background: var(--bg-elevated); border: 1px solid var(--border-subtle);
+      transition: transform 240ms ease, border-color 240ms ease, color 240ms ease;
+    }
+    .badges.in li { animation: pop 520ms cubic-bezier(.2,.7,.2,1) backwards; animation-delay: var(--d); }
+    .badges li:hover { transform: translateY(-3px); border-color: var(--accent); color: var(--accent); }
+    @keyframes pop { from { opacity: 0; transform: translateY(12px) scale(.96); } to { opacity: 1; transform: none; } }
+    @media (prefers-reduced-motion: reduce) { .badges.in li { animation: none; } }
+
+    /* ---------- Plugins ---------- */
+    .pgroup { margin-bottom: 40px; }
+    .pgroup-label {
+      display: flex; align-items: center; gap: 10px; margin-bottom: 18px;
+      color: var(--text-primary); font-family: var(--font-display); font-weight: 600; font-size: 17px;
+    }
+    .pgroup-label svg { color: var(--accent); }
+    .pgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; }
+    .pcard {
+      border: 1px solid var(--border-subtle); border-radius: 14px; padding: 20px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.02), transparent);
+      transition: border-color 200ms ease, transform 200ms ease, background 200ms ease;
+    }
+    .pcard:hover { border-color: var(--border-medium); transform: translateY(-3px); background: linear-gradient(180deg, rgba(255,255,255,0.04), transparent); }
+    .pcard h3 { font-size: 16px; margin: 0 0 8px; font-weight: 600; }
+    .pcard .pkg { display: block; font-family: var(--font-mono); font-size: 11.5px; color: var(--accent); background: none; padding: 0; margin-bottom: 10px; word-break: break-all; }
+    .pcard p { margin: 0; font-size: 14px; line-height: 1.55; color: var(--text-secondary); }
+
+    /* ---------- Why ---------- */
+    .why-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+    .why-card { border: 1px solid var(--border-subtle); border-radius: 16px; padding: 30px; }
+    .why-card h3 { font-size: 19px; margin: 0 0 14px; font-weight: 600; }
+    .why-card p { margin: 0; font-size: 15px; line-height: 1.62; }
+    .why-card.highlight { border-color: var(--accent); background: linear-gradient(180deg, var(--accent-muted), transparent 55%); }
+    @media (max-width: 860px) { .why-grid { grid-template-columns: 1fr; } }
+
+    /* ---------- Frameworks ---------- */
+    .fw-grid { display: grid; grid-template-columns: 1fr 1.05fr; gap: 48px; align-items: center; }
+    .fw-text h2 { font-size: clamp(26px, 3.4vw, 38px); margin: 0 0 16px; font-weight: 600; line-height: 1.1; }
+    .fw-chips { list-style: none; margin: 24px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 9px; }
+    .fw-chips li {
+      font-size: 13.5px; color: var(--text-secondary); padding: 7px 13px; border-radius: 999px;
+      border: 1px solid var(--border-subtle); background: var(--bg-elevated);
+    }
+    .fw-code { position: relative; }
+    .fw-code .code { border-radius: 0 0 14px 14px; }
+    .copy-snip {
+      position: absolute; top: 8px; right: 10px; display: inline-flex; align-items: center; gap: 6px;
+      cursor: pointer; font-family: var(--font-sans); font-size: 12.5px; color: var(--text-secondary);
+      background: var(--bg-floating); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 6px 10px;
+      transition: color 160ms ease, border-color 160ms ease;
+    }
+    .copy-snip:hover { color: var(--text-primary); border-color: var(--border-medium); }
+    .copy-snip.copied { color: #34d399; border-color: #34d399; }
+    @media (max-width: 860px) { .fw-grid { grid-template-columns: 1fr; gap: 32px; } }
+
+    /* ---------- Trust ---------- */
+    .trust { padding-block: clamp(48px, 7vw, 80px); }
+    .trust-row {
+      display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px;
+      border-block: 1px solid var(--border-subtle); padding-block: 40px;
+    }
+    .trust-item { text-align: center; }
+    .trust-val { display: block; font-family: var(--font-display); font-size: clamp(26px, 3.4vw, 36px); font-weight: 600; color: var(--text-primary); letter-spacing: -0.02em; }
+    .trust-lab { display: block; margin-top: 8px; font-size: 13.5px; color: var(--text-tertiary); }
+    @media (max-width: 700px) { .trust-row { grid-template-columns: repeat(2, 1fr); gap: 32px 20px; } }
+
+    /* ---------- FAQ ---------- */
+    .faq-list { border-top: 1px solid var(--border-subtle); }
+    .faq details { border-bottom: 1px solid var(--border-subtle); }
+    .faq summary {
+      list-style: none; cursor: pointer; display: flex; align-items: center; justify-content: space-between; gap: 16px;
+      padding: 22px 4px; font-family: var(--font-display); font-weight: 500; font-size: 17px; color: var(--text-primary);
+    }
+    .faq summary::-webkit-details-marker { display: none; }
+    .faq summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 6px; }
+    .faq-ico { color: var(--text-tertiary); flex-shrink: 0; transition: transform 240ms ease, color 240ms ease; }
+    .faq details[open] .faq-ico { transform: rotate(45deg); color: var(--accent); }
+    .faq details p { margin: 0; padding: 0 4px 24px; font-size: 15px; line-height: 1.62; color: var(--text-secondary); max-width: 660px; }
+
+    /* ---------- Final ---------- */
+    .final { position: relative; overflow: hidden; text-align: center; }
+    .final-glow { position: absolute; inset: auto 0 -40% 0; height: 560px; pointer-events: none;
+      background: radial-gradient(600px 360px at 50% 100%, rgba(0, 138, 255, 0.20), transparent 70%); }
+    .final-inner { position: relative; max-width: 680px; margin-inline: auto; }
+    .final-inner .eyebrow { display: inline-block; }
+    .final-inner h2 { font-size: clamp(30px, 4.6vw, 50px); margin: 0 0 18px; font-weight: 600; line-height: 1.05; }
+    .final-inner .hero-cta { margin-top: 30px; }
+  </style>
+</Base>

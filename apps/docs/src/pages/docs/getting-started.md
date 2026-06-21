@@ -17,7 +17,7 @@ One script tag, all 13 plugins included.
 <html>
   <head>
     <script
-      src="https://cdn.jsdelivr.net/npm/playerstack@0.1.0/dist/playerstack.min.js"
+      src="https://playerstack.techskills.academy/playerstack.min.js"
       defer
     ></script>
   </head>
@@ -29,9 +29,26 @@ One script tag, all 13 plugins included.
 
 The `<player-stack>` custom element registers itself, the `sources` plugin validates the URL, and the core element picks the right inner media element (native `<video>` for MP4/WebM, `<youtube-video>`, `<vimeo-video>`, or `<hls-video>`) and mounts a default `<media-controller>` UI. You can configure plugins via `data-config` JSON or shorthand attributes.
 
+The bundle above is served free from this site's Cloudflare Pages CDN.
+
+### Self-host the bundle
+
+Prefer to serve it from your own domain (no third-party request)? Download
+[`playerstack.min.js`](https://playerstack.techskills.academy/playerstack.min.js),
+drop it next to your HTML, and point the script tag at your own path:
+
+```html
+<script src="/js/playerstack.min.js" defer></script>
+```
+
+It is MIT-licensed, so you can host and redistribute it freely.
+
 ## Option 2: scoped packages
 
 Use this when you want a smaller bundle by including only the plugins you need.
+
+> The `@playerstack/*` packages are not published to npm yet. Until they are,
+> use the standalone bundle above, or build from source (`bun run --filter playerstack build`).
 
 ```sh
 npm install @playerstack/core @playerstack/plugin-sources @playerstack/plugin-cta-end
