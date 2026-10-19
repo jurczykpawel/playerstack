@@ -38,10 +38,8 @@ The component re-injects the script tag and CSS link on every render, but the br
 
 ```html
 <!-- After astro build, your page contains: -->
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/.../theme.css" />
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/.../layouts/video.css" />
 <script
-  src="https://cdn.jsdelivr.net/npm/playerstack@0.1.0/dist/playerstack.min.js"
+  src="https://playerstack.techskills.academy/playerstack.min.js"
   defer
 ></script>
 <player-stack

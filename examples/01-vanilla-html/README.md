@@ -13,7 +13,7 @@ python3 -m http.server 8000
 
 ```html
 <script
-  src="https://cdn.jsdelivr.net/npm/playerstack@0.1.0/dist/playerstack.min.js"
+  src="https://playerstack.techskills.academy/playerstack.min.js"
   defer
 ></script>
 
@@ -26,7 +26,7 @@ python3 -m http.server 8000
 The `<script>` tag loads the standalone bundle, which:
 
 1. Registers the `<player-stack>` custom element
-2. Registers all 13 plugins (sources, controls-policy, autopreview, branded-thumb, cta-end, chapters, action-bar, email-gate, saved-position, sticky, focus-mode, analytics, yt-subscribe)
+2. Registers 15 of the 17 first-party plugins (sources, controls-policy, autopreview, branded-thumb, email-gate, saved-position, action-bar, chapters, cta-end, sticky, yt-subscribe, analytics, watermark, custom-css, intro-card). `focus-mode` and `sellf-adapter` require a custom build.
 
 When the browser parses the `<player-stack>` element, the `sources` plugin validates the URL, the core element picks `<youtube-video>` as the inner media element, and `<media-controller>` mounts a default UI around it.
 

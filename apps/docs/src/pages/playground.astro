@@ -145,7 +145,7 @@ import Base from "../layouts/Base.astro";
   </main>
 
   <!-- Media Chrome ships its own UI as Web Components (shadow DOM); no external CSS needed. -->
-  <!-- Local bundle in dev (apps/docs/public/playerstack.min.js); jsDelivr in prod build -->
+  <!-- Bundle hosted with the docs (apps/docs/public/playerstack.min.js) -->
   <script src="/playerstack.min.js" is:inline></script>
   <script>
     function readForm() {
@@ -201,7 +201,7 @@ import Base from "../layouts/Base.astro";
           cfgJson !== "{}" ? `data-config='${cfgJson}'` : "",
         ].filter(Boolean).join("\n  ");
 
-        snippet.textContent = '<script src="https://cdn.jsdelivr.net/npm/playerstack@0.1.0/dist/playerstack.min.js" defer><' + '/script>\n\n<player-stack\n  ' + attrs + '>\n</player-stack>';
+        snippet.textContent = '<script src="https://playerstack.techskills.academy/playerstack.min.js" defer><' + '/script>\n\n<player-stack\n  ' + attrs + '>\n</player-stack>';
       }
     }
 
@@ -829,7 +829,7 @@ import Base from "../layouts/Base.astro";
             acknowledgeTrusted: true,
           },
         },
-        tipTitle: "All 14 plugins firing simultaneously",
+        tipTitle: "Marketing, playback and branding plugins together",
         tipSteps: [
           "Player is gated by clickToLoad — click the play overlay first.",
           "Below the player you see 3 chapter buttons.",

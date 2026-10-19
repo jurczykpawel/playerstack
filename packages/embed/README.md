@@ -2,13 +2,13 @@
 
 Embeddable video player. Drop one `<script>` tag, embed YouTube, Vimeo, MP4, or HLS with branding and CTAs. **MIT.**
 
-This is the standalone bundle for `<script src=...>` use. For composable usage (pick which plugins to ship), use the scoped packages directly: [`@playerstack/core`](https://www.npmjs.com/package/@playerstack/core) + the individual `@playerstack/plugin-*` packages.
+This is the standalone bundle for `<script src=...>` use. For composable usage (pick which plugins to ship), use the scoped packages directly: `@playerstack/core` + the individual `@playerstack/plugin-*` source packages. These packages are not published to npm yet; build them from this repository.
 
 ## Quickstart
 
 ```html
 <script
-  src="https://cdn.jsdelivr.net/npm/playerstack@0.1.0/dist/playerstack.min.js"
+  src="https://playerstack.techskills.academy/playerstack.min.js"
   defer
 ></script>
 
@@ -21,33 +21,37 @@ This is the standalone bundle for `<script src=...>` use. For composable usage (
 
 ## What's bundled
 
-This bundle pre-registers all 15 plugins:
+This bundle pre-registers 15 of the 17 first-party plugins:
 
-- [`@playerstack/plugin-sources`](https://www.npmjs.com/package/@playerstack/plugin-sources) — YouTube, Vimeo, MP4, HLS, WebM, DASH auto-detect
-- [`@playerstack/plugin-controls-policy`](https://www.npmjs.com/package/@playerstack/plugin-controls-policy) — theme + show/hide controls
-- [`@playerstack/plugin-autopreview`](https://www.npmjs.com/package/@playerstack/plugin-autopreview) — muted autoplay in viewport
-- [`@playerstack/plugin-branded-thumb`](https://www.npmjs.com/package/@playerstack/plugin-branded-thumb) — custom poster + click-to-load
-- [`@playerstack/plugin-cta-end`](https://www.npmjs.com/package/@playerstack/plugin-cta-end) — overlay HTML at end of video
-- [`@playerstack/plugin-chapters`](https://www.npmjs.com/package/@playerstack/plugin-chapters) — clickable timecoded navigation
-- [`@playerstack/plugin-action-bar`](https://www.npmjs.com/package/@playerstack/plugin-action-bar) — mid-video dismissible CTA banner
-- [`@playerstack/plugin-email-gate`](https://www.npmjs.com/package/@playerstack/plugin-email-gate) — pause-and-collect lead capture
-- [`@playerstack/plugin-saved-position`](https://www.npmjs.com/package/@playerstack/plugin-saved-position) — resume watching
-- [`@playerstack/plugin-sticky`](https://www.npmjs.com/package/@playerstack/plugin-sticky) — corner-pin on scroll
-- [`@playerstack/plugin-focus-mode`](https://www.npmjs.com/package/@playerstack/plugin-focus-mode) — auto-pause on tab blur
-- [`@playerstack/plugin-analytics`](https://www.npmjs.com/package/@playerstack/plugin-analytics) — beacon / gtag forwarder
-- [`@playerstack/plugin-yt-subscribe`](https://www.npmjs.com/package/@playerstack/plugin-yt-subscribe) — subscribe-on-YouTube bar
-- [`@playerstack/plugin-watermark`](https://www.npmjs.com/package/@playerstack/plugin-watermark) — corner-pinned logo/text overlay
-- [`@playerstack/plugin-custom-css`](https://www.npmjs.com/package/@playerstack/plugin-custom-css) — arbitrary scoped CSS injection
+- `@playerstack/plugin-sources` — YouTube, Vimeo, MP4, HLS, WebM, DASH auto-detect
+- `@playerstack/plugin-controls-policy` — theme + show/hide controls
+- `@playerstack/plugin-autopreview` — muted autoplay in viewport
+- `@playerstack/plugin-branded-thumb` — custom poster + click-to-load
+- `@playerstack/plugin-cta-end` — overlay HTML at end of video
+- `@playerstack/plugin-chapters` — clickable timecoded navigation
+- `@playerstack/plugin-action-bar` — mid-video dismissible CTA banner
+- `@playerstack/plugin-email-gate` — pause-and-collect lead capture
+- `@playerstack/plugin-saved-position` — resume watching
+- `@playerstack/plugin-sticky` — corner-pin on scroll
+- `@playerstack/plugin-analytics` — beacon / gtag forwarder
+- `@playerstack/plugin-yt-subscribe` — subscribe-on-YouTube bar
+- `@playerstack/plugin-watermark` — corner-pinned logo/text overlay
+- `@playerstack/plugin-custom-css` — arbitrary scoped CSS injection
+- `@playerstack/plugin-intro-card` — pre-roll splash with title, subtitle, badge and CTA
 
-The Sellf adapter is **not** bundled — install it separately if you need it.
+`focus-mode` and `sellf-adapter` are **not** bundled; include their source packages in a custom build if you need them.
 
 ## Bundle size
 
-| File                      | Size   | Gzipped  |
-| ------------------------- | ------ | -------- |
-| `dist/playerstack.min.js` | 790 KB | 232.3 KB |
+The hosted `playerstack.min.js`, measured on 2026-10-19:
 
-The bundle ships every Mux media-element (native `<video>`, `<youtube-video>`, `<vimeo-video>`, `<hls-video>`) so a single `<script>` tag covers every source type. Lazy-loading wrappers per source type (so MP4-only pages skip YouTube/Vimeo/HLS) is on the post-v0.2 roadmap. If size matters more than convenience, use the scoped `@playerstack/*` packages and bundle only what you need.
+| Compression | Bytes | KiB (1,024 bytes) |
+| --- | ---: | ---: |
+| None | 839,898 | 820.2 |
+| gzip (Node zlib defaults) | 244,671 | 238.9 |
+| Brotli (quality 11) | 198,723 | 194.1 |
+
+This measures the script served by the documentation site, not every possible local build. The standalone includes media elements and 15 plugins. Build from scoped source packages to choose your own plugins, then measure that output.
 
 ## Custom config
 

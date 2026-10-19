@@ -6,7 +6,7 @@ description: Overview of the 17 first-party plugins shipped with Playerstack.
 
 # Plugin overview
 
-Every Playerstack feature beyond "play a video" is a plugin. The standalone bundle pre-registers 16 of them; `sellf-adapter` is opt-in.
+Every Playerstack feature beyond "play a video" is a plugin. There are 17 first-party plugins in the source. The standalone bundle pre-registers 15 of them; `focus-mode` and `sellf-adapter` require a custom build.
 
 ## Marketing
 

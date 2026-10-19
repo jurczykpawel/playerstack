@@ -17,7 +17,7 @@ interface Props {
 const props = defineProps<Props>();
 const host = ref<HTMLDivElement | null>(null);
 
-const PLAYERSTACK_VERSION = "0.1.0";
+const PLAYERSTACK_URL = "https://playerstack.techskills.academy/playerstack.min.js";
 let scriptPromise: Promise<void> | null = null;
 
 function loadPlayerstack(): Promise<void> {
@@ -31,7 +31,7 @@ function loadPlayerstack(): Promise<void> {
     }
 
     const script = document.createElement("script");
-    script.src = `https://cdn.jsdelivr.net/npm/playerstack@${PLAYERSTACK_VERSION}/dist/playerstack.min.js`;
+    script.src = PLAYERSTACK_URL;
     script.defer = true;
     script.onload = () => resolve();
     script.onerror = () => reject(new Error("Failed to load playerstack"));

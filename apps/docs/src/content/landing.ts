@@ -59,7 +59,7 @@ export const en = {
   hero: {
     eyebrow: "Open-source embeddable video player",
     title: "One script tag. A video player that converts.",
-    lead: "Embed YouTube, Vimeo, MP4 or HLS on any page — then brand it, add CTAs, capture leads and track every play. Every feature is a plugin. Framework-free, MIT, under 50 KB.",
+    lead: "Embed YouTube, Vimeo, MP4 or HLS on any page — then brand it, add CTAs, capture leads and track every play. Every feature is a plugin. Framework-free, MIT.",
     primary: { label: "Get started", href: "/docs/getting-started" },
     secondary: { label: "Open playground", href: "/playground" },
     install:
@@ -194,7 +194,7 @@ export const en = {
   plugins: {
     eyebrow: "17 plugins, all MIT",
     title: "A plugin for every job. Ship only what you use.",
-    lead: "The standalone bundle pre-registers everything. Need lean? The codebase is split into scoped @playerstack/* packages, so you can bundle just the plugins you touch.",
+    lead: "17 first-party plugins are available in the source. The standalone script registers 15; focus-mode and sellf-adapter need a custom build. The scoped @playerstack/* packages let you bundle just what you use from source.",
     groups: [
       {
         label: "Marketing",
@@ -357,7 +357,7 @@ export const en = {
   trust: {
     items: [
       { value: "MIT", label: "Core + all 17 plugins" },
-      { value: "< 50 KB", label: "Standalone bundle, gzipped" },
+      { value: "~239 KiB", label: "Hosted standalone, gzip (2026-10-19)" },
       { value: "0 deps", label: "to start — one script tag" },
       { value: "Mux", label: "media-chrome engine, never forked" },
     ],
@@ -381,7 +381,7 @@ export const en = {
       },
       {
         q: "How big is it?",
-        a: "The standalone bundle stays under 50 KB gzipped with every source type and plugin. Need less? The scoped @playerstack/* packages let you bundle only what you use.",
+        a: "The hosted standalone script measured about 239 KiB with gzip or 194 KiB with Brotli on 2026-10-19. It includes the media elements and 15 registered plugins. Build from the scoped @playerstack/* source packages to select your own plugins; size depends on the build and compression settings.",
       },
       {
         q: "How do plugins work?",

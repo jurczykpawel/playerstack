@@ -31,7 +31,7 @@ Framework examples (React/Vue/Astro/Next.js) have their own install/run instruct
 
 ## Using local Playerstack
 
-By default, every example pulls Playerstack from jsDelivr CDN at version `0.1.0`. To test against the local build instead:
+By default, every example loads the standalone script hosted by the documentation site. The URL follows the currently hosted build; download and self-host a copy if you need to pin the artifact. To test against the local build instead:
 
 ```sh
 # from repo root
@@ -42,7 +42,7 @@ Then in any example's `index.html`, replace:
 
 ```html
 <script
-  src="https://cdn.jsdelivr.net/npm/playerstack@0.1.0/dist/playerstack.min.js"
+  src="https://playerstack.techskills.academy/playerstack.min.js"
   defer
 ></script>
 ```

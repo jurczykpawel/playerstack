@@ -17,7 +17,7 @@ interface PlayerStackProps {
   style?: React.CSSProperties;
 }
 
-const PLAYERSTACK_VERSION = "0.1.0";
+const PLAYERSTACK_URL = "https://playerstack.techskills.academy/playerstack.min.js";
 
 export function PlayerStack({ src, poster, title, config, className, style }: PlayerStackProps) {
   const hostRef = useRef<HTMLDivElement | null>(null);
@@ -30,7 +30,7 @@ export function PlayerStack({ src, poster, title, config, className, style }: Pl
       if (!customElements.get("player-stack")) {
         await new Promise<void>((resolve, reject) => {
           const script = document.createElement("script");
-          script.src = `https://cdn.jsdelivr.net/npm/playerstack@${PLAYERSTACK_VERSION}/dist/playerstack.min.js`;
+          script.src = PLAYERSTACK_URL;
           script.defer = true;
           script.onload = () => resolve();
           script.onerror = () => reject(new Error("Playerstack failed to load"));

@@ -22,7 +22,7 @@ Embeddable video player. OSS-first (MIT). Bun monorepo. Plugin-first architectur
 1. **Strict TDD from Day 3-4 onwards.** Test-first, red → green → refactor, including DOM via happy-dom or Vitest browser mode. No production code in `packages/*/src/` lands without a preceding failing test. Day 1-2 (monorepo + engine wrapper) is the only exception — smoke-tested via Playwright manually.
 2. **Core knows nothing about Sellf, SaaS, analytics, or lead capture.** All of that lives in plugins or pluggable Config Providers added at runtime.
 3. **Plugin interface is stable.** Once `init(ctx)` and the event names are defined (Day 3-4), they are not changed without bumping a major version.
-4. **Bundle ≤ 50 KB gzipped** for `playerstack` standalone UMD. Code-split per plugin when dist grows.
+4. **The standalone UMD has an aspirational 50 KiB gzip budget, currently exceeded.** Measure and document the artifact, date, compression settings, and units. Code-split per plugin when dist grows.
 5. **No GPL code in core.** Presto Player code is GPL v3 — read it for ideas, don't copy verbatim. Our engine (Mux media-chrome + media-elements) is MIT.
 6. **MIT for core + MVP plugins.** Premium plugins (post-MVP) live in `@playerstack-pro/*` (proprietary, separate repo).
 7. **No emoji in code.** Per workspace rules.
@@ -64,7 +64,7 @@ tests/
 ## Domain & hosting
 
 - Production domain: `playerstack.techskills.academy` (Cloudflare DNS, A record on `sellf.app` zone)
-- CDN: jsDelivr via npm (`https://cdn.jsdelivr.net/npm/playerstack@VERSION/dist/playerstack.min.js`)
+- Standalone script: `https://playerstack.techskills.academy/playerstack.min.js` (hosted with the docs; npm packages are not published yet)
 - Docs: Cloudflare Pages or mikrus + Caddy (TBD Day 11-12)
 
 ## Don't

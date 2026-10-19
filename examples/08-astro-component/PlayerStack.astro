@@ -8,12 +8,11 @@ interface Props {
 }
 
 const { src, poster, title, config, class: className } = Astro.props;
-const PLAYERSTACK_VERSION = "0.1.0";
 ---
 
 <!-- Playerstack bundle (auto-registers <player-stack>; ships its own UI via Web Components) -->
 <script
-  src={`https://cdn.jsdelivr.net/npm/playerstack@${PLAYERSTACK_VERSION}/dist/playerstack.min.js`}
+  src="https://playerstack.techskills.academy/playerstack.min.js"
   defer
   is:inline></script>
 

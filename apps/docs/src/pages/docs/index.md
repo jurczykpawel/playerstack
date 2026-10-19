@@ -30,7 +30,7 @@ Playerstack is an embeddable video player you drop onto any HTML page with one `
 </player-stack>
 ```
 
-That snippet uses three plugins (`sources` for URL detection, `controls-policy` for theme color, `cta-end` for the button at the end). You don't have to wire them up — the standalone bundle pre-registers all 13 plugins.
+That snippet uses three plugins (`sources` for URL detection, `controls-policy` for theme color, `cta-end` for the button at the end). You don't have to wire them up — the standalone bundle pre-registers 15 plugins.
 
 ## Try it
 

@@ -10,7 +10,7 @@ Two ways to use Playerstack: drop the standalone bundle on a page (easy), or com
 
 ## Option 1: standalone bundle (recommended)
 
-One script tag, all 13 plugins included.
+One script tag, 15 of the 17 first-party plugins included. `focus-mode` and `sellf-adapter` require a custom build from source.
 
 ```html
 <!doctype html>
@@ -62,7 +62,7 @@ import { ctaEndPlugin } from "@playerstack/plugin-cta-end";
 Playerstack.use(sourcesPlugin).use(ctaEndPlugin).define();
 ```
 
-Now `<player-stack>` is registered with just two plugins instead of all 13.
+Now `<player-stack>` is registered with just two plugins instead of the 15 in the standalone bundle.
 
 ## Configuring a player
 

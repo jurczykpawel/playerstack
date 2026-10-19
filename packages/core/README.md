@@ -2,9 +2,11 @@
 
 The engine wrapper and plugin runtime for [Playerstack](https://github.com/jurczykpawel/playerstack). Wraps Mux's [media-chrome](https://github.com/muxinc/media-chrome) plus the matching `<youtube-video>` / `<vimeo-video>` / `<hls-video>` elements, and exposes the `<player-stack>` custom element plus a small plugin API.
 
-Most users want the standalone bundle [`playerstack`](https://www.npmjs.com/package/playerstack), not this package. Use `@playerstack/core` directly when you want to **pick which plugins to ship** for a smaller bundle, or to write your own plugins.
+Most users want the standalone bundle [`playerstack`](https://playerstack.techskills.academy/playerstack.min.js), not this package. Use `@playerstack/core` directly when you want to **pick which plugins to ship** for a smaller bundle, or to write your own plugins.
 
 ## Install
+
+The scoped packages are not published to npm yet. Use the hosted standalone script above, or work from this repository with `bun install`. The registry command below applies once packages are published.
 
 ```sh
 npm install @playerstack/core

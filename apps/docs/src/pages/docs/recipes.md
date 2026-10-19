@@ -89,7 +89,7 @@ setConfigProviderForElement(cmsProvider);
 
 ## Shrink the bundle
 
-If 127 KB gzipped is too much, ship only the plugins you use:
+To select which plugins are registered, build a custom bundle from the scoped source packages (not yet published to npm):
 
 ```ts
 import { Playerstack } from "@playerstack/core";
@@ -99,7 +99,7 @@ import { sourcesPlugin } from "@playerstack/plugin-sources";
 Playerstack.use(sourcesPlugin).define();
 ```
 
-Each plugin you skip saves a few KB. For a true minimum, you can skip `media-chrome` entirely and use the inner media element with the browser's default controls (`controls` attribute) — but that's a bigger refactor.
+Measure your custom build: removing a plugin does not remove media-element dependencies imported by the core. For a true minimum, you can skip `media-chrome` entirely and use the inner media element with the browser's default controls (`controls` attribute) — but that's a bigger refactor.
 
 ## Dynamic config
 

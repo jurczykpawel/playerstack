@@ -30,7 +30,7 @@ const analyticsPlugin = {
 Playerstack.use(analyticsPlugin);
 ```
 
-The plugin runs **after** the standalone bundle has registered the 5 MVP plugins, so the event bus already has emitters attached.
+The plugin runs **after** the standalone bundle has registered the 15 bundled plugins, so the event bus already has emitters attached.
 
 ## Production version
 

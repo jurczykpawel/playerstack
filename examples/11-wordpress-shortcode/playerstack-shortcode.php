@@ -9,7 +9,7 @@
  *   [playerstack src="..." poster="https://..." accent="#008aff"]
  *   [playerstack src="..." cta_label="Buy now" cta_url="https://example.com/buy"]
  *
- * Loads the Playerstack bundle from jsDelivr CDN once per page (regardless of
+ * Loads the Playerstack bundle from the documentation site once per page (regardless of
  * how many shortcodes are on the page).
  */
 
@@ -19,7 +19,7 @@ if (!defined('ABSPATH')) {
 
 class PlayerstackShortcode
 {
-    private const PLAYERSTACK_VERSION = '0.1.0';
+    private const PLAYERSTACK_URL = 'https://playerstack.techskills.academy/playerstack.min.js';
 
     private bool $assets_enqueued = false;
 
@@ -100,9 +100,9 @@ class PlayerstackShortcode
         // Media Chrome ships its own UI as Web Components (shadow DOM); no external CSS needed.
         wp_enqueue_script(
             'playerstack',
-            'https://cdn.jsdelivr.net/npm/playerstack@' . self::PLAYERSTACK_VERSION . '/dist/playerstack.min.js',
+            self::PLAYERSTACK_URL,
             [],
-            self::PLAYERSTACK_VERSION,
+            null,
             ['strategy' => 'defer']
         );
     }

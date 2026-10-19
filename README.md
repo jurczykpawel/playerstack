@@ -12,7 +12,7 @@ Embeddable video player for any HTML page. One script tag. YouTube, Vimeo, Wisti
 
 ```html
 <script
-  src="https://cdn.jsdelivr.net/npm/playerstack@0.1.0/dist/playerstack.min.js"
+  src="https://playerstack.techskills.academy/playerstack.min.js"
   defer
 ></script>
 
@@ -22,6 +22,8 @@ Embeddable video player for any HTML page. One script tag. YouTube, Vimeo, Wisti
 >
 </player-stack>
 ```
+
+The script is hosted by the documentation site. To self-host it, download the file and serve it from your own domain. For a local build, run `bun install` and `bun run --filter playerstack build`; the output is `packages/embed/dist/playerstack.min.js`.
 
 That's it. The custom element registers itself, parses the URL, mounts the right Mux media element underneath (`<video>` for MP4/WebM, `<youtube-video>`, `<vimeo-video>`, `<wistia-video>`, `<twitch-video>`, or `<hls-video>`) inside `<media-controller>`, and applies the plugins from `data-config`.
 
@@ -75,7 +77,7 @@ Presto Player has the marketing layer — only for WordPress.
 | `@playerstack/plugin-analytics`     | Forward events to a beacon endpoint or `gtag` (Google Analytics 4) |
 | `@playerstack/plugin-sellf-adapter` | Fetch config from a Sellf product endpoint (opt-in)                |
 
-The standalone `playerstack` bundle pre-registers all 16 marketing/e-learning/performance/branding/analytics plugins. Use scoped packages directly for a custom bundle.
+There are 17 first-party plugins in `packages/plugin-*`. The standalone `playerstack` bundle pre-registers 15 of them; `focus-mode` and `sellf-adapter` require a custom bundle from source. See `packages/embed/src/index.ts` for the registration list.
 
 ## Repo layout
 
@@ -158,13 +160,15 @@ Playerstack is designed to embed on third-party pages. Config-driven inputs (HTM
 
 ## License
 
-- Core + 16 MVP plugins: **MIT**
+- Core + 17 first-party plugins: **MIT**
 - Premium plugins (post-MVP): `@playerstack-pro/*`, proprietary
 - Site / docs: MIT
 
 ## Bundle size
 
-The standalone `playerstack.min.js` ships every Mux media-element (native + YouTube + Vimeo + HLS) plus all 13 plugins, so a single `<script>` tag covers every source type. Lazy-loading the wrapper elements per source type (so MP4-only pages skip YouTube/Vimeo/HLS) is on the post-v0.2 roadmap. If size matters more than convenience, install the scoped `@playerstack/*` packages and bundle only what you need.
+The hosted `playerstack.min.js`, measured on 2026-10-19, is 839,898 bytes raw (820.2 KiB), 244,671 bytes with gzip (238.9 KiB), and 198,723 bytes with Brotli (194.1 KiB). Compression was measured with Node zlib defaults for gzip and quality 11 for Brotli; 1 KiB = 1,024 bytes. Sizes vary with the build and compression settings.
+
+The standalone bundle includes the Mux media elements and 15 registered plugins. The scoped `@playerstack/*` packages are not published to npm yet; use the hosted script above, self-host a downloaded copy, or build a custom bundle from this repository.
 
 ## Acknowledgements
 
