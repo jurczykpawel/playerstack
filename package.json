@@ -26,5 +26,10 @@
     "vitest": "^3.2.4",
     "happy-dom": "^20.0.0",
     "@playwright/test": "^1.50.0"
+  },
+  "overrides": {
+    "hls.js": "1.6.16",
+    "media-chrome": "4.19.2",
+    "vimeo-video-element": "1.7.2"
   }
 }

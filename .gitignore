@@ -9,7 +9,6 @@ dist/
 .env.*.local
 
 # Bun
-bun.lock
 .bun/
 
 # Build output
