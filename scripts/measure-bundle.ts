@@ -24,9 +24,7 @@ const sizes = (paths: string[]) =>
     );
 
 const provider = (name: string) => {
-  const file = readdirSync(dist).find((f) =>
-    new RegExp(`^playerstack-${name}\\.\\w+\\.js$`).test(f),
-  );
+  const file = readdirSync(dist).find((f) => new RegExp(`^playerstack-${name}\\.js$`).test(f));
   if (!file) throw new Error(`missing provider file for ${name} in ${dist}`);
   return join(dist, file);
 };

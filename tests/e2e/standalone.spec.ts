@@ -63,7 +63,9 @@ test("HLS loads only the hls provider next to the main script and plays in Chrom
   const fetched = await openEmbed(page, SOURCES.hls);
   const hls = page.locator("player-stack hls-video");
   await expect(hls).toBeAttached();
-  expect(providerFiles(fetched)).toEqual([expect.stringMatching(/^playerstack-hls\.\w+\.js$/)]);
+  expect(providerFiles(fetched)).toEqual([
+    expect.stringMatching(/^playerstack-hls\.js\?v=[0-9a-f]{8}$/),
+  ]);
   await expect
     .poll(() => hls.evaluate((el) => (el as HTMLMediaElement).readyState), { timeout: 15_000 })
     .toBeGreaterThanOrEqual(1);
@@ -73,7 +75,9 @@ test("Vimeo loads only the vimeo provider", async ({ page }) => {
   const fetched = await openEmbed(page, SOURCES.vimeo);
   await expect(page.locator("player-stack vimeo-video")).toBeAttached();
   expect(await page.evaluate(() => !!customElements.get("vimeo-video"))).toBe(true);
-  expect(providerFiles(fetched)).toEqual([expect.stringMatching(/^playerstack-vimeo\.\w+\.js$/)]);
+  expect(providerFiles(fetched)).toEqual([
+    expect.stringMatching(/^playerstack-vimeo\.js\?v=[0-9a-f]{8}$/),
+  ]);
 });
 
 test("a failed provider download logs an error and emits playerstack:error", async ({ page }) => {

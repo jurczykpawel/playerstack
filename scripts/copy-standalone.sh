@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Copy the standalone script and its lazily loaded provider files into a
 # static site directory. They must stay side by side: playerstack.min.js
-# fetches playerstack-<provider>.<hash>.js from its own URL's directory.
+# fetches playerstack-<provider>.js?v=<hash> from its own URL's directory.
 # Usage: bash scripts/copy-standalone.sh <target-dir>
 set -euo pipefail
 

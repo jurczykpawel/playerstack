@@ -1,5 +1,6 @@
 import { build, type Plugin } from "esbuild";
 import { gzipSync } from "zlib";
+import { createHash } from "crypto";
 import { readFileSync, readdirSync, rmSync, mkdirSync } from "fs";
 import { join, dirname, basename } from "path";
 
@@ -30,8 +31,11 @@ await build({
 });
 
 // Standalone: providers that are not needed for YouTube/MP4 become separate
-// IIFE files next to playerstack.min.js, named by content hash so a cached
-// main script never pairs with a different provider build.
+// IIFE files next to playerstack.min.js. File names stay the same across
+// releases, because the CDN may keep an old playerstack.min.js in browser
+// caches for a long time and every deploy replaces all files: a hashed name
+// would 404 for that cached script after the next release. The manifest adds
+// `?v=<content hash>` so a new main script never reuses a stale cached provider.
 const PROVIDERS = {
   "hls-video": { name: "hls", pkg: "hls-video-element" },
   "vimeo-video": { name: "vimeo", pkg: "vimeo-video-element" },
@@ -63,7 +67,7 @@ const providerResult = await build({
   entryPoints: Object.fromEntries(
     Object.values(PROVIDERS).map(({ name, pkg }) => [name, `provider:${pkg}`]),
   ),
-  entryNames: "playerstack-[name].[hash]",
+  entryNames: "playerstack-[name]",
   outdir,
   metafile: true,
   plugins: [providerEntries],
@@ -74,7 +78,9 @@ for (const [file, meta] of Object.entries(providerResult.metafile.outputs)) {
   if (!file.endsWith(".js") || !meta.entryPoint) continue;
   const pkg = meta.entryPoint.replace(/^provider:/, "");
   const tag = Object.entries(PROVIDERS).find(([, p]) => p.pkg === pkg)?.[0];
-  if (tag) providerFiles[tag] = basename(file);
+  if (!tag) continue;
+  const version = createHash("sha256").update(readFileSync(file)).digest("hex").slice(0, 8);
+  providerFiles[tag] = `${basename(file)}?v=${version}`;
 }
 
 const standaloneImporter: Plugin = {
