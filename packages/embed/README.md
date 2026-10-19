@@ -45,13 +45,15 @@ This bundle pre-registers 15 of the 17 first-party plugins:
 
 The hosted `playerstack.min.js`, measured on 2026-10-19:
 
-| Compression               |   Bytes | KiB (1,024 bytes) |
-| ------------------------- | ------: | ----------------: |
-| None                      | 839,898 |             820.2 |
-| gzip (Node zlib defaults) | 244,671 |             238.9 |
-| Brotli (quality 11)       | 198,723 |             194.1 |
+| Compression         |   Bytes | KiB (1,024 bytes) |
+| ------------------- | ------: | ----------------: |
+| None                | 237,183 |             231.6 |
+| gzip (Node zlib, 9) |  59,689 |              58.3 |
+| Brotli (quality 11) |  49,911 |              48.7 |
 
-This measures the script served by the documentation site, not every possible local build. The standalone includes media elements and 15 plugins. Build from scoped source packages to choose your own plugins, then measure that output.
+This is all a page with YouTube or MP4 players downloads. HLS, Vimeo, Wistia and Twitch load on first use from `playerstack-<provider>.<hash>.js` files in the same directory as `playerstack.min.js`; when self-hosting, copy all `playerstack*.js` files together. Per-source totals (gzip): HLS 221.1 KiB, Vimeo 73.7 KiB, Wistia and Twitch 61.4 KiB each — run `bun scripts/measure-bundle.ts` after a build.
+
+This measures the script served by the documentation site, not every possible local build. The standalone includes media-chrome, the YouTube element and 15 plugins. Build from scoped source packages to choose your own plugins, then measure that output.
 
 ## Custom config
 

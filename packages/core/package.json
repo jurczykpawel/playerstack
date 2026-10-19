@@ -13,6 +13,10 @@
     "./element": {
       "types": "./src/playerstack-element.ts",
       "import": "./src/playerstack-element.ts"
+    },
+    "./script-loader": {
+      "types": "./src/script-loader.ts",
+      "import": "./src/script-loader.ts"
     }
   },
   "files": [

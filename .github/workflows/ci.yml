@@ -45,7 +45,7 @@ jobs:
         run: bun run --cwd packages/embed build
 
       - name: Copy bundle to docs public
-        run: cp packages/embed/dist/playerstack.min.js apps/docs/public/playerstack.min.js
+        run: bash scripts/copy-standalone.sh apps/docs/public
 
       - name: Install Playwright browsers
         run: bunx playwright install --with-deps chromium

@@ -1,25 +1,17 @@
 import "media-chrome";
+// YouTube and native <video> ship in the core bundle; HLS, Vimeo, Wistia and
+// Twitch load on first use through ensureMediaElement().
 import "youtube-video-element";
-import "vimeo-video-element";
-import "hls-video-element";
-import "wistia-video-element";
-import "twitch-video-element";
 
 import { createEventBus, type EventBus } from "./events";
 import { createInlineConfigProvider, type ConfigProvider, type PlayerstackConfig } from "./config";
 import { createPluginRegistry, type PlayerstackPlugin } from "./plugins";
 import { isSafeHttpUrl } from "./safe-html";
+import { ensureMediaElement, type MediaElementTag } from "./providers";
 
 const OBSERVED_ATTRS = ["src", "poster", "title"] as const;
 
-/** Tag name a plugin can request the inner media element to use. */
-export type MediaElementTag =
-  | "video"
-  | "youtube-video"
-  | "vimeo-video"
-  | "hls-video"
-  | "wistia-video"
-  | "twitch-video";
+export type { MediaElementTag } from "./providers";
 
 let registeredPlugins: readonly PlayerstackPlugin[] = [];
 let configProvider: ConfigProvider = createInlineConfigProvider();
@@ -90,7 +82,21 @@ export class PlayerstackElement extends HTMLElement {
       return;
     }
 
-    const { controller, mediaEl } = this.buildMediaController(config);
+    const tag = detectElementTag(config.src);
+    try {
+      await ensureMediaElement(tag);
+    } catch (err) {
+      console.error(`[playerstack] could not load <${tag}>:`, (err as Error).message);
+      this.dispatchEvent(
+        new CustomEvent("playerstack:error", {
+          bubbles: true,
+          detail: { reason: "provider-load", tag, error: err },
+        }),
+      );
+      return;
+    }
+
+    const { controller, mediaEl } = this.buildMediaController(config, tag);
     this.appendChild(controller);
     this.mediaPlayer = mediaEl;
 
@@ -126,12 +132,13 @@ export class PlayerstackElement extends HTMLElement {
     this.destroyRegistry = () => registry.destroy();
   }
 
-  private buildMediaController(config: PlayerstackConfig): {
+  private buildMediaController(
+    config: PlayerstackConfig,
+    tag: MediaElementTag,
+  ): {
     controller: HTMLElement;
     mediaEl: HTMLElement;
   } {
-    const tag: MediaElementTag = detectElementTag(config.src);
-
     const controller = document.createElement("media-controller");
     controller.style.width = "100%";
     controller.style.height = "100%";

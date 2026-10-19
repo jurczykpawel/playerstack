@@ -29,8 +29,9 @@ playwright-report/
 .playwright/
 
 # Local dev bundle copy (built on demand for docs playground)
-apps/docs/public/playerstack.min.js
-apps/docs/public/playerstack.min.js.map
+apps/docs/public/playerstack*.js
+apps/docs/public/playerstack*.js.map
+apps/docs/public/playerstack*.LEGAL.txt
 apps/playground/playerstack.min.js
 apps/playground/playerstack.min.js.map
 

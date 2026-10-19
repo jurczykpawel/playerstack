@@ -34,8 +34,10 @@ The bundle above is served free from this site's Cloudflare Pages CDN.
 ### Self-host the bundle
 
 Prefer to serve it from your own domain (no third-party request)? Download
-[`playerstack.min.js`](https://playerstack.techskills.academy/playerstack.min.js),
-drop it next to your HTML, and point the script tag at your own path:
+[`playerstack.min.js`](https://playerstack.techskills.academy/playerstack.min.js)
+together with the provider files it loads on demand for HLS, Vimeo, Wistia and Twitch
+(`playerstack-<provider>.<hash>.js`, built by `packages/embed` and copied by
+`scripts/copy-standalone.sh`), keep them in one directory, and point the script tag at your own path:
 
 ```html
 <script src="/js/playerstack.min.js" defer></script>

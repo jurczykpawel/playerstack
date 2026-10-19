@@ -166,9 +166,9 @@ Playerstack is designed to embed on third-party pages. Config-driven inputs (HTM
 
 ## Bundle size
 
-The hosted `playerstack.min.js`, measured on 2026-10-19, is 839,898 bytes raw (820.2 KiB), 244,671 bytes with gzip (238.9 KiB), and 198,723 bytes with Brotli (194.1 KiB). Compression was measured with Node zlib defaults for gzip and quality 11 for Brotli; 1 KiB = 1,024 bytes. Sizes vary with the build and compression settings.
+The hosted `playerstack.min.js`, measured on 2026-10-19, is 237,183 bytes raw (231.6 KiB), 59,689 bytes with gzip (58.3 KiB), and 49,911 bytes with Brotli (48.7 KiB). That is everything a page with YouTube or MP4 players downloads. HLS, Vimeo, Wistia and Twitch support loads on first use from files next to the script (`playerstack-<provider>.<hash>.js`): a page with an HLS player downloads 221.1 KiB gzip in total (hls.js is most of it), one with Vimeo 73.7 KiB. Before this split the single script was 244,613 bytes gzip (238.9 KiB) for every page. Compression was measured with Node zlib, gzip level 9 and Brotli quality 11 (`bun scripts/measure-bundle.ts`); 1 KiB = 1,024 bytes. Sizes vary with the build and compression settings.
 
-The standalone bundle includes the Mux media elements and 15 registered plugins. The scoped `@playerstack/*` packages are not published to npm yet; use the hosted script above, self-host a downloaded copy, or build a custom bundle from this repository.
+The standalone bundle includes media-chrome, the YouTube element and 15 registered plugins. The scoped `@playerstack/*` packages are not published to npm yet; use the hosted script above, self-host a downloaded copy, or build a custom bundle from this repository.
 
 ## Acknowledgements
 
