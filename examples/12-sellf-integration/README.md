@@ -52,10 +52,18 @@ Your Sellf product must serve `/api/products/:id/playerstack` returning JSON:
 
 ## Run
 
+The hosted `playerstack.min.js` does not include the Sellf adapter, and the scoped `@playerstack/*` packages are not published to npm yet, so this example uses a small custom build from this repository (`entry.ts`):
+
 ```sh
+# from the repository root, after `bun install`
+bun build examples/12-sellf-integration/entry.ts --format=iife --minify \
+  --outfile examples/12-sellf-integration/dist/playerstack-sellf.js
+cd examples/12-sellf-integration
 python3 -m http.server 8000
 # open http://localhost:8000
 ```
+
+`sellf-provider.ts` (the first import of `entry.ts`) installs the Sellf config provider before `<player-stack>` is defined. Do not replace it with an inline `fetch` into `data-config`: the adapter keeps an allowlist of fields the remote API may set, so it cannot point analytics or lead-capture requests at a URL you did not choose.
 
 > Note: this example assumes a Sellf endpoint exists. The fetch will 404 against real `sellf.app` unless you have a configured product. The demo is for showing the integration pattern.
 
@@ -88,7 +96,7 @@ Sellf still drives `src`, `poster`, `ctaEnd`, etc. but `title` is taken from the
 
 ## Auth
 
-If your endpoint requires auth (e.g. only logged-in users see private courses):
+If your endpoint requires auth (e.g. only logged-in users see private courses), change the provider in `sellf-provider.ts` and rebuild:
 
 ```js
 const sellf = createSellfConfigProvider({

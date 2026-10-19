@@ -15,7 +15,7 @@ Representative use cases. Each folder is a self-contained example with its own R
 | 9   | [next-js-app](./09-next-js-app)                 | Next.js 15      | Next.js with dynamic import (no SSR for the player)        |
 | 10  | [tailwind-styled](./10-tailwind-styled)         | HTML + Tailwind | Styling overrides via Tailwind utilities                   |
 | 11  | [wordpress-shortcode](./11-wordpress-shortcode) | PHP             | WordPress shortcode without a plugin                       |
-| 12  | [sellf-integration](./12-sellf-integration)     | TS              | Drive config from a Sellf product endpoint                 |
+| 12  | [sellf-integration](./12-sellf-integration)     | TS              | Drive config from a Sellf product endpoint (custom build)  |
 
 ## Running locally
 

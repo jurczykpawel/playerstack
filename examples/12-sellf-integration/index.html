@@ -59,32 +59,10 @@
       ></player-stack>
     </div>
 
-    <!-- Use scoped packages instead of the standalone bundle, because we need
-         to install a custom config provider before the element registers -->
-    <script type="module">
-      import {
-        Playerstack,
-        setConfigProviderForElement,
-      } from "https://esm.sh/@playerstack/core@0.1.0";
-      import { sourcesPlugin } from "https://esm.sh/@playerstack/plugin-sources@0.1.0";
-      import { controlsPolicyPlugin } from "https://esm.sh/@playerstack/plugin-controls-policy@0.1.0";
-      import { ctaEndPlugin } from "https://esm.sh/@playerstack/plugin-cta-end@0.1.0";
-      import { brandedThumbPlugin } from "https://esm.sh/@playerstack/plugin-branded-thumb@0.1.0";
-      import { createSellfConfigProvider } from "https://esm.sh/@playerstack/plugin-sellf-adapter@0.1.0";
-
-      // 1. Install the Sellf config provider BEFORE define()
-      const sellf = createSellfConfigProvider({
-        baseUrl: "https://sellf.app",
-        // fetchOptions: { credentials: "include" }, // if your endpoint needs cookies
-      });
-      setConfigProviderForElement(sellf);
-
-      // 2. Register plugins as usual
-      Playerstack.use(sourcesPlugin)
-        .use(controlsPolicyPlugin)
-        .use(brandedThumbPlugin)
-        .use(ctaEndPlugin)
-        .define();
-    </script>
+    <!-- Custom build with the Sellf config provider (the hosted standalone script
+         does not include it). Build from the repo root first:
+         bun build examples/12-sellf-integration/entry.ts --format=iife --minify \
+           --outfile examples/12-sellf-integration/dist/playerstack-sellf.js -->
+    <script src="./dist/playerstack-sellf.js" defer></script>
   </body>
 </html>

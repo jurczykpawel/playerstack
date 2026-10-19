@@ -1,0 +1,118 @@
+<!doctype html>
+<!--
+  Source of apps/docs/public/og-default.png (1200x630).
+  Render: bun scripts/render-og.ts
+  Keep facts here stable: no bundle sizes (they change per release).
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <style>
+      @font-face {
+        font-family: "Space Grotesk Variable";
+        src: url("../node_modules/@fontsource-variable/space-grotesk/files/space-grotesk-latin-wght-normal.woff2")
+          format("woff2-variations");
+        font-weight: 300 700;
+      }
+      @font-face {
+        font-family: "Inter Variable";
+        src: url("../node_modules/@fontsource-variable/inter/files/inter-latin-wght-normal.woff2")
+          format("woff2-variations");
+        font-weight: 100 900;
+      }
+      * {
+        box-sizing: border-box;
+        margin: 0;
+      }
+      html,
+      body {
+        width: 1200px;
+        height: 630px;
+      }
+      body {
+        background:
+          radial-gradient(900px 420px at 100% 0%, rgba(0, 138, 255, 0.13), transparent 70%),
+          radial-gradient(700px 380px at 0% 100%, rgba(0, 138, 255, 0.05), transparent 70%), #0a0c12;
+        color: #f5f7fc;
+        font-family: "Inter Variable", system-ui, sans-serif;
+        padding: 72px 72px 0;
+        position: relative;
+        overflow: hidden;
+      }
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        font-family: "Space Grotesk Variable", sans-serif;
+        font-weight: 600;
+        font-size: 32px;
+        letter-spacing: -0.02em;
+      }
+      .dot {
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background: #008aff;
+        box-shadow: 0 0 0 8px rgba(0, 138, 255, 0.18);
+        margin: 0 4px 0 8px;
+      }
+      .eyebrow {
+        margin-top: 104px;
+        color: #2f9dff;
+        font-size: 20px;
+        font-weight: 600;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+      }
+      h1 {
+        margin-top: 20px;
+        font-family: "Space Grotesk Variable", sans-serif;
+        font-weight: 700;
+        font-size: 76px;
+        line-height: 1.04;
+        letter-spacing: -0.035em;
+        max-width: 900px;
+      }
+      h1 .muted {
+        background: linear-gradient(180deg, #e6eaf3, #aab2c3);
+        -webkit-background-clip: text;
+        color: transparent;
+      }
+      .chips {
+        position: absolute;
+        left: 72px;
+        bottom: 72px;
+        display: flex;
+        gap: 12px;
+      }
+      .chip {
+        padding: 12px 22px;
+        border-radius: 999px;
+        border: 1px solid #222838;
+        background: #10131c;
+        color: #d5dae5;
+        font-size: 22px;
+        font-weight: 500;
+      }
+      .chip.accent {
+        background: #008aff;
+        border-color: #008aff;
+        color: #fff;
+        font-weight: 600;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="brand"><span class="dot"></span>Playerstack</div>
+    <p class="eyebrow">Open-source embeddable video player</p>
+    <h1>One script tag. <span class="muted">A video player that converts.</span></h1>
+    <div class="chips">
+      <span class="chip accent">MIT</span>
+      <span class="chip">YouTube</span>
+      <span class="chip">Vimeo</span>
+      <span class="chip">MP4 &amp; HLS</span>
+      <span class="chip">17 plugins</span>
+      <span class="chip">Framework-free</span>
+    </div>
+  </body>
+</html>
