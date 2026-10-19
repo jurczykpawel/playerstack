@@ -73,6 +73,16 @@ const providerResult = await build({
   plugins: [providerEntries],
 });
 
+// Contract: a provider file only registers its custom element. It must not
+// bundle Playerstack code, because a main script cached for up to a year
+// loads whatever provider file the latest release ships.
+const ownCode = Object.keys(providerResult.metafile.inputs).filter(
+  (input) => !input.includes("node_modules") && !input.startsWith("provider:"),
+);
+if (ownCode.length > 0) {
+  throw new Error(`provider bundles must not include Playerstack code: ${ownCode.join(", ")}`);
+}
+
 const providerFiles: Record<string, string> = {};
 for (const [file, meta] of Object.entries(providerResult.metafile.outputs)) {
   if (!file.endsWith(".js") || !meta.entryPoint) continue;

@@ -55,6 +55,13 @@ This is all a page with YouTube or MP4 players downloads. HLS, Vimeo, Wistia and
 
 This measures the script served by the documentation site, not every possible local build. The standalone includes media-chrome, the YouTube element and 15 plugins. Build from scoped source packages to choose your own plugins, then measure that output.
 
+## Provider files and compatibility
+
+`playerstack-hls.js`, `playerstack-vimeo.js`, `playerstack-wistia.js` and `playerstack-twitch.js` keep the same names in every release; `playerstack.min.js` requests them with `?v=<content hash>`. The CDN may serve a cached `playerstack.min.js` for up to a year, and that old script will load the provider files of the latest release. Rules for future changes:
+
+- A provider file only registers its custom element (`hls-video`, `vimeo-video`, `wistia-video`, `twitch-video`) from the upstream media-element package. It must not bundle Playerstack code or depend on internal APIs of a particular core version; `build.ts` fails if it does.
+- The contract between core and providers is the tag name plus the standard media element API (attributes, `HTMLMediaElement` properties and events). Do not rename tags or files; add a new tag and file instead.
+
 ## Custom config
 
 Full config schema is documented in the [main README](https://github.com/jurczykpawel/playerstack#readme) and on [playerstack.techskills.academy/docs](https://playerstack.techskills.academy/docs).
