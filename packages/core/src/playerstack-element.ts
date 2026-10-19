@@ -47,6 +47,8 @@ export class PlayerstackElement extends HTMLElement {
   private mediaPlayer: HTMLElement | null = null;
   private events: EventBus | null = null;
   private destroyRegistry: (() => void) | null = null;
+  /** Attribute changes made while boot() is still waiting (config, provider). */
+  private pendingAttrs = new Map<string, string | null>();
 
   connectedCallback(): void {
     if (this.mediaPlayer) return;
@@ -61,7 +63,10 @@ export class PlayerstackElement extends HTMLElement {
   }
 
   attributeChangedCallback(name: string, _old: string | null, value: string | null): void {
-    if (!this.mediaPlayer) return;
+    if (!this.mediaPlayer) {
+      this.pendingAttrs.set(name, value);
+      return;
+    }
     if (value === null) {
       this.mediaPlayer.removeAttribute(name);
       return;
@@ -74,6 +79,8 @@ export class PlayerstackElement extends HTMLElement {
   }
 
   private async boot(): Promise<void> {
+    // Attributes present now are read by the config provider below.
+    this.pendingAttrs.clear();
     let config: PlayerstackConfig;
     try {
       config = await configProvider.load(this);
@@ -82,18 +89,26 @@ export class PlayerstackElement extends HTMLElement {
       return;
     }
 
-    const tag = detectElementTag(config.src);
-    try {
-      await ensureMediaElement(tag);
-    } catch (err) {
-      console.error(`[playerstack] could not load <${tag}>:`, (err as Error).message);
-      this.dispatchEvent(
-        new CustomEvent("playerstack:error", {
-          bubbles: true,
-          detail: { reason: "provider-load", tag, error: err },
-        }),
-      );
-      return;
+    // Loading a provider can take seconds; apply attribute changes made in the
+    // meantime and pick the provider again if the source type changed.
+    let tag = detectElementTag(config.src);
+    for (;;) {
+      try {
+        await ensureMediaElement(tag);
+      } catch (err) {
+        console.error(`[playerstack] could not load <${tag}>:`, (err as Error).message);
+        this.dispatchEvent(
+          new CustomEvent("playerstack:error", {
+            bubbles: true,
+            detail: { reason: "provider-load", tag, error: err },
+          }),
+        );
+        return;
+      }
+      config = this.applyPendingAttrs(config);
+      const next = detectElementTag(config.src);
+      if (next === tag) break;
+      tag = next;
     }
 
     const { controller, mediaEl } = this.buildMediaController(config, tag);
@@ -130,6 +145,18 @@ export class PlayerstackElement extends HTMLElement {
     }
 
     this.destroyRegistry = () => registry.destroy();
+  }
+
+  private applyPendingAttrs(config: PlayerstackConfig): PlayerstackConfig {
+    if (this.pendingAttrs.size === 0) return config;
+    const next = { ...config };
+    for (const [name, value] of this.pendingAttrs) {
+      // `src` is required; removing it mid-boot keeps the configured source.
+      if (value === null && name !== "src") delete next[name as "poster" | "title"];
+      else if (value !== null) next[name as "src" | "poster" | "title"] = value;
+    }
+    this.pendingAttrs.clear();
+    return next;
   }
 
   private buildMediaController(

@@ -6,7 +6,7 @@ Embeddable video player. OSS-first (MIT). Bun monorepo. Plugin-first architectur
 
 | Layer              | Choice                                                                                                                 |
 | ------------------ | ---------------------------------------------------------------------------------------------------------------------- |
-| Runtime            | Bun 1.3+                                                                                                               |
+| Runtime            | Bun 1.4+ (CI 1.4.3, same as `packageManager`; `bun.lock` v2)                                                           |
 | Workspaces         | Bun native (`apps/*`, `packages/*`)                                                                                    |
 | Language           | TypeScript (strict, ES2020 target)                                                                                     |
 | Engine             | Mux `media-chrome` + `youtube-video-element` / `vimeo-video-element` / `hls-video-element` (all MIT, wrapper not fork) |

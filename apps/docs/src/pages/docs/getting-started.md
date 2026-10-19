@@ -48,6 +48,12 @@ keep them in one directory, and point the script tag at your own path:
 
 It is MIT-licensed, so you can host and redistribute it freely.
 
+With a Content Security Policy, allow the directory that serves the script (for example
+`script-src https://playerstack.techskills.academy/`), not only the full path of
+`playerstack.min.js`: the provider files are loaded from the same directory. A policy with
+`require-trusted-types-for 'script'` blocks them. In both cases YouTube and MP4 still play; HLS,
+Vimeo, Wistia and Twitch players stay empty and the element dispatches a `playerstack:error` event.
+
 ## Option 2: scoped packages
 
 Use this when you want a smaller bundle by including only the plugins you need.

@@ -10,7 +10,14 @@ export type LazyMediaElementTag = "hls-video" | "vimeo-video" | "wistia-video" |
 /** Loads the code that defines a lazy media element. */
 export type ProviderImporter = (tag: LazyMediaElementTag) => Promise<unknown>;
 
-const LAZY_TAGS: readonly string[] = ["hls-video", "vimeo-video", "wistia-video", "twitch-video"];
+/** Every release must ship a provider file for each of these (see packages/embed/build.ts). */
+export const LAZY_MEDIA_ELEMENT_TAGS: readonly LazyMediaElementTag[] = [
+  "hls-video",
+  "vimeo-video",
+  "wistia-video",
+  "twitch-video",
+];
+const LAZY_TAGS: readonly string[] = LAZY_MEDIA_ELEMENT_TAGS;
 
 let importer: ProviderImporter = importProvider;
 const pending = new Map<LazyMediaElementTag, Promise<void>>();

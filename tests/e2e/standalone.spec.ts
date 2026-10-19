@@ -108,3 +108,43 @@ test("a failed provider download logs an error and emits playerstack:error", asy
     .toBe("hls-video");
   expect(errors.some((e) => e.includes("[playerstack] could not load <hls-video>"))).toBe(true);
 });
+
+/** Serves the page and bundle, holding provider files back by `delayMs`. */
+async function openWithSlowProviders(page: Page, src: string, delayMs: number): Promise<void> {
+  await page.route(`${ORIGIN}/assets/*`, async (route) => {
+    const file = new URL(route.request().url()).pathname.split("/").pop()!;
+    if (file !== "playerstack.min.js") await new Promise((r) => setTimeout(r, delayMs));
+    return route.fulfill({
+      body: readFileSync(join(DIST, file)),
+      contentType: "application/javascript",
+    });
+  });
+  await page.route(`${ORIGIN}/`, (route) =>
+    route.fulfill({
+      contentType: "text/html",
+      body: `<!doctype html><html><body>
+        <player-stack src="${src}"></player-stack>
+        <script src="${SCRIPT}"></script>
+      </body></html>`,
+    }),
+  );
+  // The load event waits for injected provider scripts; act right after DOMContentLoaded.
+  await page.goto(`${ORIGIN}/`, { waitUntil: "domcontentloaded" });
+  await expect(page.locator("player-stack hls-video")).toHaveCount(0);
+}
+
+test("a src change while the provider downloads is not lost", async ({ page }) => {
+  const second = `${SOURCES.hls}?second=1`;
+  await openWithSlowProviders(page, SOURCES.hls, 800);
+  await page.locator("player-stack").evaluate((el, s) => el.setAttribute("src", s), second);
+  await expect(page.locator("player-stack hls-video")).toHaveAttribute("src", second);
+});
+
+test("switching the source type while a provider downloads picks the new element", async ({
+  page,
+}) => {
+  await openWithSlowProviders(page, SOURCES.hls, 800);
+  await page.locator("player-stack").evaluate((el, s) => el.setAttribute("src", s), SOURCES.mp4);
+  await expect(page.locator("player-stack video")).toHaveAttribute("src", SOURCES.mp4);
+  await expect(page.locator("player-stack hls-video")).toHaveCount(0);
+});

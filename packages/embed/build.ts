@@ -3,6 +3,7 @@ import { gzipSync } from "zlib";
 import { createHash } from "crypto";
 import { readFileSync, readdirSync, rmSync, mkdirSync } from "fs";
 import { join, dirname, basename } from "path";
+import { LAZY_MEDIA_ELEMENT_TAGS } from "../core/src/providers";
 
 const root = dirname(new URL(import.meta.url).pathname);
 const outdir = join(root, "dist");
@@ -91,6 +92,13 @@ for (const [file, meta] of Object.entries(providerResult.metafile.outputs)) {
   if (!tag) continue;
   const version = createHash("sha256").update(readFileSync(file)).digest("hex").slice(0, 8);
   providerFiles[tag] = `${basename(file)}?v=${version}`;
+}
+
+// A main script cached for up to a year may request any of these files, so
+// every release must ship all of them.
+const missing = LAZY_MEDIA_ELEMENT_TAGS.filter((tag) => !providerFiles[tag]);
+if (missing.length > 0) {
+  throw new Error(`provider files missing for: ${missing.join(", ")}`);
 }
 
 const standaloneImporter: Plugin = {
