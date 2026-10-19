@@ -6,12 +6,7 @@ import { parseBunny, type BunnySource } from "./parsers/bunny";
 import { parseFile, type FileSource } from "./parsers/file";
 
 export type ResolvedSource =
-  | YouTubeSource
-  | VimeoSource
-  | WistiaSource
-  | TwitchSource
-  | BunnySource
-  | FileSource;
+  YouTubeSource | VimeoSource | WistiaSource | TwitchSource | BunnySource | FileSource;
 
 // Order matters: bunny must run before file so Bunny URLs are tagged with
 // the provider metadata instead of falling through to the generic file parser.

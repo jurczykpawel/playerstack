@@ -46,9 +46,7 @@ const states = new WeakMap<PlayerstackContext, MyState>();
 const myPlugin: PlayerstackPlugin = {
   name: "my-plugin",
   init(ctx) {
-    states.set(ctx, {
-      /* ... */
-    });
+    states.set(ctx, {/* ... */});
   },
   destroy(ctx) {
     states.get(ctx)?.cleanup();

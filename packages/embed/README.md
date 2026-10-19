@@ -45,11 +45,11 @@ This bundle pre-registers 15 of the 17 first-party plugins:
 
 The hosted `playerstack.min.js`, measured on 2026-10-19:
 
-| Compression | Bytes | KiB (1,024 bytes) |
-| --- | ---: | ---: |
-| None | 839,898 | 820.2 |
-| gzip (Node zlib defaults) | 244,671 | 238.9 |
-| Brotli (quality 11) | 198,723 | 194.1 |
+| Compression               |   Bytes | KiB (1,024 bytes) |
+| ------------------------- | ------: | ----------------: |
+| None                      | 839,898 |             820.2 |
+| gzip (Node zlib defaults) | 244,671 |             238.9 |
+| Brotli (quality 11)       | 198,723 |             194.1 |
 
 This measures the script served by the documentation site, not every possible local build. The standalone includes media elements and 15 plugins. Build from scoped source packages to choose your own plugins, then measure that output.
 
