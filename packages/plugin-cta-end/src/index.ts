@@ -68,7 +68,8 @@ function renderOverlay(ctx: PlayerstackContext, cfg: CtaEndConfig): HTMLElement 
     const h = document.createElement("h3");
     h.className = "playerstack-cta-title";
     h.textContent = cfg.title;
-    h.style.cssText = "margin:0;font-size:24px;font-weight:600;";
+    // color:inherit so host-page heading styles (h3 { color }) do not override the overlay text color.
+    h.style.cssText = "margin:0;font-size:24px;font-weight:600;color:inherit;";
     overlay.appendChild(h);
   }
 

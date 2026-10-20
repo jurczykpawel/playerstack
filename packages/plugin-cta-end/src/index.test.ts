@@ -161,4 +161,11 @@ describe("ctaEndPlugin", () => {
       "Obejrzyj jeszcze raz",
     );
   });
+  it("title keeps the overlay text color even when the host page styles headings", async () => {
+    const ctx = makeContext({ ctaEnd: { enabled: true, title: "Done" } });
+    await ctaEndPlugin.init(ctx);
+    fireEnded(ctx.mediaPlayer);
+    const title = ctx.container.querySelector(".playerstack-cta h3") as HTMLElement;
+    expect(title.style.color).toBe("inherit");
+  });
 });
