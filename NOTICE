@@ -18,4 +18,4 @@ The demo video and its poster are not covered by the Apache License 2.0 of the c
 
   Changes: the video is a 12-second, re-encoded excerpt prepared for the web
   (H.264, 1282x720). The poster is a still taken from the last frame of that
-  video.
+  video, scaled to 1000x562 and saved as WebP.

@@ -162,7 +162,7 @@ Playerstack is designed to embed on third-party pages. Config-driven inputs (HTM
 
 - Core + 17 first-party plugins: **Apache-2.0**
 - Premium plugins (post-MVP): `@playerstack-pro/*`, proprietary
-- Site / docs: Apache-2.0
+- Site / docs: Apache-2.0, except the demo video and its poster (CC BY 3.0, see [NOTICE](NOTICE))
 
 ## Bundle size
 

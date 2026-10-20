@@ -378,7 +378,7 @@ export const en = {
     items: [
       {
         q: "Is it really free for commercial use?",
-        a: "Yes. The core and all 17 plugins are Apache-2.0 licensed. Use it in client work, products and SaaS without a license fee. When you redistribute it, keep the LICENSE and NOTICE files with it; the license also includes a patent grant from the contributors.",
+        a: "Yes. The core and all 17 plugins are Apache-2.0 licensed. Use it in client work, products and SaaS without a license fee. When you redistribute it, keep the LICENSE and NOTICE files with it. The license also grants you the patent rights that contributors hold in their own contributions.",
       },
       {
         q: "Does it work with my framework?",
