@@ -1,5 +1,6 @@
 ---
 import Base from "../layouts/Base.astro";
+import { demoCredit } from "../content/landing";
 ---
 
 <Base title="Playground — Playerstack">
@@ -9,6 +10,13 @@ import Base from "../layouts/Base.astro";
       <h1>Live playground</h1>
       <p class="lead">
         Pick a preset to see what's possible, then tweak the config and copy the embed.
+      </p>
+      <p class="demo-credit">
+        Demo video:
+        <a href={demoCredit.titleHref} rel="noopener">{demoCredit.title}</a>
+        {demoCredit.author},
+        {demoCredit.holder},
+        <a href={demoCredit.licenseHref} rel="noopener">{demoCredit.license}</a>
       </p>
     </header>
 
@@ -907,6 +915,9 @@ import Base from "../layouts/Base.astro";
   .back { color: var(--muted); text-decoration: none; font-size: 14px; }
   h1 { font-size: 32px; margin: 12px 0 4px; }
   .lead { color: var(--muted); margin: 0 0 24px; }
+  .demo-credit { margin: -12px 0 24px; font-size: 13.5px; color: var(--muted); }
+  .demo-credit a { color: inherit; text-decoration: underline; text-underline-offset: 2px; }
+  .demo-credit a:hover { color: var(--fg); }
 
   .presets {
     display: grid;

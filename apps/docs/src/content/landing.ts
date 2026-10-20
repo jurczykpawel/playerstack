@@ -38,6 +38,16 @@ export interface PluginGroup {
   items: PluginItem[];
 }
 
+/** Sintel trailer attribution (CC BY 3.0), shared by the landing demo and /playground. */
+export const demoCredit = {
+  title: "Sintel Trailer",
+  titleHref: "https://durian.blender.org/",
+  author: "by Durian Open Movie Team",
+  holder: "© Blender Foundation",
+  license: "CC BY 3.0",
+  licenseHref: "https://creativecommons.org/licenses/by/3.0/",
+};
+
 export const en = {
   meta: {
     title: "Playerstack — the embeddable video player with a marketing layer",
@@ -184,12 +194,7 @@ export const en = {
       "One element, one config object, five plugins shown live. Mix any of the 17 below — or write your own.",
     credit: {
       prefix: "Demo video: 12-second excerpt from",
-      title: "Sintel Trailer",
-      titleHref: "https://durian.blender.org/",
-      author: "by Durian Open Movie Team",
-      holder: "© Blender Foundation",
-      license: "CC BY 3.0",
-      licenseHref: "https://creativecommons.org/licenses/by/3.0/",
+      ...demoCredit,
     },
   },
 
