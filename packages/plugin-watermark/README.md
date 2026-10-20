@@ -54,4 +54,4 @@ Playerstack.use(watermarkPlugin).define();
 
 ## License
 
-MIT.
+Apache-2.0.

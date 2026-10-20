@@ -42,4 +42,4 @@ E-learning platforms — keeps students from playing the video in a background t
 
 ## License
 
-MIT.
+Apache-2.0.

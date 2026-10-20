@@ -66,4 +66,4 @@ This plugin only consumes events; it doesn't emit any.
 
 ## License
 
-MIT.
+Apache-2.0.

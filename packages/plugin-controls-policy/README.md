@@ -49,4 +49,4 @@ Each `<player-stack>` gets its own scoped `<style>` block. You can put dozens of
 
 ## License
 
-MIT.
+Apache-2.0.

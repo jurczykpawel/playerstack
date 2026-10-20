@@ -1,6 +1,6 @@
 # Playerstack
 
-> Embeddable video player for any HTML page. Drop one script tag, embed YouTube, Vimeo, MP4, or HLS with branding and CTAs. MIT, plugin-first.
+> Embeddable video player for any HTML page. Drop one script tag, embed YouTube, Vimeo, MP4, or HLS with branding and CTAs. Apache-2.0, plugin-first.
 
 ## What it is
 Playerstack is a thin layer on top of Mux's media-chrome and media-elements with a marketing layer added: branded thumbnails, click-to-load (LCP + GDPR), end-of-video CTAs, autopreview, themed controls. Framework-agnostic Web Component.
@@ -11,7 +11,7 @@ Playerstack is a thin layer on top of Mux's media-chrome and media-elements with
 <player-stack src="https://youtu.be/dQw4w9WgXcQ"></player-stack>
 ```
 
-## Plugins (17 first-party source packages, 15 in standalone, all MIT)
+## Plugins (17 first-party source packages, 15 in standalone, all Apache-2.0)
 
 The standalone script registers 15 plugins. focus-mode and sellf-adapter require a custom build from source; scoped packages are not published to npm yet.
 
@@ -37,7 +37,7 @@ The standalone script registers 15 plugins. focus-mode and sellf-adapter require
 Bun monorepo. TypeScript strict. Engine: Mux media-chrome + media-elements (MIT). esbuild bundler. Astro docs site.
 
 ## License
-MIT for core and all 17 first-party plugins. Premium plugins (post-MVP) are proprietary.
+Apache-2.0 for core and all 17 first-party plugins. Premium plugins (post-MVP) are proprietary.
 
 ## Links
 - Site: https://playerstack.techskills.academy

@@ -77,7 +77,7 @@ Presto Player is a great WordPress plugin if you're all-in on WP. Playerstack is
 
 - You want the same player on a WordPress site **and** on a static landing page **and** in a Sellf product
 - You don't want to maintain a WP plugin codebase
-- You want MIT licensing (Presto is GPL — fine for distribution but locks you into copyleft if you fork)
+- You want permissive Apache-2.0 licensing (Presto is GPL — fine for distribution but locks you into copyleft if you fork)
 
 For a pure-WP setup with no other touchpoints, Presto is probably easier.
 

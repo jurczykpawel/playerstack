@@ -53,4 +53,4 @@ npm install @playerstack/core @playerstack/plugin-action-bar
 
 ## License
 
-MIT.
+Apache-2.0.

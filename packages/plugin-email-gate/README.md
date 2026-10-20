@@ -172,4 +172,4 @@ export async function POST(req: Request) {
 
 ## License
 
-MIT.
+Apache-2.0.

@@ -1,4 +1,4 @@
-// Renders apps/docs/og/og-default.html to apps/docs/public/og-default-2.png (1200x630).
+// Renders apps/docs/og/og-default.html to apps/docs/public/og-default-3.png (1200x630).
 // Usage: bun scripts/render-og.ts
 import { chromium } from "@playwright/test";
 import { join } from "path";
@@ -17,8 +17,8 @@ try {
     ["Space Grotesk Variable", "Inter Variable"].every((f) => document.fonts.check(`16px "${f}"`)),
   );
   if (!loaded) throw new Error("OG fonts did not load; run bun install first");
-  await page.screenshot({ path: join(docs, "public/og-default-2.png") });
+  await page.screenshot({ path: join(docs, "public/og-default-3.png") });
 } finally {
   await browser.close();
 }
-console.log("apps/docs/public/og-default-2.png");
+console.log("apps/docs/public/og-default-3.png");

@@ -108,4 +108,4 @@ createSellfConfigProvider({ baseUrl: "...", trustRemote: true });
 
 ## License
 
-MIT.
+Apache-2.0.

@@ -79,4 +79,4 @@ The overlay uses CSS variables you can override globally:
 
 ## License
 
-MIT.
+Apache-2.0.

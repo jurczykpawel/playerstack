@@ -48,4 +48,4 @@ The active chapter button gets the `active` class — style it however you want.
 
 ## License
 
-MIT.
+Apache-2.0.

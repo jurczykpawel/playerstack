@@ -81,4 +81,4 @@ Playerstack.use(introCardPlugin).define();
 
 ## License
 
-MIT.
+Apache-2.0.

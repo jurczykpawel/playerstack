@@ -54,4 +54,4 @@ YouTube and Vimeo iframes fetch tracking cookies as soon as they load — even b
 
 ## License
 
-MIT.
+Apache-2.0.

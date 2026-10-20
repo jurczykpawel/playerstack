@@ -46,7 +46,7 @@ keep them in one directory, and point the script tag at your own path:
 <script src="/js/playerstack.min.js" defer></script>
 ```
 
-It is MIT-licensed, so you can host and redistribute it freely.
+It is Apache-2.0 licensed, so you can host and redistribute it freely (keep the LICENSE and NOTICE files with it).
 
 With a Content Security Policy, allow the directory that serves the script (for example
 `script-src https://playerstack.techskills.academy/`), not only the full path of

@@ -9,8 +9,8 @@ interface Props {
 
 const {
   title,
-  description = "Embeddable video player. Drop one script tag, embed YouTube, Vimeo, MP4, or HLS with branding and CTAs. MIT.",
-  ogImage = "/og-default-2.png",
+  description = "Embeddable video player. Drop one script tag, embed YouTube, Vimeo, MP4, or HLS with branding and CTAs. Apache-2.0.",
+  ogImage = "/og-default-3.png",
 } = Astro.props;
 
 const canonical = new URL(Astro.url.pathname, Astro.site);
@@ -53,7 +53,7 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
         applicationCategory: "DeveloperApplication",
         operatingSystem: "Web",
         offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
-        license: "MIT",
+        license: "Apache-2.0",
         url: Astro.site?.toString(),
       })}
     />

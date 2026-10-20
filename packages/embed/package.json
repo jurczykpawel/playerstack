@@ -1,8 +1,8 @@
 {
   "name": "playerstack",
   "version": "0.0.0",
-  "license": "MIT",
-  "description": "Embeddable video player. Drop one script tag, embed YouTube/Vimeo/MP4/HLS with branding and CTAs. MIT, plugin-first.",
+  "license": "Apache-2.0",
+  "description": "Embeddable video player. Drop one script tag, embed YouTube/Vimeo/MP4/HLS with branding and CTAs. Apache-2.0, plugin-first.",
   "type": "module",
   "main": "./dist/playerstack.cjs",
   "module": "./dist/playerstack.esm.js",

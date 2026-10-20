@@ -42,7 +42,7 @@ export const en = {
   meta: {
     title: "Playerstack — the embeddable video player with a marketing layer",
     description:
-      "Open-source embeddable video player. One script tag embeds YouTube, Vimeo, MP4 or HLS, then brand it, add CTAs, capture leads and track plays — all via plugins. MIT, framework-free.",
+      "Open-source embeddable video player. One script tag embeds YouTube, Vimeo, MP4 or HLS, then brand it, add CTAs, capture leads and track plays — all via plugins. Apache-2.0, framework-free.",
   },
 
   nav: {
@@ -59,13 +59,13 @@ export const en = {
   hero: {
     eyebrow: "Open-source embeddable video player",
     title: "One script tag. A video player that converts.",
-    lead: "Embed YouTube, Vimeo, MP4 or HLS on any page — then brand it, add CTAs, capture leads and track every play. Every feature is a plugin. Framework-free, MIT.",
+    lead: "Embed YouTube, Vimeo, MP4 or HLS on any page — then brand it, add CTAs, capture leads and track every play. Every feature is a plugin. Framework-free, Apache-2.0.",
     primary: { label: "Get started", href: "/docs/getting-started" },
     secondary: { label: "Open playground", href: "/playground" },
     install:
       '<script src="https://playerstack.techskills.academy/playerstack.min.js" defer></script>',
     selfHost: {
-      label: "Or download the MIT bundle and self-host it",
+      label: "Or download the bundle and self-host it",
       href: "/docs/getting-started",
     },
   },
@@ -200,7 +200,7 @@ export const en = {
   },
 
   plugins: {
-    eyebrow: "17 plugins, all MIT",
+    eyebrow: "17 plugins, all Apache-2.0",
     title: "A plugin for every job. Ship only what you use.",
     lead: "17 first-party plugins are available in the source. The standalone script registers 15; focus-mode and sellf-adapter need a custom build. The scoped @playerstack/* packages let you bundle just what you use from source.",
     groups: [
@@ -327,7 +327,7 @@ export const en = {
       },
       {
         title: "Playerstack is both, anywhere",
-        body: "A modern Web Component you drop on any page: the marketing layer of the first kind, the openness of the second. MIT, framework-free, yours to extend.",
+        body: "A modern Web Component you drop on any page: the marketing layer of the first kind, the openness of the second. Apache-2.0, framework-free, yours to extend.",
       },
     ],
   },
@@ -364,7 +364,7 @@ export const en = {
 
   trust: {
     items: [
-      { value: "MIT", label: "Core + all 17 plugins" },
+      { value: "Apache-2.0", label: "Core + all 17 plugins" },
       { value: "~58 KiB", label: "Hosted script for YouTube/MP4, gzip (2026-10-19)" },
       { value: "0 deps", label: "to start — one script tag" },
       { value: "Mux", label: "media-chrome engine, never forked" },
@@ -377,7 +377,7 @@ export const en = {
     items: [
       {
         q: "Is it really free for commercial use?",
-        a: "Yes. The core and all 17 plugins are MIT-licensed. Use it in client work, products and SaaS without a license fee.",
+        a: "Yes. The core and all 17 plugins are Apache-2.0 licensed. Use it in client work, products and SaaS without a license fee. When you redistribute it, keep the LICENSE and NOTICE files with it; the license also includes a patent grant from the contributors.",
       },
       {
         q: "Does it work with my framework?",

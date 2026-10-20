@@ -67,7 +67,7 @@ See `AGENTS.md` for the full project rules.
 
 ## License
 
-By contributing you agree your code ships under MIT (the project's license).
+By contributing you agree your code ships under the Apache License 2.0 (the project's license, see `LICENSE`).
 
 ## Code of conduct
 

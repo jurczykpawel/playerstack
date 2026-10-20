@@ -2,6 +2,14 @@
 
 All notable changes to Playerstack will be documented in this file.
 
+## Unreleased
+
+### License
+
+- The project license changes from MIT to Apache License 2.0. `LICENSE` is the
+  unmodified Apache-2.0 text, `NOTICE` carries the copyright line, and every
+  `package.json` declares `Apache-2.0`. v0.1.0 below was released under MIT.
+
 ## v0.1.0 — 2026-05-09
 
 Initial release. MIT, plugin-first, framework-agnostic embeddable video player.

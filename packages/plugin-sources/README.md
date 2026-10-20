@@ -84,4 +84,4 @@ const result = resolveSource("https://youtu.be/dQw4w9WgXcQ");
 
 ## License
 
-MIT.
+Apache-2.0.

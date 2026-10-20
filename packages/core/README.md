@@ -96,4 +96,4 @@ interface PlayerstackConfig {
 
 ## License
 
-MIT. Engine: Mux [media-chrome](https://github.com/muxinc/media-chrome) + [media-elements](https://github.com/muxinc/media-elements) (all MIT).
+Apache-2.0. Engine: Mux [media-chrome](https://github.com/muxinc/media-chrome) + [media-elements](https://github.com/muxinc/media-elements) (all MIT).

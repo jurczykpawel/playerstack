@@ -1,10 +1,10 @@
 # Playerstack
 
 [![CI](https://github.com/jurczykpawel/playerstack/actions/workflows/ci.yml/badge.svg)](https://github.com/jurczykpawel/playerstack/actions/workflows/ci.yml)
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+[![License: Apache-2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://www.apache.org/licenses/LICENSE-2.0)
 [![Tests](https://img.shields.io/badge/tests-237%20unit%20%2B%204%20e2e-brightgreen.svg)](#testing)
 
-Embeddable video player for any HTML page. One script tag. YouTube, Vimeo, Wistia, Twitch, Bunny Stream, MP4, HLS. Brand it, add CTAs, gate emails — all via plugins. **MIT.**
+Embeddable video player for any HTML page. One script tag. YouTube, Vimeo, Wistia, Twitch, Bunny Stream, MP4, HLS. Brand it, add CTAs, gate emails — all via plugins. **Apache-2.0.**
 
 > **Status:** v0.1.0 (initial release, 2026-05-09)
 
@@ -33,7 +33,7 @@ Plyr and the Mux media-elements are great engines for developers — no marketin
 Presto Player has the marketing layer — only for WordPress.
 **Playerstack** is the modern, framework-agnostic combination of both.
 
-## Plugins (all MIT)
+## Plugins (all Apache-2.0)
 
 **Marketing**
 
@@ -160,9 +160,9 @@ Playerstack is designed to embed on third-party pages. Config-driven inputs (HTM
 
 ## License
 
-- Core + 17 first-party plugins: **MIT**
+- Core + 17 first-party plugins: **Apache-2.0**
 - Premium plugins (post-MVP): `@playerstack-pro/*`, proprietary
-- Site / docs: MIT
+- Site / docs: Apache-2.0
 
 ## Bundle size
 

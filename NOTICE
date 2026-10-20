@@ -1,10 +1,12 @@
-Playerstack
-Copyright (c) 2026 Pawel Jurczyk. Code is licensed under the MIT License (see LICENSE).
+PlayerStack
+Copyright 2026 Pawel Jurczyk
+
+This product is licensed under the Apache License, Version 2.0 (see LICENSE).
 
 Third-party media
 -----------------
 
-The demo video and its poster are not covered by the MIT License of the code.
+The demo video and its poster are not covered by the Apache License 2.0 of the code.
 
   apps/docs/public/demo.mp4
   apps/docs/public/demo-poster.webp

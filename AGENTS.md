@@ -1,6 +1,6 @@
 # AGENTS.md — Playerstack
 
-Embeddable video player. OSS-first (MIT). Bun monorepo. Plugin-first architecture built on Mux media-chrome + media-elements.
+Embeddable video player. OSS-first (Apache-2.0). Bun monorepo. Plugin-first architecture built on Mux media-chrome + media-elements.
 
 ## Stack
 
@@ -24,7 +24,7 @@ Embeddable video player. OSS-first (MIT). Bun monorepo. Plugin-first architectur
 3. **Plugin interface is stable.** Once `init(ctx)` and the event names are defined (Day 3-4), they are not changed without bumping a major version.
 4. **The standalone UMD has an aspirational 50 KiB gzip budget, currently exceeded.** Measure and document the artifact, date, compression settings, and units. Code-split per plugin when dist grows.
 5. **No GPL code in core.** Presto Player code is GPL v3 — read it for ideas, don't copy verbatim. Our engine (Mux media-chrome + media-elements) is MIT.
-6. **MIT for core + MVP plugins.** Premium plugins (post-MVP) live in `@playerstack-pro/*` (proprietary, separate repo).
+6. **Apache-2.0 for core + MVP plugins.** Premium plugins (post-MVP) live in `@playerstack-pro/*` (proprietary, separate repo).
 7. **No emoji in code.** Per workspace rules.
 8. **Polish for business docs, English for code/technical docs.**
 
