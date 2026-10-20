@@ -100,8 +100,13 @@ const path = Astro.url.pathname.replace(/\/$/, "");
     padding: 32px 24px 96px;
   }
   @media (max-width: 800px) {
-    .docs-layout { grid-template-columns: 1fr; }
+    .docs-layout { grid-template-columns: minmax(0, 1fr); }
     aside { position: static !important; height: auto !important; }
+    article :global(table) { display: block; overflow-x: auto; }
+    article :global(code:not(pre code)) { overflow-wrap: anywhere; }
+  }
+  article {
+    min-width: 0;
   }
   aside {
     position: sticky;

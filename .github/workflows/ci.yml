@@ -50,11 +50,11 @@ jobs:
       - name: Install Playwright browsers
         run: bunx playwright install --with-deps chromium
 
-      - name: E2E tests
-        run: bun run test:e2e
-
       - name: Build docs site
         run: bun run --cwd apps/docs build
+
+      - name: E2E tests
+        run: bun run test:e2e
 
       - name: Check docs page titles
         run: bun scripts/check-docs-titles.ts
