@@ -4,6 +4,7 @@ import { createHash } from "crypto";
 import { readFileSync, readdirSync, rmSync, mkdirSync } from "fs";
 import { join, dirname, basename } from "path";
 import { LAZY_MEDIA_ELEMENT_TAGS } from "../core/src/providers";
+import { writeLegalNotices } from "./legal-notices";
 
 const root = dirname(new URL(import.meta.url).pathname);
 const outdir = join(root, "dist");
@@ -17,19 +18,22 @@ const common = {
   target: "es2020",
   sourcemap: true,
   legalComments: "linked",
+  metafile: true,
 } as const;
 
-await build({
+const esmResult = await build({
   ...common,
   format: "esm",
   outfile: join(outdir, "playerstack.esm.js"),
 });
+writeLegalNotices(esmResult.metafile!, process.cwd());
 
-await build({
+const cjsResult = await build({
   ...common,
   format: "cjs",
   outfile: join(outdir, "playerstack.cjs"),
 });
+writeLegalNotices(cjsResult.metafile!, process.cwd());
 
 // Standalone: every provider except native <video> becomes a separate IIFE
 // file next to playerstack.min.js. File names stay the same across
@@ -74,6 +78,7 @@ const providerResult = await build({
   metafile: true,
   plugins: [providerEntries],
 });
+writeLegalNotices(providerResult.metafile, process.cwd());
 
 // Contract: a provider file only registers its custom element. It must not
 // bundle Playerstack code, because a main script cached for up to a year
@@ -111,7 +116,7 @@ const standaloneImporter: Plugin = {
   },
 };
 
-await build({
+const standaloneResult = await build({
   ...common,
   format: "iife",
   globalName: "Playerstack",
@@ -120,6 +125,7 @@ await build({
   define: { __PLAYERSTACK_PROVIDER_FILES__: JSON.stringify(providerFiles) },
   plugins: [standaloneImporter],
 });
+writeLegalNotices(standaloneResult.metafile!, process.cwd());
 
 const kb = (n: number) => (n / 1024).toFixed(1);
 console.log(`[playerstack] build OK`);

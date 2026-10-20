@@ -23,7 +23,8 @@
     "README.md"
   ],
   "scripts": {
-    "build": "bun build.ts"
+    "build": "bun build.ts",
+    "test": "vitest run legal-notices.test.ts"
   },
   "dependencies": {
     "@playerstack/core": "workspace:*",
