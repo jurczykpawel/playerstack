@@ -16,6 +16,8 @@ export interface BrandedThumbConfig {
   unmuteOnPlay?: boolean;
   /** On click, set `currentTime=0` on the inner media element before play(). */
   restartOnPlay?: boolean;
+  /** Accessible name of the play button (default: "Play video"). Set it in the page language. */
+  playLabel?: string;
 }
 
 interface ThumbState {
@@ -62,7 +64,7 @@ export const brandedThumbPlugin: PlayerstackPlugin = {
     button.type = "button";
     button.className = "playerstack-thumb-play";
     button.setAttribute("data-style", buttonStyle);
-    button.setAttribute("aria-label", "Play video");
+    button.setAttribute("aria-label", cfg.playLabel || "Play video");
     applyPlayButtonStyle(button, buttonStyle);
     button.appendChild(buildPlayTriangle());
     overlay.appendChild(button);

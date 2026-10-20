@@ -17,6 +17,8 @@ export interface CtaEndConfig {
   html?: string;
   button?: CtaButton;
   showReplay?: boolean;
+  /** Replay button text (default: "Replay"). Set it in the page language. */
+  replayLabel?: string;
 }
 
 interface CtaState {
@@ -99,7 +101,7 @@ function renderOverlay(ctx: PlayerstackContext, cfg: CtaEndConfig): HTMLElement 
     const replay = document.createElement("button");
     replay.type = "button";
     replay.className = "playerstack-cta-replay";
-    replay.textContent = "Replay";
+    replay.textContent = cfg.replayLabel || "Replay";
     replay.style.cssText =
       "background:transparent;color:#fff;border:1px solid rgba(255,255,255,0.4);padding:8px 16px;border-radius:6px;cursor:pointer;";
     replay.addEventListener("click", () => {

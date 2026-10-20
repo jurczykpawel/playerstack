@@ -51,6 +51,7 @@ Playerstack.use(ctaEndPlugin).define();
 | `button.url`   | `string`   | Destination URL                                                                      |
 | `button.utm`   | `string?`  | Query string appended to URL (e.g. `utm_source=...`)                                 |
 | `showReplay`   | `boolean?` | Render a "Replay" button that re-plays the video and dismisses the overlay           |
+| `replayLabel`  | `string?`  | Replay button text (default `"Replay"`); set it in the page language                 |
 
 ## Events
 

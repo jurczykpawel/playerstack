@@ -263,4 +263,15 @@ describe("brandedThumbPlugin", () => {
     expect(ctx.container.querySelector(".playerstack-thumb")).toBeNull();
     expect(ctx.mediaPlayer.getAttribute("src")).toBe("youtube/abc123");
   });
+  it("uses playLabel as the play button's accessible name (default: Play video)", async () => {
+    const ctx = makeContext({ brandedThumb: { enabled: true, playLabel: "Odtwórz film" } });
+    await brandedThumbPlugin.init(ctx);
+    const button = ctx.container.querySelector(".playerstack-thumb-play");
+    expect(button?.getAttribute("aria-label")).toBe("Odtwórz film");
+    const plain = makeContext({ brandedThumb: { enabled: true } });
+    await brandedThumbPlugin.init(plain);
+    expect(
+      plain.container.querySelector(".playerstack-thumb-play")?.getAttribute("aria-label"),
+    ).toBe("Play video");
+  });
 });

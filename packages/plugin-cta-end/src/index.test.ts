@@ -151,4 +151,14 @@ describe("ctaEndPlugin", () => {
     fireEnded(ctx.mediaPlayer);
     expect(ctx.container.querySelector("a.playerstack-cta-button")).toBeNull();
   });
+  it("uses replayLabel for the replay button text (default: Replay)", async () => {
+    const ctx = makeContext({
+      ctaEnd: { enabled: true, showReplay: true, replayLabel: "Obejrzyj jeszcze raz" },
+    });
+    await ctaEndPlugin.init(ctx);
+    fireEnded(ctx.mediaPlayer);
+    expect(ctx.container.querySelector(".playerstack-cta-replay")?.textContent).toBe(
+      "Obejrzyj jeszcze raz",
+    );
+  });
 });

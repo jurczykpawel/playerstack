@@ -32,11 +32,12 @@ Playerstack.use(brandedThumbPlugin).define();
 
 `config.brandedThumb`:
 
-| Field             | Type                             | Default    | Description                                                                                                                                                    |
-| ----------------- | -------------------------------- | ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `enabled`         | `boolean`                        | `false`    | Plugin is a no-op unless `true`                                                                                                                                |
-| `playButtonStyle` | `"minimal" \| "box" \| "circle"` | `"circle"` | Visual style of the play button (CSS hook via `data-style`)                                                                                                    |
-| `clickToLoad`     | `boolean`                        | `false`    | If `true`, defers `src` on the inner media element until the user clicks the overlay. The YouTube/Vimeo iframe (or `<video>` request) is never made until then |
+| Field             | Type                             | Default        | Description                                                                                                                                                    |
+| ----------------- | -------------------------------- | -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `enabled`         | `boolean`                        | `false`        | Plugin is a no-op unless `true`                                                                                                                                |
+| `playButtonStyle` | `"minimal" \| "box" \| "circle"` | `"circle"`     | Visual style of the play button (CSS hook via `data-style`)                                                                                                    |
+| `clickToLoad`     | `boolean`                        | `false`        | If `true`, defers `src` on the inner media element until the user clicks the overlay. The YouTube/Vimeo iframe (or `<video>` request) is never made until then |
+| `playLabel`       | `string`                         | `"Play video"` | Accessible name of the play button; set it in the page language                                                                                                |
 
 ## Why clickToLoad
 
