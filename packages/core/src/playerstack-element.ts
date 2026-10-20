@@ -77,6 +77,9 @@ export class PlayerstackElement extends HTMLElement {
   attributeChangedCallback(name: string, _old: string | null, value: string | null): void {
     if (!this.mediaPlayer || this.initializing) {
       this.pendingAttrs.set(name, value);
+      // Stop pending plugins before they can assign the previous source.
+      // boot() restarts with these attributes once the current init settles.
+      if (this.initializing) this.destroyRegistry?.();
       return;
     }
     if (value === null) {
@@ -128,6 +131,8 @@ export class PlayerstackElement extends HTMLElement {
     }
 
     const { controller, mediaEl } = this.buildMediaController(config, tag);
+    // Keep the connected DOM available to plugins without painting defaults.
+    controller.style.visibility = "hidden";
     this.appendChild(controller);
     this.mediaPlayer = mediaEl;
     this.initializing = true;
@@ -174,6 +179,7 @@ export class PlayerstackElement extends HTMLElement {
     if (pluginsOk && !deferredSrc && !mediaEl.hasAttribute("src")) {
       mediaEl.setAttribute("src", config.src);
     }
+    controller.style.removeProperty("visibility");
   }
 
   private applyPendingAttrs(config: PlayerstackConfig): PlayerstackConfig {
