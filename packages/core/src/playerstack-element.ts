@@ -1,7 +1,6 @@
 import "media-chrome";
-// YouTube and native <video> ship in the core bundle; HLS, Vimeo, Wistia and
-// Twitch load on first use through ensureMediaElement().
-import "youtube-video-element";
+// Native <video> needs no provider; every other media element loads on first
+// use through ensureMediaElement().
 
 import { createEventBus, type EventBus } from "./events";
 import { createInlineConfigProvider, type ConfigProvider, type PlayerstackConfig } from "./config";

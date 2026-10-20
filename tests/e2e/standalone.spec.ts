@@ -45,16 +45,20 @@ async function openEmbed(page: Page, src: string): Promise<string[]> {
 
 const providerFiles = (files: string[]) => files.filter((f) => f !== "playerstack.min.js");
 
-test("YouTube loads no provider file", async ({ page }) => {
+test("YouTube loads only the youtube provider", async ({ page }) => {
   const fetched = await openEmbed(page, SOURCES.youtube);
   await expect(page.locator("player-stack youtube-video")).toBeAttached();
-  expect(providerFiles(fetched)).toEqual([]);
+  expect(await page.evaluate(() => !!customElements.get("youtube-video"))).toBe(true);
+  expect(providerFiles(fetched)).toEqual([
+    expect.stringMatching(/^playerstack-youtube\.js\?v=[0-9a-f]{8}$/),
+  ]);
 });
 
 test("MP4 loads no provider file", async ({ page }) => {
   const fetched = await openEmbed(page, SOURCES.mp4);
   await expect(page.locator("player-stack video")).toHaveAttribute("src", SOURCES.mp4);
   expect(providerFiles(fetched)).toEqual([]);
+  expect(await page.evaluate(() => !!customElements.get("youtube-video"))).toBe(false);
 });
 
 test("HLS loads only the hls provider next to the main script and plays in Chromium", async ({

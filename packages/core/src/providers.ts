@@ -5,13 +5,15 @@ export type MediaElementTag =
   "video" | "youtube-video" | "vimeo-video" | "hls-video" | "wistia-video" | "twitch-video";
 
 /** Media elements that are not part of the core bundle and load on first use. */
-export type LazyMediaElementTag = "hls-video" | "vimeo-video" | "wistia-video" | "twitch-video";
+export type LazyMediaElementTag =
+  "youtube-video" | "hls-video" | "vimeo-video" | "wistia-video" | "twitch-video";
 
 /** Loads the code that defines a lazy media element. */
 export type ProviderImporter = (tag: LazyMediaElementTag) => Promise<unknown>;
 
 /** Every release must ship a provider file for each of these (see packages/embed/build.ts). */
 export const LAZY_MEDIA_ELEMENT_TAGS: readonly LazyMediaElementTag[] = [
+  "youtube-video",
   "hls-video",
   "vimeo-video",
   "wistia-video",
@@ -36,8 +38,8 @@ export function setProviderImporter(next: ProviderImporter): void {
 }
 
 /**
- * Resolves once `tag` is a defined custom element. Native `<video>` and YouTube
- * resolve immediately; other providers are loaded once and shared by every
+ * Resolves once `tag` is a defined custom element. Native `<video>` resolves
+ * immediately; every other provider is loaded once and shared by every
  * player on the page. A failed load is forgotten so the next player retries.
  */
 export function ensureMediaElement(tag: MediaElementTag): Promise<void> {

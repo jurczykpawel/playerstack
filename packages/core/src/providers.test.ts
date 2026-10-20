@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
+  LAZY_MEDIA_ELEMENT_TAGS,
   ensureMediaElement,
   isLazyMediaElement,
   setProviderImporter,
@@ -19,16 +20,26 @@ afterEach(() => {
 });
 
 describe("isLazyMediaElement", () => {
-  it("treats HLS, Vimeo, Wistia and Twitch as lazily loaded providers", () => {
+  it("treats YouTube, HLS, Vimeo, Wistia and Twitch as lazily loaded providers", () => {
+    expect(isLazyMediaElement("youtube-video")).toBe(true);
     expect(isLazyMediaElement("hls-video")).toBe(true);
     expect(isLazyMediaElement("vimeo-video")).toBe(true);
     expect(isLazyMediaElement("wistia-video")).toBe(true);
     expect(isLazyMediaElement("twitch-video")).toBe(true);
   });
 
-  it("keeps native <video> and YouTube in the core bundle", () => {
+  it("keeps native <video> in the core bundle", () => {
     expect(isLazyMediaElement("video")).toBe(false);
-    expect(isLazyMediaElement("youtube-video")).toBe(false);
+  });
+
+  it("lists every lazy provider for the build, which must ship a file for each", () => {
+    expect([...LAZY_MEDIA_ELEMENT_TAGS].sort()).toEqual([
+      "hls-video",
+      "twitch-video",
+      "vimeo-video",
+      "wistia-video",
+      "youtube-video",
+    ]);
   });
 });
 
@@ -40,11 +51,19 @@ describe("ensureMediaElement", () => {
     expect(importer).not.toHaveBeenCalled();
   });
 
-  it("does not call the importer for YouTube", async () => {
-    const importer = vi.fn();
+  it("imports the YouTube provider only when a YouTube player asks, and retries after a failure", async () => {
+    const importer = vi
+      .fn()
+      .mockRejectedValueOnce(new Error("network down"))
+      .mockImplementationOnce(defineLater("youtube-video"));
     setProviderImporter(importer);
-    await ensureMediaElement("youtube-video");
+    await ensureMediaElement("video");
     expect(importer).not.toHaveBeenCalled();
+    await expect(ensureMediaElement("youtube-video")).rejects.toThrow("network down");
+    await ensureMediaElement("youtube-video");
+    expect(importer).toHaveBeenCalledTimes(2);
+    expect(importer).toHaveBeenCalledWith("youtube-video");
+    expect(customElements.get("youtube-video")).toBeDefined();
   });
 
   it("imports the HLS provider and resolves once the element is defined", async () => {

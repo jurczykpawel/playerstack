@@ -7,6 +7,9 @@ import type { LazyMediaElementTag } from "./providers";
  */
 export async function importProvider(tag: LazyMediaElementTag): Promise<void> {
   switch (tag) {
+    case "youtube-video":
+      await import("youtube-video-element");
+      return;
     case "hls-video":
       await import("hls-video-element");
       return;

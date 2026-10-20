@@ -31,13 +31,14 @@ await build({
   outfile: join(outdir, "playerstack.cjs"),
 });
 
-// Standalone: providers that are not needed for YouTube/MP4 become separate
-// IIFE files next to playerstack.min.js. File names stay the same across
+// Standalone: every provider except native <video> becomes a separate IIFE
+// file next to playerstack.min.js. File names stay the same across
 // releases, because the CDN may keep an old playerstack.min.js in browser
 // caches for a long time and every deploy replaces all files: a hashed name
 // would 404 for that cached script after the next release. The manifest adds
 // `?v=<content hash>` so a new main script never reuses a stale cached provider.
 const PROVIDERS = {
+  "youtube-video": { name: "youtube", pkg: "youtube-video-element" },
   "hls-video": { name: "hls", pkg: "hls-video-element" },
   "vimeo-video": { name: "vimeo", pkg: "vimeo-video-element" },
   "wistia-video": { name: "wistia", pkg: "wistia-video-element" },
