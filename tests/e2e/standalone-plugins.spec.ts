@@ -3,7 +3,7 @@ import { SOURCES, openEmbed, lazyFiles, observeStandalone } from "./standalone-h
 
 observeStandalone();
 
-test("configured CTA downloads only cta-end and renders on ended", async ({ page }) => {
+test("configured CTA downloads only cta-end and renders when playback ends", async ({ page }) => {
   const fetched = await openEmbed(page, SOURCES.mp4, {
     ctaEnd: { enabled: true, title: "Thanks for watching" },
   });
@@ -11,7 +11,19 @@ test("configured CTA downloads only cta-end and renders on ended", async ({ page
   await expect
     .poll(() => lazyFiles(fetched))
     .toEqual([expect.stringMatching(/^playerstack-plugin-cta-end\.js\?v=[0-9a-f]{8}$/)]);
-  await page.locator("player-stack video").dispatchEvent("ended");
+  const video = page.locator("player-stack video");
+  await expect
+    .poll(() => video.evaluate((el) => (el as HTMLVideoElement).duration), { timeout: 15000 })
+    .toBeGreaterThan(1);
+  await video.evaluate((el) => {
+    const video = el as HTMLVideoElement;
+    video.muted = true;
+    video.currentTime = video.duration - 0.25;
+  });
+  await page.locator("player-stack media-play-button").click();
+  await expect
+    .poll(() => video.evaluate((el) => (el as HTMLVideoElement).ended), { timeout: 15000 })
+    .toBe(true);
   await expect(page.locator(".playerstack-cta-title")).toHaveText("Thanks for watching");
 });
 
