@@ -75,4 +75,4 @@ Be kind. Disagree on ideas, not people. The maintainer reserves the right to rem
 
 ## Questions
 
-Open a [GitHub Discussion](https://github.com/jurczykpawel/playerstack/discussions) for design questions, or an issue for bugs.
+Open a [GitHub issue](https://github.com/jurczykpawel/playerstack/issues) for design questions or bug reports.
