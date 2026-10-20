@@ -81,7 +81,7 @@ interface ConfigProvider {
 }
 ```
 
-Default is `createInlineConfigProvider()` which reads `src`, `poster`, `title` attributes plus `data-config` JSON. Replace via `setConfigProviderForElement(provider)` (advanced).
+Default is `createInlineConfigProvider()` which reads `src`, `poster`, `title` attributes plus `data-config` JSON. Replace via `setConfigProviderForElement(provider)` from `@playerstack/core/element` (advanced). `@playerstack/core` defines `<player-stack>` as soon as it is imported (plugins import it too), and players already on the page start with the provider installed at that moment. Install the provider from `@playerstack/core/element` in a module that is the first import of your entry file. The hosted `playerstack.min.js` always uses the default provider; a custom provider needs a custom build (see `examples/12-sellf-integration`).
 
 ### `PlayerstackConfig`
 

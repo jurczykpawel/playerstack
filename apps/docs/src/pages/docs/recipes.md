@@ -62,8 +62,9 @@ This is what every first-party plugin does. Without it, putting two players on o
 When you want config to come from somewhere other than inline attributes — a CMS, a CDN, your own API:
 
 ```ts
+// cms-provider.ts — the first import of your entry file
 import type { ConfigProvider, PlayerstackConfig } from "@playerstack/core";
-import { setConfigProviderForElement } from "@playerstack/core";
+import { setConfigProviderForElement } from "@playerstack/core/element";
 
 const cmsProvider: ConfigProvider = {
   name: "cms",
@@ -83,7 +84,7 @@ setConfigProviderForElement(cmsProvider);
 <player-stack data-cms-slug="my-lesson"></player-stack>
 ```
 
-`<player-stack>` calls `cmsProvider.load(element)` on connect, then mounts with the returned config.
+`<player-stack>` calls `cmsProvider.load(element)` on connect, then mounts with the returned config. `@playerstack/core` defines `<player-stack>` as soon as it is imported (plugins import it too), and players already on the page start with the provider installed at that moment. Install the provider from `@playerstack/core/element` in a module that is the first import of your entry file. The hosted `playerstack.min.js` always uses the default provider; a custom provider needs a custom build (see `examples/12-sellf-integration`).
 
 ## Shrink the bundle
 

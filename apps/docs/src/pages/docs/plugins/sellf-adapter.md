@@ -15,8 +15,9 @@ Replaces the default `InlineConfigProvider` with one that fetches config from a 
 ## Quickstart
 
 ```ts
+// sellf-provider.ts — the first import of your entry file
 import { createSellfConfigProvider } from "@playerstack/plugin-sellf-adapter";
-import { setConfigProviderForElement } from "@playerstack/core";
+import { setConfigProviderForElement } from "@playerstack/core/element";
 
 const provider = createSellfConfigProvider({
   baseUrl: "https://sellf.app",
@@ -25,6 +26,15 @@ const provider = createSellfConfigProvider({
 
 setConfigProviderForElement(provider);
 ```
+
+```ts
+// main.ts
+import "./sellf-provider"; // must stay the first import
+import { Playerstack } from "@playerstack/core";
+// …register plugins and call Playerstack.define()
+```
+
+`@playerstack/core` defines `<player-stack>` as soon as it is imported (plugins import it too), and players already on the page start with the provider installed at that moment. Install the provider from `@playerstack/core/element` in a module that is the first import of your entry file. The hosted `playerstack.min.js` always uses the default provider; a custom provider needs a custom build (see `examples/12-sellf-integration`).
 
 ```html
 <player-stack data-sellf-product="abc123"></player-stack>

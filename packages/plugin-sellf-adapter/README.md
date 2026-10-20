@@ -13,8 +13,9 @@ npm install @playerstack/core @playerstack/plugin-sellf-adapter
 ## Use
 
 ```ts
+// sellf-provider.ts — import it first in your entry file: import "./sellf-provider";
 import { createSellfConfigProvider } from "@playerstack/plugin-sellf-adapter";
-import { setConfigProviderForElement } from "@playerstack/core";
+import { setConfigProviderForElement } from "@playerstack/core/element";
 
 const provider = createSellfConfigProvider({
   baseUrl: "https://sellf.app",
@@ -33,6 +34,8 @@ setConfigProviderForElement(provider);
 
 // Then on your page:
 ```
+
+`@playerstack/core` defines `<player-stack>` as soon as it is imported (plugins import it too), and players already on the page start with the provider installed at that moment. Install the provider from `@playerstack/core/element` in a module that is the first import of your entry file. The hosted `playerstack.min.js` always uses the default provider; a custom provider needs a custom build (see `examples/12-sellf-integration`).
 
 ```html
 <player-stack data-sellf-product="abc123"></player-stack>

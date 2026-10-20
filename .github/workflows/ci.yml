@@ -56,6 +56,9 @@ jobs:
       - name: Build docs site
         run: bun run --cwd apps/docs build
 
+      - name: Check docs page titles
+        run: bun scripts/check-docs-titles.ts
+
       - name: Upload docs dist
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
         uses: actions/upload-artifact@v7
