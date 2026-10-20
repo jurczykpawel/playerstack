@@ -371,7 +371,7 @@ export const en = {
   trust: {
     items: [
       { value: "Apache-2.0", label: "Core + all 17 plugins" },
-      { value: "~58 KiB", label: "Hosted script for YouTube/MP4, gzip (2026-10-19)" },
+      { value: "~46 KiB", label: "Script for an MP4 page, gzip (2026-10-20)" },
       { value: "0 deps", label: "to start — one script tag" },
       { value: "Mux", label: "media-chrome engine, never forked" },
     ],
@@ -395,7 +395,7 @@ export const en = {
       },
       {
         q: "How big is it?",
-        a: "The hosted script measured about 58 KiB with gzip or 49 KiB with Brotli on 2026-10-19, which is all a YouTube or MP4 page downloads. HLS, Vimeo, Wistia and Twitch support loads only when such a video is on the page (HLS adds about 163 KiB gzip, Vimeo about 15 KiB). It includes media-chrome, the YouTube element and 15 registered plugins. Build from the scoped @playerstack/* source packages to select your own plugins; size depends on the build and compression settings.",
+        a: "The standalone script measured about 46 KiB with gzip or 39 KiB with Brotli on 2026-10-20, which is all a page with only MP4 players downloads. YouTube, HLS, Vimeo, Wistia and Twitch support loads only when such a video is on the page (YouTube adds about 4 KiB gzip, HLS about 163 KiB, Vimeo about 15 KiB). It includes the media-chrome controls the player creates and 15 registered plugins. Build from the scoped @playerstack/* source packages to select your own plugins; size depends on the build and compression settings.",
       },
       {
         q: "How do plugins work?",

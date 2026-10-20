@@ -43,24 +43,24 @@ This bundle pre-registers 15 of the 17 first-party plugins:
 
 ## Bundle size
 
-The hosted `playerstack.min.js`, measured on 2026-10-19:
+The standalone `playerstack.min.js`, built from this repository and measured on 2026-10-20:
 
 | Compression         |   Bytes | KiB (1,024 bytes) |
 | ------------------- | ------: | ----------------: |
-| None                | 237,552 |             232.0 |
-| gzip (Node zlib, 9) |  59,828 |              58.4 |
-| Brotli (quality 11) |  50,004 |              48.8 |
+| None                | 183,830 |             179.5 |
+| gzip (Bun zlib, 9)  |  47,287 |              46.2 |
+| Brotli (quality 11) |  40,051 |              39.1 |
 
-This is all a page with YouTube or MP4 players downloads. HLS, Vimeo, Wistia and Twitch load on first use from `playerstack-<provider>.js` files in the same directory as `playerstack.min.js`; when self-hosting, copy all `playerstack*.js` files together. Per-source totals (gzip): HLS 221.3 KiB, Vimeo 73.8 KiB, Wistia 61.6 KiB, Twitch 61.5 KiB — run `bun scripts/measure-bundle.ts` after a build.
+This is all a page with only MP4 players downloads. YouTube, HLS, Vimeo, Wistia and Twitch load on first use from `playerstack-<provider>.js` files in the same directory as `playerstack.min.js`; when self-hosting, copy all `playerstack*.js` files together. Per-source totals (gzip): YouTube 50.5 KiB, HLS 209.0 KiB, Vimeo 61.6 KiB, Wistia 49.3 KiB, Twitch 49.3 KiB — run `bun scripts/measure-bundle.ts` after a build. Bun 1.4.3 zlib was used; Node's zlib gives about 0.4% fewer gzip bytes.
 
-This measures the script served by the documentation site, not every possible local build. The standalone includes media-chrome, the YouTube element and 15 plugins. Build from scoped source packages to choose your own plugins, then measure that output.
+This measures the standalone build in this repository, not every possible local build. The standalone includes the media-chrome controls the player creates and 15 plugins. Build from scoped source packages to choose your own plugins, then measure that output.
 
 ## Provider files and compatibility
 
-`playerstack-hls.js`, `playerstack-vimeo.js`, `playerstack-wistia.js` and `playerstack-twitch.js` keep the same names in every release; `playerstack.min.js` requests them with `?v=<content hash>`. The CDN may serve a cached `playerstack.min.js` for up to a year, and that old script will load the provider files of the latest release. Rules for future changes:
+`playerstack-youtube.js`, `playerstack-hls.js`, `playerstack-vimeo.js`, `playerstack-wistia.js` and `playerstack-twitch.js` keep the same names in every release; `playerstack.min.js` requests them with `?v=<content hash>`. The CDN may serve a cached `playerstack.min.js` for up to a year, and that old script will load the provider files of the latest release. Rules for future changes:
 
-- A provider file only registers its custom element (`hls-video`, `vimeo-video`, `wistia-video`, `twitch-video`) from the upstream media-element package. It must not bundle Playerstack code or depend on internal APIs of a particular core version; `build.ts` fails if it does.
-- The contract between core and providers is the tag name plus the standard media element API (attributes, `HTMLMediaElement` properties and events). Never rename or remove tags or files; add a new tag and file instead. `build.ts` fails if one of the four files is not produced.
+- A provider file only registers its custom element (`youtube-video`, `hls-video`, `vimeo-video`, `wistia-video`, `twitch-video`) from the upstream media-element package. It must not bundle Playerstack code or depend on internal APIs of a particular core version; `build.ts` fails if it does.
+- The contract between core and providers is the tag name plus the standard media element API (attributes, `HTMLMediaElement` properties and events). Never rename or remove tags or files; add a new tag and file instead. `build.ts` fails if one of the five files is not produced.
 
 If a provider file cannot be loaded (network error, blocked by CSP, missing file), the player stays empty, the error is logged as `[playerstack] could not load <tag>: …`, and the `<player-stack>` element dispatches a bubbling `playerstack:error` DOM event with `detail: { reason: "provider-load", tag, error }`. Another player of the same type added later retries the download.
 

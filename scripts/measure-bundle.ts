@@ -6,6 +6,7 @@ import { readFileSync, readdirSync } from "fs";
 import { join } from "path";
 import { gzipSync, brotliCompressSync, constants } from "zlib";
 
+const runtime = typeof Bun === "undefined" ? `Node ${process.version}` : `Bun ${Bun.version}`;
 const dist = join(import.meta.dir, "../packages/embed/dist");
 const baseline = process.argv[2];
 
@@ -32,8 +33,8 @@ const provider = (name: string) => {
 const core = join(dist, "playerstack.min.js");
 const scenarios: Record<string, string[]> = {
   "core only": [core],
-  YouTube: [core],
   MP4: [core],
+  YouTube: [core, provider("youtube")],
   HLS: [core, provider("hls")],
   Vimeo: [core, provider("vimeo")],
   Wistia: [core, provider("wistia")],
@@ -50,4 +51,6 @@ for (const [name, files] of Object.entries(scenarios)) {
     `| ${name} | ${before ? kib(before.gzip) : "-"} | ${before ? kib(before.brotli) : "-"} | ${kib(after.raw)} | ${kib(after.gzip)} | ${kib(after.brotli)} |`,
   );
 }
-console.log("\nKiB = 1024 bytes; Node zlib: gzip level 9, Brotli quality 11.");
+console.log(
+  `\nKiB = 1024 bytes; ${runtime} zlib: gzip level 9, Brotli quality 11 (gzip bytes differ by about 0.4% between runtimes).`,
+);
