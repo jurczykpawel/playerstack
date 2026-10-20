@@ -1,6 +1,6 @@
-// Only the media-chrome parts buildMediaController() and buildControlBar()
-// create. The package entry would register every media-chrome element.
+// Include components created internally by the controller as well as our control bar.
 import "media-chrome/dist/media-controller.js";
+import "media-chrome/dist/media-keyboard-shortcuts-dialog.js";
 import "media-chrome/dist/media-control-bar.js";
 import "media-chrome/dist/media-play-button.js";
 import "media-chrome/dist/media-mute-button.js";

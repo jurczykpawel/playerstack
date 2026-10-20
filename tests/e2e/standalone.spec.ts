@@ -61,6 +61,23 @@ test("MP4 loads no provider file", async ({ page }) => {
   expect(await page.evaluate(() => !!customElements.get("youtube-video"))).toBe(false);
 });
 
+test("Shift+? opens keyboard help with shortcut content and Escape closes it", async ({ page }) => {
+  const fetched = await openEmbed(page, SOURCES.mp4);
+  const play = page.locator("player-stack media-play-button");
+  await play.focus();
+  await page.keyboard.press("Shift+?");
+  const dialog = page.locator("player-stack media-keyboard-shortcuts-dialog");
+  await expect(dialog).toBeAttached();
+  expect(await page.evaluate(() => !!customElements.get("media-keyboard-shortcuts-dialog"))).toBe(
+    true,
+  );
+  await expect(dialog.getByRole("heading", { name: "Keyboard Shortcuts" })).toBeVisible();
+  await expect(dialog.locator(".shortcuts-table tr")).not.toHaveCount(0);
+  await page.keyboard.press("Escape");
+  await expect(dialog).not.toBeVisible();
+  expect(providerFiles(fetched)).toEqual([]);
+});
+
 test("HLS loads only the hls provider next to the main script and plays in Chromium", async ({
   page,
 }) => {
