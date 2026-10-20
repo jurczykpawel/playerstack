@@ -6,9 +6,7 @@ This package is **not** included in the standalone `playerstack` bundle — inst
 
 ## Install
 
-```sh
-npm install @playerstack/core @playerstack/plugin-sellf-adapter
-```
+This plugin is not part of the standalone script. The `@playerstack/*` packages are not published to npm yet, so it needs a custom bundle built from this repository (see [Getting started](https://playerstack.techskills.academy/docs/getting-started/)).
 
 ## Use
 

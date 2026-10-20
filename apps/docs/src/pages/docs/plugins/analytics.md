@@ -6,7 +6,7 @@ description: Forward Playerstack and native media events to your analytics endpo
 
 # analytics
 
-> npm: [`@playerstack/plugin-analytics`](https://www.npmjs.com/package/@playerstack/plugin-analytics)
+> Package: `@playerstack/plugin-analytics` ([source](https://github.com/jurczykpawel/playerstack/tree/main/packages/plugin-analytics)), not published to npm yet
 
 Forward Playerstack event-bus events (and native HTML5 media events) to your analytics. Two providers built in: `navigator.sendBeacon` to a custom URL, or `window.gtag` for Google Analytics 4.
 

@@ -6,7 +6,7 @@ description: Subscribe-on-YouTube bar below the player.
 
 # yt-subscribe
 
-> npm: [`@playerstack/plugin-yt-subscribe`](https://www.npmjs.com/package/@playerstack/plugin-yt-subscribe)
+> Package: `@playerstack/plugin-yt-subscribe` ([source](https://github.com/jurczykpawel/playerstack/tree/main/packages/plugin-yt-subscribe)), not published to npm yet
 
 Render a "Subscribe on YouTube" bar below the player linking to the channel's subscribe-confirm page (one-click subscribe).
 

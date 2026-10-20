@@ -6,7 +6,7 @@ description: Muted autoplay when the player enters the viewport.
 
 # autopreview
 
-> npm: [`@playerstack/plugin-autopreview`](https://www.npmjs.com/package/@playerstack/plugin-autopreview)
+> Package: `@playerstack/plugin-autopreview` ([source](https://github.com/jurczykpawel/playerstack/tree/main/packages/plugin-autopreview)), not published to npm yet
 
 Plays muted when the player scrolls into view, pauses when it scrolls out. Great for blog posts and landing pages where you want video to feel alive without forcing the user to click.
 

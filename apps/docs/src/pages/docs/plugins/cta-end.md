@@ -6,7 +6,7 @@ description: Show a CTA overlay when the video ends.
 
 # cta-end
 
-> npm: [`@playerstack/plugin-cta-end`](https://www.npmjs.com/package/@playerstack/plugin-cta-end)
+> Package: `@playerstack/plugin-cta-end` ([source](https://github.com/jurczykpawel/playerstack/tree/main/packages/plugin-cta-end)), not published to npm yet
 
 When the video ends, render an overlay with optional title, custom HTML, anchor button (label + URL + UTM), and replay. Hook into the event bus for analytics.
 

@@ -6,7 +6,7 @@ description: Corner-pinned logo or text overlay for branding, attribution, or co
 
 # watermark
 
-> npm: [`@playerstack/plugin-watermark`](https://www.npmjs.com/package/@playerstack/plugin-watermark)
+> Package: `@playerstack/plugin-watermark` ([source](https://github.com/jurczykpawel/playerstack/tree/main/packages/plugin-watermark)), not published to npm yet
 
 Pin a small image or text snippet to one corner of the player. Useful for brand logos, copyright lines, or attribution. Optional click-through link.
 

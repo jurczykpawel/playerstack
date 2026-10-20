@@ -6,7 +6,7 @@ description: Pin the player to the corner of the viewport when the user scrolls 
 
 # sticky
 
-> npm: [`@playerstack/plugin-sticky`](https://www.npmjs.com/package/@playerstack/plugin-sticky)
+> Package: `@playerstack/plugin-sticky` ([source](https://github.com/jurczykpawel/playerstack/tree/main/packages/plugin-sticky)), not published to npm yet
 
 When the user scrolls past the player while it's playing, the plugin pins it to the bottom-right corner of the viewport. A close button lets the user dismiss the sticky state.
 

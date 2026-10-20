@@ -6,7 +6,7 @@ description: Resume watching from where the visitor left off.
 
 # saved-position
 
-> npm: [`@playerstack/plugin-saved-position`](https://www.npmjs.com/package/@playerstack/plugin-saved-position)
+> Package: `@playerstack/plugin-saved-position` ([source](https://github.com/jurczykpawel/playerstack/tree/main/packages/plugin-saved-position)), not published to npm yet
 
 Stores `currentTime` in `localStorage` (debounced) and restores it when the same video is loaded again. Clears storage on `ended` so finished videos don't stale-resume. No backend required.
 

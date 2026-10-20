@@ -6,7 +6,7 @@ description: Custom poster + click-to-load. No third-party cookies until interac
 
 # branded-thumb
 
-> npm: [`@playerstack/plugin-branded-thumb`](https://www.npmjs.com/package/@playerstack/plugin-branded-thumb)
+> Package: `@playerstack/plugin-branded-thumb` ([source](https://github.com/jurczykpawel/playerstack/tree/main/packages/plugin-branded-thumb)), not published to npm yet
 
 Renders a custom poster overlay with an accessible play button. Optional `clickToLoad` mode defers the underlying iframe until the user clicks — eliminating third-party cookies and dramatically improving Largest Contentful Paint.
 

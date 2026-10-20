@@ -60,10 +60,7 @@ Use this when you want a smaller bundle by including only the plugins you need.
 
 > The `@playerstack/*` packages are not published to npm yet. Until they are,
 > use the standalone bundle above, or build from source (`bun run --filter playerstack build`).
-
-```sh
-npm install @playerstack/core @playerstack/plugin-sources @playerstack/plugin-cta-end
-```
+> The code below is for a custom bundle built from the repository.
 
 ```ts
 import { Playerstack } from "@playerstack/core";

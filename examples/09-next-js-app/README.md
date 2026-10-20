@@ -41,18 +41,10 @@ For the legacy Pages Router, use the same `dynamic()` pattern. The `"use client"
 
 ## Self-hosting the bundle
 
-If you want to avoid the CDN dependency, install Playerstack as a workspace dep:
-
-```sh
-npm install playerstack
-```
-
-Then in `PlayerStack.tsx`, replace the dynamic script tag with:
+If you want to avoid the CDN dependency, download `playerstack.min.js` and the provider files next to it (`playerstack-hls.js`, `playerstack-vimeo.js`, `playerstack-wistia.js`, `playerstack-twitch.js`; see [Self-host the bundle](https://playerstack.techskills.academy/docs/getting-started/#self-host-the-bundle)) into your app's `public/js/` directory. Keep them in one directory, then point `PLAYERSTACK_URL` in `PlayerStack.tsx` at your copy:
 
 ```ts
-useEffect(() => {
-  import("playerstack");
-}, []);
+const PLAYERSTACK_URL = "/js/playerstack.min.js";
 ```
 
-Webpack/Turbopack will bundle Playerstack into your app's JS chunks.
+The `@playerstack/*` and `playerstack` npm packages are not published yet, so there is nothing to install with a package manager.

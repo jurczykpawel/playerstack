@@ -6,7 +6,7 @@ description: Theme color, opacity, and selective control hiding.
 
 # controls-policy
 
-> npm: [`@playerstack/plugin-controls-policy`](https://www.npmjs.com/package/@playerstack/plugin-controls-policy)
+> Package: `@playerstack/plugin-controls-policy` ([source](https://github.com/jurczykpawel/playerstack/tree/main/packages/plugin-controls-policy)), not published to npm yet
 
 Brand the player with a theme color, hide controls you don't want, all via a single CSS injection.
 

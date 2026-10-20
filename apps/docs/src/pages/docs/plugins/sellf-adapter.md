@@ -6,7 +6,7 @@ description: Load Playerstack config from a Sellf product endpoint.
 
 # sellf-adapter
 
-> npm: [`@playerstack/plugin-sellf-adapter`](https://www.npmjs.com/package/@playerstack/plugin-sellf-adapter)
+> Package: `@playerstack/plugin-sellf-adapter` ([source](https://github.com/jurczykpawel/playerstack/tree/main/packages/plugin-sellf-adapter)), not published to npm yet
 
 Replaces the default `InlineConfigProvider` with one that fetches config from a [Sellf](https://sellf.app) product endpoint. Designed for course creators who want their video metadata, CTAs, and gating to live in Sellf and propagate to every embed.
 

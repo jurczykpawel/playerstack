@@ -6,7 +6,7 @@ description: Auto-detect YouTube, Vimeo, MP4, HLS, WebM, DASH from a single src 
 
 # sources
 
-> npm: [`@playerstack/plugin-sources`](https://www.npmjs.com/package/@playerstack/plugin-sources)
+> Package: `@playerstack/plugin-sources` ([source](https://github.com/jurczykpawel/playerstack/tree/main/packages/plugin-sources)), not published to npm yet
 
 Auto-detects the source type from a single `src` URL, validates it, and lets the core element pick the right inner media element (native `<video>` for MP4/WebM, `<youtube-video>`, `<vimeo-video>`, or `<hls-video>`). Paste any URL — it just works.
 

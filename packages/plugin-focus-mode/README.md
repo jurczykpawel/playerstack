@@ -2,13 +2,11 @@
 
 Auto-pause the video when the user switches tabs or minimizes the window. Optionally resume when the tab becomes visible again. Part of [Playerstack](https://github.com/jurczykpawel/playerstack).
 
-Included in the standalone [`playerstack`](https://www.npmjs.com/package/playerstack) bundle.
+Not included in the standalone [`playerstack`](https://playerstack.techskills.academy/playerstack.min.js) bundle.
 
 ## Install
 
-```sh
-npm install @playerstack/core @playerstack/plugin-focus-mode
-```
+This plugin is not part of the standalone script. The `@playerstack/*` packages are not published to npm yet, so it needs a custom bundle built from this repository (see [Getting started](https://playerstack.techskills.academy/docs/getting-started/)).
 
 ## Use
 

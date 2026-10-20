@@ -6,7 +6,7 @@ description: Dismissible mid-video banner with optional CTA button.
 
 # action-bar
 
-> npm: [`@playerstack/plugin-action-bar`](https://www.npmjs.com/package/@playerstack/plugin-action-bar)
+> Package: `@playerstack/plugin-action-bar` ([source](https://github.com/jurczykpawel/playerstack/tree/main/packages/plugin-action-bar)), not published to npm yet
 
 A dismissible banner overlay that appears mid-playback (or immediately) with optional title, custom HTML, and a CTA button. Lighter-weight cousin of `cta-end` — the action bar shows DURING the video, not after.
 

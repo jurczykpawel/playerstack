@@ -6,13 +6,16 @@ Most users want the standalone bundle [`playerstack`](https://playerstack.techsk
 
 ## Install
 
-The scoped packages are not published to npm yet. Use the hosted standalone script above, or work from this repository with `bun install`. The registry command below applies once packages are published.
+The scoped packages are not published to npm yet. Most pages should embed the hosted standalone script:
 
-```sh
-npm install @playerstack/core
-# or
-bun add @playerstack/core
+```html
+<script
+  src="https://playerstack.techskills.academy/playerstack.min.js"
+  defer
+></script>
 ```
+
+To pick plugins or write your own, work from this repository (`bun install`) and build a custom bundle.
 
 ## Use
 

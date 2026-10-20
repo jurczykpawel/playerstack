@@ -5,13 +5,20 @@ Two-tier styling for `<player-stack>`:
 1. **`tokens`** — validated CSS custom properties (`--ps-*`) applied as inline style. The right surface for theming driven by a CMS, a SaaS dashboard, or any config string you didn't author yourself.
 2. **`trustedCss`** — raw CSS, auto-scoped to the player instance. Requires an explicit `acknowledgeTrusted: true`, and is intended for stylesheets you author in your own codebase.
 
-Part of [Playerstack](https://github.com/jurczykpawel/playerstack). The standalone [`playerstack`](https://www.npmjs.com/package/playerstack) bundle includes this plugin by default — install this package directly only if you're using `@playerstack/core` and composing your own bundle.
+Part of [Playerstack](https://github.com/jurczykpawel/playerstack). The standalone [`playerstack`](https://playerstack.techskills.academy/playerstack.min.js) bundle includes this plugin by default — use this package directly only if you're using `@playerstack/core` and composing your own bundle.
 
 ## Install
 
-```sh
-npm install @playerstack/core @playerstack/plugin-custom-css
+This plugin is included in the standalone script, so there is nothing to install:
+
+```html
+<script
+  src="https://playerstack.techskills.academy/playerstack.min.js"
+  defer
+></script>
 ```
+
+The `@playerstack/*` packages are not published to npm yet; to compose your own bundle, build it from this repository.
 
 ## Use — theming via tokens
 

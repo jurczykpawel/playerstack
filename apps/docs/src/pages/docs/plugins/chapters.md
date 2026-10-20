@@ -6,7 +6,7 @@ description: Clickable chapter list that syncs with playback time.
 
 # chapters
 
-> npm: [`@playerstack/plugin-chapters`](https://www.npmjs.com/package/@playerstack/plugin-chapters)
+> Package: `@playerstack/plugin-chapters` ([source](https://github.com/jurczykpawel/playerstack/tree/main/packages/plugin-chapters)), not published to npm yet
 
 Render a clickable chapter list under (or anywhere around) the player. Active chapter highlights as `currentTime` advances; clicking a chapter jumps to it.
 

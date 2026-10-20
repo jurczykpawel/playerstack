@@ -6,7 +6,7 @@ description: Marketing splash overlay shown before the video plays — title, su
 
 # intro-card
 
-> npm: [`@playerstack/plugin-intro-card`](https://www.npmjs.com/package/@playerstack/plugin-intro-card)
+> Package: `@playerstack/plugin-intro-card` ([source](https://github.com/jurczykpawel/playerstack/tree/main/packages/plugin-intro-card)), not published to npm yet
 
 Pre-roll splash overlay with marketing content — title, subtitle, badge, optional CTA, custom HTML, and a big branded play button. Different scope from [`branded-thumb`](/docs/plugins/branded-thumb): branded-thumb is "custom poster + click-to-load", intro-card is "billboard before play".
 

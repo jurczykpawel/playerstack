@@ -6,7 +6,7 @@ description: Lead capture overlay with secure-by-default Altcha proof-of-work + 
 
 # email-gate
 
-> npm: [`@playerstack/plugin-email-gate`](https://www.npmjs.com/package/@playerstack/plugin-email-gate)
+> Package: `@playerstack/plugin-email-gate` ([source](https://github.com/jurczykpawel/playerstack/tree/main/packages/plugin-email-gate)), not published to npm yet
 
 Pause the video and show an email form before the visitor can keep watching. Lead capture for course previews, lead magnets, and pre-roll qualifying.
 

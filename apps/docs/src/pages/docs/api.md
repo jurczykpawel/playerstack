@@ -6,7 +6,7 @@ description: Reference for Playerstack singleton, plugin contract, event bus, an
 
 # Core API
 
-Everything in [`@playerstack/core`](https://www.npmjs.com/package/@playerstack/core).
+Everything in [`@playerstack/core`](https://github.com/jurczykpawel/playerstack/tree/main/packages/core).
 
 ## Playerstack singleton
 

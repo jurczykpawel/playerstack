@@ -2,13 +2,20 @@
 
 Lead capture with **secure-by-default** verification. Pauses the video, shows an email form, forwards the lead to your server only after an [Altcha](https://altcha.org) proof-of-work challenge is solved AND a single-use server-issued nonce is consumed. Without server-side verification configured, the plugin runs in event-bus-only "open mode" and never POSTs anywhere.
 
-Part of [Playerstack](https://github.com/jurczykpawel/playerstack). Included in the standalone [`playerstack`](https://www.npmjs.com/package/playerstack) bundle.
+Part of [Playerstack](https://github.com/jurczykpawel/playerstack). Included in the standalone [`playerstack`](https://playerstack.techskills.academy/playerstack.min.js) bundle.
 
 ## Install
 
-```sh
-npm install @playerstack/core @playerstack/plugin-email-gate
+This plugin is included in the standalone script, so there is nothing to install:
+
+```html
+<script
+  src="https://playerstack.techskills.academy/playerstack.min.js"
+  defer
+></script>
 ```
+
+The `@playerstack/*` packages are not published to npm yet; to compose your own bundle, build it from this repository.
 
 ## Use — open mode (event bus only, no network)
 

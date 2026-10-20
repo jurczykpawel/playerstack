@@ -2,13 +2,20 @@
 
 A dismissible banner overlay that appears mid-playback (or immediately) with optional title, custom HTML, and a CTA button. Lighter-weight cousin of `cta-end` — the action bar shows DURING video, not after it. Part of [Playerstack](https://github.com/jurczykpawel/playerstack).
 
-Included in the standalone [`playerstack`](https://www.npmjs.com/package/playerstack) bundle.
+Included in the standalone [`playerstack`](https://playerstack.techskills.academy/playerstack.min.js) bundle.
 
 ## Install
 
-```sh
-npm install @playerstack/core @playerstack/plugin-action-bar
+This plugin is included in the standalone script, so there is nothing to install:
+
+```html
+<script
+  src="https://playerstack.techskills.academy/playerstack.min.js"
+  defer
+></script>
 ```
+
+The `@playerstack/*` packages are not published to npm yet; to compose your own bundle, build it from this repository.
 
 ## Use
 

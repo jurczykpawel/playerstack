@@ -6,7 +6,7 @@ description: Two-tier styling for Playerstack — safe theme tokens for untruste
 
 # custom-css
 
-> npm: [`@playerstack/plugin-custom-css`](https://www.npmjs.com/package/@playerstack/plugin-custom-css)
+> Package: `@playerstack/plugin-custom-css` ([source](https://github.com/jurczykpawel/playerstack/tree/main/packages/plugin-custom-css)), not published to npm yet
 
 Two-tier styling on top of [`controls-policy`](/docs/plugins/controls-policy):
 

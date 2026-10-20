@@ -2,13 +2,20 @@
 
 Corner-pinned logo or text overlay for [Playerstack](https://github.com/jurczykpawel/playerstack). Useful for branding, attribution, or "©" notices.
 
-The standalone [`playerstack`](https://www.npmjs.com/package/playerstack) bundle includes this plugin by default — install this package directly only if you're using `@playerstack/core` and composing your own bundle.
+The standalone [`playerstack`](https://playerstack.techskills.academy/playerstack.min.js) bundle includes this plugin by default — use this package directly only if you're using `@playerstack/core` and composing your own bundle.
 
 ## Install
 
-```sh
-npm install @playerstack/core @playerstack/plugin-watermark
+This plugin is included in the standalone script, so there is nothing to install:
+
+```html
+<script
+  src="https://playerstack.techskills.academy/playerstack.min.js"
+  defer
+></script>
 ```
+
+The `@playerstack/*` packages are not published to npm yet; to compose your own bundle, build it from this repository.
 
 ## Use
 

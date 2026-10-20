@@ -2,13 +2,20 @@
 
 Forward Playerstack events (and native HTML5 media events) to your analytics endpoint. Supports `navigator.sendBeacon` to a custom URL or `window.gtag` for Google Analytics. Part of [Playerstack](https://github.com/jurczykpawel/playerstack).
 
-Included in the standalone [`playerstack`](https://www.npmjs.com/package/playerstack) bundle.
+Included in the standalone [`playerstack`](https://playerstack.techskills.academy/playerstack.min.js) bundle.
 
 ## Install
 
-```sh
-npm install @playerstack/core @playerstack/plugin-analytics
+This plugin is included in the standalone script, so there is nothing to install:
+
+```html
+<script
+  src="https://playerstack.techskills.academy/playerstack.min.js"
+  defer
+></script>
 ```
+
+The `@playerstack/*` packages are not published to npm yet; to compose your own bundle, build it from this repository.
 
 ## Use
 

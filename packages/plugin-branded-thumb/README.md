@@ -2,13 +2,20 @@
 
 Custom poster overlay with an accessible play button. Optional `clickToLoad` mode defers the underlying iframe load until the user clicks, eliminating third-party cookies (LCP + GDPR). Part of [Playerstack](https://github.com/jurczykpawel/playerstack).
 
-Included in the standalone [`playerstack`](https://www.npmjs.com/package/playerstack) bundle.
+Included in the standalone [`playerstack`](https://playerstack.techskills.academy/playerstack.min.js) bundle.
 
 ## Install
 
-```sh
-npm install @playerstack/core @playerstack/plugin-branded-thumb
+This plugin is included in the standalone script, so there is nothing to install:
+
+```html
+<script
+  src="https://playerstack.techskills.academy/playerstack.min.js"
+  defer
+></script>
 ```
+
+The `@playerstack/*` packages are not published to npm yet; to compose your own bundle, build it from this repository.
 
 ## Use
 

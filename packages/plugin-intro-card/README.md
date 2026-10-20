@@ -2,13 +2,20 @@
 
 Marketing splash overlay shown **before** the video plays — title, subtitle, badge, optional CTA, custom HTML, and a big play button. Different scope from `branded-thumb` (which handles custom poster + click-to-load). You can use both together. Part of [Playerstack](https://github.com/jurczykpawel/playerstack).
 
-The standalone [`playerstack`](https://www.npmjs.com/package/playerstack) bundle includes this plugin by default.
+The standalone [`playerstack`](https://playerstack.techskills.academy/playerstack.min.js) bundle includes this plugin by default.
 
 ## Install
 
-```sh
-npm install @playerstack/core @playerstack/plugin-intro-card
+This plugin is included in the standalone script, so there is nothing to install:
+
+```html
+<script
+  src="https://playerstack.techskills.academy/playerstack.min.js"
+  defer
+></script>
 ```
+
+The `@playerstack/*` packages are not published to npm yet; to compose your own bundle, build it from this repository.
 
 ## Use
 

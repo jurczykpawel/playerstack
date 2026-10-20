@@ -2,13 +2,20 @@
 
 Auto-detects YouTube, Vimeo, Wistia, Twitch, Bunny Stream, MP4, HLS, WebM, and DASH from a single `src` URL, validates it, and lets the core element pick the right inner media element (`<video>`, `<youtube-video>`, `<vimeo-video>`, `<wistia-video>`, `<twitch-video>`, or `<hls-video>`). Part of [Playerstack](https://github.com/jurczykpawel/playerstack).
 
-The standalone [`playerstack`](https://www.npmjs.com/package/playerstack) bundle includes this plugin by default — install this package directly only if you're using `@playerstack/core` and composing your own bundle.
+The standalone [`playerstack`](https://playerstack.techskills.academy/playerstack.min.js) bundle includes this plugin by default — use this package directly only if you're using `@playerstack/core` and composing your own bundle.
 
 ## Install
 
-```sh
-npm install @playerstack/core @playerstack/plugin-sources
+This plugin is included in the standalone script, so there is nothing to install:
+
+```html
+<script
+  src="https://playerstack.techskills.academy/playerstack.min.js"
+  defer
+></script>
 ```
+
+The `@playerstack/*` packages are not published to npm yet; to compose your own bundle, build it from this repository.
 
 ## Use
 
