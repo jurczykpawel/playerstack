@@ -1,4 +1,12 @@
-import "media-chrome";
+// Only the media-chrome parts buildMediaController() and buildControlBar()
+// create. The package entry would register every media-chrome element.
+import "media-chrome/dist/media-controller.js";
+import "media-chrome/dist/media-control-bar.js";
+import "media-chrome/dist/media-play-button.js";
+import "media-chrome/dist/media-mute-button.js";
+import "media-chrome/dist/media-time-display.js";
+import "media-chrome/dist/media-time-range.js";
+import "media-chrome/dist/media-fullscreen-button.js";
 // Native <video> needs no provider; every other media element loads on first
 // use through ensureMediaElement().
 
