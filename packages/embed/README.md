@@ -47,11 +47,11 @@ The standalone `playerstack.min.js`, built from this repository and measured on 
 
 | Compression         |   Bytes | KiB (1,024 bytes) |
 | ------------------- | ------: | ----------------: |
-| None                | 165,091 |             161.2 |
-| gzip (Bun zlib, 9)  |  41,549 |              40.6 |
-| Brotli (quality 11) |  34,890 |              34.1 |
+| None                | 165,200 |             161.3 |
+| gzip (Bun zlib, 9)  |  41,579 |              40.6 |
+| Brotli (quality 11) |  35,022 |              34.2 |
 
-This is the complete Playerstack JS download for an MP4 page without plugin configuration. With CTA and branded thumbnail it is 43.7 KiB gzip / 36.6 KiB Brotli; with controls and custom CSS as well it is 46.1 / 38.7 KiB. Without configured plugins, provider totals are YouTube 44.9 / 37.9 KiB, HLS 203.4 / 167.9 KiB, Vimeo 56.0 / 47.8 KiB, Wistia 43.7 / 36.8 KiB and Twitch 43.7 / 36.8 KiB.
+This is the complete Playerstack JS download for an MP4 page without plugin configuration. With CTA and branded thumbnail it is 43.7 KiB gzip / 36.8 KiB Brotli; with controls and custom CSS as well it is 46.1 / 38.9 KiB. Without configured plugins, provider totals are YouTube 44.9 / 38.0 KiB, HLS 203.5 / 168.0 KiB, Vimeo 56.0 / 47.9 KiB, Wistia 43.8 / 37.0 KiB and Twitch 43.7 / 36.9 KiB.
 
 Run `bun scripts/measure-bundle.ts` or `node scripts/measure-bundle.ts` after building. Totals sum each independently compressed JS file using gzip level 9 and Brotli quality 11, excluding maps, notices, HTTP headers and media. Bun 1.4.3 zlib was used above; Node produces slightly different gzip bytes. The main script retains media-chrome controls and keyboard help. ESM/CJS builds keep their existing eager plugin imports.
 

@@ -166,16 +166,16 @@ Playerstack is designed to embed on third-party pages. Config-driven inputs (HTM
 
 ## Bundle size
 
-The standalone `playerstack.min.js`, built from this repository and measured on 2026-10-20, is 165,091 bytes raw (161.2 KiB), 41,549 bytes with gzip (40.6 KiB), and 34,890 bytes with Brotli (34.1 KiB). A page with only MP4 players and no plugin configuration downloads only this script. The previous build with all plugin code in the script was 48.3 KiB gzip.
+The standalone `playerstack.min.js`, built from this repository and measured on 2026-10-20, is 165,200 bytes raw (161.3 KiB), 41,579 bytes with gzip (40.6 KiB), and 35,022 bytes with Brotli (34.2 KiB). A page with only MP4 players and no plugin configuration downloads only this script. The previous build with all plugin code in the script was 48.3 KiB gzip.
 
 | Page configuration                                   | gzip (KiB) | Brotli (KiB) |
 | ---------------------------------------------------- | ---------: | -----------: |
-| MP4, no plugin configuration                         |       40.6 |         34.1 |
-| MP4, CTA and branded thumbnail                       |       43.7 |         36.6 |
-| MP4, controls, CTA, branded thumbnail and custom CSS |       46.1 |         38.7 |
-| YouTube, no plugin configuration                     |       44.9 |         37.9 |
-| HLS, no plugin configuration                         |      203.4 |        167.9 |
-| Vimeo, no plugin configuration                       |       56.0 |         47.8 |
+| MP4, no plugin configuration                         |       40.6 |         34.2 |
+| MP4, CTA and branded thumbnail                       |       43.7 |         36.8 |
+| MP4, controls, CTA, branded thumbnail and custom CSS |       46.1 |         38.9 |
+| YouTube, no plugin configuration                     |       44.9 |         38.0 |
+| HLS, no plugin configuration                         |      203.5 |        168.0 |
+| Vimeo, no plugin configuration                       |       56.0 |         47.9 |
 
 The main script includes media-chrome controls and keyboard help, the sources plugin, and registrations for 14 conditional plugins. Each conditional plugin downloads only when its configuration enables it. Providers also load on first use. Files are fetched from the directory of the main script, with content versions in the query string. Keep all 20 standalone JS files and their 20 adjacent `*.LEGAL.txt` notices together when self-hosting; `bash scripts/copy-standalone.sh <target-dir>` checks and copies the complete release.
 

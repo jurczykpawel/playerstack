@@ -395,7 +395,7 @@ export const en = {
       },
       {
         q: "How big is it?",
-        a: "On 2026-10-20 the standalone script measured 40.6 KiB gzip or 34.1 KiB Brotli for an MP4 page without plugin configuration. CTA and a branded thumbnail bring it to 43.7 KiB gzip; controls and custom CSS as well bring it to 46.1 KiB. The 14 optional plugins download only when enabled in configuration. YouTube, HLS, Vimeo, Wistia and Twitch support also loads only when used (totals without plugins: YouTube 44.9 KiB gzip, HLS 203.4 KiB, Vimeo 56.0 KiB). The main script includes media-chrome controls, keyboard help and source validation. Measurements use Bun 1.4.3 zlib, gzip level 9 and Brotli quality 11; one KiB is 1,024 bytes. Build and compression settings affect size.",
+        a: "On 2026-10-20 the standalone script measured 40.6 KiB gzip or 34.2 KiB Brotli for an MP4 page without plugin configuration. CTA and a branded thumbnail bring it to 43.7 KiB gzip; controls and custom CSS as well bring it to 46.1 KiB. The 14 optional plugins download only when enabled in configuration. YouTube, HLS, Vimeo, Wistia and Twitch support also loads only when used (totals without plugins: YouTube 44.9 KiB gzip, HLS 203.5 KiB, Vimeo 56.0 KiB). The main script includes media-chrome controls, keyboard help and source validation. Measurements use Bun 1.4.3 zlib, gzip level 9 and Brotli quality 11; one KiB is 1,024 bytes. Build and compression settings affect size.",
       },
       {
         q: "How do plugins work?",
