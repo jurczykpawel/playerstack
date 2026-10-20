@@ -1,13 +1,13 @@
 // Per-scenario download size of the standalone script: what a page with one
 // player of each source type fetches from playerstack.techskills.academy.
 // Usage: bun scripts/measure-bundle.ts [baseline.min.js]
-//   baseline: a previous single-file playerstack.min.js to compare against.
-import { readFileSync, readdirSync } from "fs";
-import { join } from "path";
+//   baseline: a previous playerstack.min.js, with its provider files alongside it.
+import { existsSync, readFileSync, readdirSync } from "fs";
+import { dirname, join } from "path";
 import { gzipSync, brotliCompressSync, constants } from "zlib";
 
 const runtime = typeof Bun === "undefined" ? `Node ${process.version}` : `Bun ${Bun.version}`;
-const dist = join(import.meta.dir, "../packages/embed/dist");
+const dist = join(import.meta.dirname, "../packages/embed/dist");
 const baseline = process.argv[2];
 
 const sizes = (paths: string[]) =>
@@ -42,11 +42,14 @@ const scenarios: Record<string, string[]> = {
 };
 
 const kib = (n: number) => (n / 1024).toFixed(1);
-const before = baseline ? sizes([baseline]) : null;
 console.log("| scenario | before gzip | before brotli | after raw | after gzip | after brotli |");
 console.log("|---|---:|---:|---:|---:|---:|");
 for (const [name, files] of Object.entries(scenarios)) {
   const after = sizes(files);
+  const oldProvider = baseline && join(dirname(baseline), `playerstack-${name.toLowerCase()}.js`);
+  const before = baseline
+    ? sizes([baseline, ...(oldProvider && existsSync(oldProvider) ? [oldProvider] : [])])
+    : null;
   console.log(
     `| ${name} | ${before ? kib(before.gzip) : "-"} | ${before ? kib(before.brotli) : "-"} | ${kib(after.raw)} | ${kib(after.gzip)} | ${kib(after.brotli)} |`,
   );

@@ -47,13 +47,13 @@ The standalone `playerstack.min.js`, built from this repository and measured on 
 
 | Compression         |   Bytes | KiB (1,024 bytes) |
 | ------------------- | ------: | ----------------: |
-| None                | 183,830 |             179.5 |
-| gzip (Bun zlib, 9)  |  47,287 |              46.2 |
-| Brotli (quality 11) |  40,051 |              39.1 |
+| None                | 193,100 |             188.6 |
+| gzip (Bun zlib, 9)  |  49,451 |              48.3 |
+| Brotli (quality 11) |  41,866 |              40.9 |
 
-This is all a page with only MP4 players downloads. YouTube, HLS, Vimeo, Wistia and Twitch load on first use from `playerstack-<provider>.js` files in the same directory as `playerstack.min.js`; when self-hosting, copy all `playerstack*.js` files together. Per-source totals (gzip): YouTube 50.5 KiB, HLS 209.0 KiB, Vimeo 61.6 KiB, Wistia 49.3 KiB, Twitch 49.3 KiB — run `bun scripts/measure-bundle.ts` after a build. Bun 1.4.3 zlib was used; Node's zlib gives about 0.4% fewer gzip bytes.
+This is all the Playerstack JavaScript a page with only MP4 players downloads. YouTube, HLS, Vimeo, Wistia and Twitch load on first use from `playerstack-<provider>.js` files in the same directory as `playerstack.min.js`; when self-hosting, copy `playerstack.min.js`, `playerstack-youtube.js`, `playerstack-hls.js`, `playerstack-vimeo.js`, `playerstack-wistia.js`, `playerstack-twitch.js` and each file's `*.LEGAL.txt` notice from the same release into one directory. Run `bash scripts/copy-standalone.sh <target-dir>` to copy and check this complete set. Per-source totals (gzip): YouTube 52.6 KiB, HLS 211.2 KiB, Vimeo 63.7 KiB, Wistia 51.5 KiB, Twitch 51.4 KiB — run `bun scripts/measure-bundle.ts` after a build. Bun 1.4.3 zlib was used; Node's zlib produces slightly different gzip bytes.
 
-This measures the standalone build in this repository, not every possible local build. The standalone includes the media-chrome controls the player creates and 15 plugins. Build from scoped source packages to choose your own plugins, then measure that output.
+This measures the standalone build in this repository, not every possible local build. The standalone includes the media-chrome controls and their internal components (including keyboard help) and 15 plugins. Build from scoped source packages to choose your own plugins, then measure that output.
 
 ## Provider files and compatibility
 
@@ -69,6 +69,10 @@ document.addEventListener("playerstack:error", (e) => {
   console.warn("player failed:", e.detail.reason, e.detail.tag);
 });
 ```
+
+## Third-party notices
+
+Every JavaScript build output has an adjacent `*.LEGAL.txt` file containing full dependency license texts and any upstream NOTICE files. Keep these notices with the scripts when redistributing. The build derives dependencies from esbuild output metadata and fails if a bundled package lacks a license text or a reviewed fallback. The copy step requires all six standalone scripts and all six notices before replacing any target files. HLS includes hls.js (Apache-2.0); the wrappers and media-chrome declare MIT. See [license source notes](licenses/README.md).
 
 ## Custom config
 

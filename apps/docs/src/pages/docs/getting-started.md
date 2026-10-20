@@ -35,12 +35,14 @@ The bundle above is served free from this site's Cloudflare Pages CDN.
 
 Prefer to serve it from your own domain (no third-party request)? Download
 [`playerstack.min.js`](https://playerstack.techskills.academy/playerstack.min.js)
-together with the provider files it loads on demand for HLS, Vimeo, Wistia and Twitch
-([`playerstack-hls.js`](https://playerstack.techskills.academy/playerstack-hls.js),
+together with the provider files it loads on demand for YouTube, HLS, Vimeo, Wistia and Twitch
+([`playerstack-youtube.js`](https://playerstack.techskills.academy/playerstack-youtube.js),
+[`playerstack-hls.js`](https://playerstack.techskills.academy/playerstack-hls.js),
 [`playerstack-vimeo.js`](https://playerstack.techskills.academy/playerstack-vimeo.js),
 [`playerstack-wistia.js`](https://playerstack.techskills.academy/playerstack-wistia.js),
 [`playerstack-twitch.js`](https://playerstack.techskills.academy/playerstack-twitch.js)),
-keep them in one directory, and point the script tag at your own path:
+and each script's adjacent `*.LEGAL.txt` notice, all from the same release.
+Keep these six scripts and six notices in one directory, and point the script tag at your own path:
 
 ```html
 <script src="/js/playerstack.min.js" defer></script>
@@ -51,7 +53,7 @@ It is Apache-2.0 licensed, so you can host and redistribute it freely. Keep a co
 With a Content Security Policy, allow the directory that serves the script (for example
 `script-src https://playerstack.techskills.academy/`), not only the full path of
 `playerstack.min.js`: the provider files are loaded from the same directory. A policy with
-`require-trusted-types-for 'script'` blocks them. In both cases YouTube and MP4 still play; HLS,
+`require-trusted-types-for 'script'` blocks them. In both cases MP4 still plays; YouTube, HLS,
 Vimeo, Wistia and Twitch players stay empty and the element dispatches a `playerstack:error` event.
 
 ## Option 2: scoped packages

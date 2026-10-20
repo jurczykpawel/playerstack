@@ -41,7 +41,7 @@ For the legacy Pages Router, use the same `dynamic()` pattern. The `"use client"
 
 ## Self-hosting the bundle
 
-If you want to avoid the CDN dependency, download `playerstack.min.js` and the provider files next to it (`playerstack-hls.js`, `playerstack-vimeo.js`, `playerstack-wistia.js`, `playerstack-twitch.js`; see [Self-host the bundle](https://playerstack.techskills.academy/docs/getting-started/#self-host-the-bundle)) into your app's `public/js/` directory. Keep them in one directory, then point `PLAYERSTACK_URL` in `PlayerStack.tsx` at your copy:
+If you want to avoid the CDN dependency, download `playerstack.min.js` and the provider files next to it (`playerstack-youtube.js`, `playerstack-hls.js`, `playerstack-vimeo.js`, `playerstack-wistia.js`, `playerstack-twitch.js`; see [Self-host the bundle](https://playerstack.techskills.academy/docs/getting-started/#self-host-the-bundle)) together with each script's `*.LEGAL.txt` notice from the same release into your app's `public/js/` directory. Keep them in one directory, then point `PLAYERSTACK_URL` in `PlayerStack.tsx` at your copy:
 
 ```ts
 const PLAYERSTACK_URL = "/js/playerstack.min.js";
