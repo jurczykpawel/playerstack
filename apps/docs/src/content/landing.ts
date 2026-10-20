@@ -182,6 +182,14 @@ export const en = {
     ] as DemoStep[],
     closer:
       "One element, one config object, five plugins shown live. Mix any of the 17 below — or write your own.",
+    credit: {
+      prefix: "Demo video:",
+      title: "Sintel Trailer",
+      titleHref: "https://durian.blender.org/",
+      holder: "© Blender Foundation",
+      license: "CC BY 3.0",
+      licenseHref: "https://creativecommons.org/licenses/by/3.0/",
+    },
   },
 
   sources: {

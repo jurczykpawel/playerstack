@@ -123,6 +123,12 @@ const groupIcon = ["megaphone", "grad", "zap", "palette", "chart"];
           </ol>
         </div>
         <p class="demo-closer reveal">{c.livingDemo.closer}</p>
+        <p class="demo-credit reveal">
+          {c.livingDemo.credit.prefix}
+          <a href={c.livingDemo.credit.titleHref} rel="noopener">{c.livingDemo.credit.title}</a>,
+          {c.livingDemo.credit.holder},
+          <a href={c.livingDemo.credit.licenseHref} rel="noopener">{c.livingDemo.credit.license}</a>
+        </p>
       </div>
     </section>
 
@@ -655,6 +661,9 @@ const groupIcon = ["megaphone", "grad", "zap", "palette", "chart"];
     .step > p { margin: 0 0 18px; font-size: 15px; line-height: 1.6; }
     .step .code { border-radius: 12px; border: 1px solid var(--border-subtle); }
     .demo-closer { margin: 48px auto 0; text-align: center; max-width: 620px; color: var(--text-secondary); font-size: 16px; }
+    .demo-credit { margin: 14px auto 0; text-align: center; font-size: 13.5px; color: var(--text-tertiary); }
+    .demo-credit a { color: inherit; text-decoration: underline; text-underline-offset: 2px; }
+    .demo-credit a:hover { color: var(--text-secondary); }
 
     @media (max-width: 900px) {
       .demo-grid { grid-template-columns: 1fr; gap: 28px; }
