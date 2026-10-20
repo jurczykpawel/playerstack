@@ -52,6 +52,8 @@ export class PlayerstackElement extends HTMLElement {
   }
 
   private mediaPlayer: HTMLElement | null = null;
+  private initializing = false;
+  private bootGeneration = 0;
   private events: EventBus | null = null;
   private destroyRegistry: (() => void) | null = null;
   /** Attribute changes made while boot() is still waiting (config, provider). */
@@ -63,14 +65,17 @@ export class PlayerstackElement extends HTMLElement {
   }
 
   disconnectedCallback(): void {
+    this.bootGeneration++;
+    this.initializing = false;
     this.destroyRegistry?.();
+    this.mediaPlayer?.parentElement?.remove();
     this.destroyRegistry = null;
     this.mediaPlayer = null;
     this.events = null;
   }
 
   attributeChangedCallback(name: string, _old: string | null, value: string | null): void {
-    if (!this.mediaPlayer) {
+    if (!this.mediaPlayer || this.initializing) {
       this.pendingAttrs.set(name, value);
       return;
     }
@@ -85,16 +90,19 @@ export class PlayerstackElement extends HTMLElement {
     this.mediaPlayer.setAttribute(name, value);
   }
 
-  private async boot(): Promise<void> {
+  private async boot(restartConfig?: PlayerstackConfig): Promise<void> {
+    const generation = ++this.bootGeneration;
     // Attributes present now are read by the config provider below.
     this.pendingAttrs.clear();
     let config: PlayerstackConfig;
     try {
-      config = await configProvider.load(this);
+      config = restartConfig ?? (await configProvider.load(this));
     } catch (err) {
       console.error("[playerstack]", (err as Error).message);
       return;
     }
+
+    if (generation !== this.bootGeneration) return;
 
     // Loading a provider can take seconds; apply attribute changes made in the
     // meantime and pick the provider again if the source type changed.
@@ -112,6 +120,7 @@ export class PlayerstackElement extends HTMLElement {
         );
         return;
       }
+      if (generation !== this.bootGeneration) return;
       config = this.applyPendingAttrs(config);
       const next = detectElementTag(config.src);
       if (next === tag) break;
@@ -121,6 +130,7 @@ export class PlayerstackElement extends HTMLElement {
     const { controller, mediaEl } = this.buildMediaController(config, tag);
     this.appendChild(controller);
     this.mediaPlayer = mediaEl;
+    this.initializing = true;
 
     const events = createEventBus();
     this.events = events;
@@ -130,6 +140,7 @@ export class PlayerstackElement extends HTMLElement {
       registry.register(plugin);
     }
 
+    this.destroyRegistry = () => registry.destroy();
     let pluginsOk = true;
     try {
       await registry.init({
@@ -143,6 +154,19 @@ export class PlayerstackElement extends HTMLElement {
       console.error("[playerstack] plugin init failed:", err);
     }
 
+    if (generation !== this.bootGeneration) return;
+    this.initializing = false;
+    if (this.pendingAttrs.size > 0) {
+      const next = this.applyPendingAttrs(config);
+      registry.destroy();
+      this.destroyRegistry = null;
+      controller.remove();
+      this.mediaPlayer = null;
+      this.events = null;
+      void this.boot(next);
+      return;
+    }
+
     const deferredSrc = (config as { brandedThumb?: { clickToLoad?: boolean } }).brandedThumb
       ?.clickToLoad;
     // If plugin init threw, don't write a fallback `src` — the sources
@@ -150,8 +174,6 @@ export class PlayerstackElement extends HTMLElement {
     if (pluginsOk && !deferredSrc && !mediaEl.hasAttribute("src")) {
       mediaEl.setAttribute("src", config.src);
     }
-
-    this.destroyRegistry = () => registry.destroy();
   }
 
   private applyPendingAttrs(config: PlayerstackConfig): PlayerstackConfig {

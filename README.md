@@ -23,7 +23,7 @@ Embeddable video player for any HTML page. One script tag. YouTube, Vimeo, Wisti
 </player-stack>
 ```
 
-The script is hosted by the documentation site. To self-host it, copy `playerstack.min.js`, `playerstack-youtube.js`, `playerstack-hls.js`, `playerstack-vimeo.js`, `playerstack-wistia.js`, `playerstack-twitch.js` and each file's `*.LEGAL.txt` notice from the same release into one directory on your domain. For a local build, run `bun install --frozen-lockfile` and `bun run --filter playerstack build`; all files are in `packages/embed/dist/`. `bash scripts/copy-standalone.sh <target-dir>` copies and checks this complete set.
+The script is hosted by the documentation site. To self-host it, copy `playerstack.min.js`, `playerstack-youtube.js`, `playerstack-hls.js`, `playerstack-vimeo.js`, `playerstack-wistia.js`, `playerstack-twitch.js`, all 14 `playerstack-plugin-*.js` files and each file's `*.LEGAL.txt` notice from the same release into one directory on your domain. For a local build, run `bun install --frozen-lockfile` and `bun run --filter playerstack build`; all files are in `packages/embed/dist/`. `bash scripts/copy-standalone.sh <target-dir>` copies and checks this complete set.
 
 That's it. The custom element registers itself, parses the URL, mounts the right Mux media element underneath (`<video>` for MP4/WebM, `<youtube-video>`, `<vimeo-video>`, `<wistia-video>`, `<twitch-video>`, or `<hls-video>`) inside `<media-controller>`, and applies the plugins from `data-config`.
 
@@ -166,9 +166,20 @@ Playerstack is designed to embed on third-party pages. Config-driven inputs (HTM
 
 ## Bundle size
 
-The standalone `playerstack.min.js`, built from this repository and measured on 2026-10-20, is 193,100 bytes raw (188.6 KiB), 49,451 bytes with gzip (48.3 KiB), and 41,866 bytes with Brotli (40.9 KiB). That is all the Playerstack JavaScript a page with only MP4 players downloads. YouTube, HLS, Vimeo, Wistia and Twitch support loads on first use from files next to the script (`playerstack-<provider>.js`): a page with a YouTube player downloads 52.6 KiB gzip in total, one with an HLS player 211.2 KiB (hls.js is most of it), one with Vimeo 63.7 KiB. Before the provider split the single script was 244,613 bytes gzip (238.9 KiB) for every page, and before YouTube moved out of it the script was 59,828 bytes gzip (58.4 KiB). Compression was measured with Bun 1.4.3 zlib, gzip level 9 and Brotli quality 11 (`bun scripts/measure-bundle.ts`); 1 KiB = 1,024 bytes. Node's zlib produces slightly different gzip bytes. Sizes vary with the build and compression settings.
+The standalone `playerstack.min.js`, built from this repository and measured on 2026-10-20, is 165,091 bytes raw (161.2 KiB), 41,549 bytes with gzip (40.6 KiB), and 34,890 bytes with Brotli (34.1 KiB). A page with only MP4 players and no plugin configuration downloads only this script. The previous build with all plugin code in the script was 48.3 KiB gzip.
 
-The standalone bundle includes the media-chrome controls the player creates and 15 registered plugins. The scoped `@playerstack/*` packages are not published to npm yet; use the hosted script above, self-host a downloaded copy, or build a custom bundle from this repository.
+| Page configuration                                   | gzip (KiB) | Brotli (KiB) |
+| ---------------------------------------------------- | ---------: | -----------: |
+| MP4, no plugin configuration                         |       40.6 |         34.1 |
+| MP4, CTA and branded thumbnail                       |       43.7 |         36.6 |
+| MP4, controls, CTA, branded thumbnail and custom CSS |       46.1 |         38.7 |
+| YouTube, no plugin configuration                     |       44.9 |         37.9 |
+| HLS, no plugin configuration                         |      203.4 |        167.9 |
+| Vimeo, no plugin configuration                       |       56.0 |         47.8 |
+
+The main script includes media-chrome controls and keyboard help, the sources plugin, and registrations for 14 conditional plugins. Each conditional plugin downloads only when its configuration enables it. Providers also load on first use. Files are fetched from the directory of the main script, with content versions in the query string. Keep all 20 standalone JS files and their 20 adjacent `*.LEGAL.txt` notices together when self-hosting; `bash scripts/copy-standalone.sh <target-dir>` checks and copies the complete release.
+
+Measurements sum each downloaded JS file compressed separately with Bun 1.4.3 zlib, gzip level 9 and Brotli quality 11 (`bun scripts/measure-bundle.ts`). One KiB is 1,024 bytes; maps, notices, HTTP headers and media are excluded. Node's zlib produces slightly different gzip bytes. ESM/CJS builds retain their existing eager plugin imports; the scoped `@playerstack/*` packages are not published to npm yet. Use the hosted script, self-host a build, or build a custom bundle from this repository.
 
 ## Acknowledgements
 

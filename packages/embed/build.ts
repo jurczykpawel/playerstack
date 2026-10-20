@@ -5,6 +5,7 @@ import { readFileSync, readdirSync, rmSync, mkdirSync } from "fs";
 import { join, dirname, basename } from "path";
 import { LAZY_MEDIA_ELEMENT_TAGS } from "../core/src/providers";
 import { writeLegalNotices } from "./legal-notices";
+import { LAZY_PLUGINS } from "./plugin-manifest";
 
 const root = dirname(new URL(import.meta.url).pathname);
 const outdir = join(root, "dist");
@@ -107,6 +108,56 @@ if (missing.length > 0) {
   throw new Error(`provider files missing for: ${missing.join(", ")}`);
 }
 
+const pluginEntries: Plugin = {
+  name: "plugin-entries",
+  setup(b) {
+    b.onResolve({ filter: /^plugin:/ }, (args) => ({
+      path: args.path.slice(7),
+      namespace: "plugin",
+    }));
+    b.onResolve({ filter: /^@playerstack\/core$/ }, () => ({
+      path: join(coreDir, "src/safe-html.ts"),
+    }));
+    b.onLoad({ filter: /.*/, namespace: "plugin" }, (args) => {
+      const entry = LAZY_PLUGINS.find((entry) => entry.name === args.path)!;
+      return {
+        contents: `import { ${entry.exportName} } from "@playerstack/plugin-${entry.name}"; import { registerPlugin } from "./src/plugin-modules"; registerPlugin(${entry.exportName});`,
+        resolveDir: root,
+      };
+    });
+  },
+};
+const pluginResult = await build({
+  bundle: true,
+  target: "es2020",
+  format: "iife",
+  minify: true,
+  sourcemap: true,
+  legalComments: "linked",
+  entryPoints: Object.fromEntries(LAZY_PLUGINS.map(({ name }) => [name, `plugin:${name}`])),
+  entryNames: "playerstack-plugin-[name]",
+  outdir,
+  metafile: true,
+  plugins: [pluginEntries],
+});
+writeLegalNotices(pluginResult.metafile, process.cwd());
+const engineCopies = Object.keys(pluginResult.metafile.inputs).filter(
+  (input) =>
+    input.includes("media-chrome") ||
+    (input.includes("core/src/") && !input.endsWith("safe-html.ts")),
+);
+if (engineCopies.length)
+  throw new Error(`plugin files must not duplicate the engine: ${engineCopies.join(", ")}`);
+const pluginFiles: Record<string, string> = {};
+for (const { name } of LAZY_PLUGINS) {
+  const file = `playerstack-plugin-${name}.js`;
+  const version = createHash("sha256")
+    .update(readFileSync(join(outdir, file)))
+    .digest("hex")
+    .slice(0, 8);
+  pluginFiles[name] = `${file}?v=${version}`;
+}
+
 const standaloneImporter: Plugin = {
   name: "standalone-provider-imports",
   setup(b) {
@@ -118,11 +169,15 @@ const standaloneImporter: Plugin = {
 
 const standaloneResult = await build({
   ...common,
+  entryPoints: [join(root, "src/standalone.ts")],
   format: "iife",
   globalName: "Playerstack",
   outfile: join(outdir, "playerstack.min.js"),
   minify: true,
-  define: { __PLAYERSTACK_PROVIDER_FILES__: JSON.stringify(providerFiles) },
+  define: {
+    __PLAYERSTACK_PROVIDER_FILES__: JSON.stringify(providerFiles),
+    __PLAYERSTACK_PLUGIN_FILES__: JSON.stringify(pluginFiles),
+  },
   plugins: [standaloneImporter],
 });
 writeLegalNotices(standaloneResult.metafile!, process.cwd());

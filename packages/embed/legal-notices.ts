@@ -78,7 +78,14 @@ export function writeLegalNotices(metafile: Metafile, workingDir: string): void 
     const legal = `${file}.LEGAL.txt`;
     const preserved = existsSync(legal) ? readFileSync(legal, "utf8") : "";
     const text = [...notices].sort(([a], [b]) => a.localeCompare(b)).map(([, text]) => text);
-    if (!text.length) throw new Error(`No dependency notices generated for ${basename(file)}`);
+    if (!text.length)
+      text.push(
+        [
+          "Playerstack",
+          readFileSync(new URL("../../NOTICE", import.meta.url), "utf8"),
+          readFileSync(new URL("../../LICENSE", import.meta.url), "utf8"),
+        ].join("\n\n"),
+      );
     writeFileSync(legal, [...text, preserved].filter(Boolean).join("\n\n---\n\n") + "\n");
     appendFileSync(file, `\n// License notices: ${basename(legal)}\n`);
   }

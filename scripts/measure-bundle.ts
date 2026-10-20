@@ -1,8 +1,5 @@
-// Per-scenario download size of the standalone script: what a page with one
-// player of each source type fetches from playerstack.techskills.academy.
 // Usage: bun scripts/measure-bundle.ts [baseline.min.js]
-//   baseline: a previous playerstack.min.js, with its provider files alongside it.
-import { existsSync, readFileSync, readdirSync } from "fs";
+import { existsSync, readFileSync } from "fs";
 import { dirname, join } from "path";
 import { gzipSync, brotliCompressSync, constants } from "zlib";
 
@@ -24,36 +21,36 @@ const sizes = (paths: string[]) =>
       { raw: 0, gzip: 0, brotli: 0 },
     );
 
-const provider = (name: string) => {
-  const file = readdirSync(dist).find((f) => new RegExp(`^playerstack-${name}\\.js$`).test(f));
-  if (!file) throw new Error(`missing provider file for ${name} in ${dist}`);
-  return join(dist, file);
-};
-
-const core = join(dist, "playerstack.min.js");
 const scenarios: Record<string, string[]> = {
-  "core only": [core],
-  MP4: [core],
-  YouTube: [core, provider("youtube")],
-  HLS: [core, provider("hls")],
-  Vimeo: [core, provider("vimeo")],
-  Wistia: [core, provider("wistia")],
-  Twitch: [core, provider("twitch")],
+  "core only": [],
+  MP4: [],
+  "MP4 + CTA + branded thumb": ["plugin-cta-end", "plugin-branded-thumb"],
+  "MP4 + foundation config": [
+    "plugin-controls-policy",
+    "plugin-cta-end",
+    "plugin-branded-thumb",
+    "plugin-custom-css",
+  ],
+  YouTube: ["youtube"],
+  HLS: ["hls"],
+  Vimeo: ["vimeo"],
+  Wistia: ["wistia"],
+  Twitch: ["twitch"],
 };
 
 const kib = (n: number) => (n / 1024).toFixed(1);
 console.log("| scenario | before gzip | before brotli | after raw | after gzip | after brotli |");
 console.log("|---|---:|---:|---:|---:|---:|");
-for (const [name, files] of Object.entries(scenarios)) {
-  const after = sizes(files);
-  const oldProvider = baseline && join(dirname(baseline), `playerstack-${name.toLowerCase()}.js`);
+for (const [name, chunks] of Object.entries(scenarios)) {
+  const files = chunks.map((chunk) => `playerstack-${chunk}.js`);
+  const after = sizes([join(dist, "playerstack.min.js"), ...files.map((f) => join(dist, f))]);
   const before = baseline
-    ? sizes([baseline, ...(oldProvider && existsSync(oldProvider) ? [oldProvider] : [])])
+    ? sizes([baseline, ...files.map((f) => join(dirname(baseline), f)).filter(existsSync)])
     : null;
   console.log(
     `| ${name} | ${before ? kib(before.gzip) : "-"} | ${before ? kib(before.brotli) : "-"} | ${kib(after.raw)} | ${kib(after.gzip)} | ${kib(after.brotli)} |`,
   );
 }
 console.log(
-  `\nKiB = 1024 bytes; ${runtime} zlib: gzip level 9, Brotli quality 11 (gzip bytes differ by about 0.4% between runtimes).`,
+  `\nKiB = 1024 bytes; ${runtime} zlib: gzip level 9, Brotli quality 11. Totals sum each independently compressed JS file, excluding maps, notices, HTTP headers and media. Baseline includes each sibling chunk when present; older monolithic builds already contain plugin code.`,
 );

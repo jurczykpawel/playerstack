@@ -1,55 +1,24 @@
-import { test, expect, type Page, type Request } from "@playwright/test";
-import { readFileSync, existsSync } from "fs";
+import { test, expect, type Page } from "@playwright/test";
+import { readFileSync } from "fs";
 import { join } from "path";
+import {
+  DIST,
+  ORIGIN,
+  SCRIPT,
+  SOURCES,
+  openEmbed,
+  lazyFiles,
+  observeStandalone,
+} from "./standalone-helpers";
 
-// Exercises the built standalone bundle (packages/embed/dist) exactly as a
-// customer embeds it: one classic <script> from another origin. Run
-// `bun run --cwd packages/embed build` first (CI does).
-const DIST = join(__dirname, "../../packages/embed/dist");
-const ORIGIN = "https://ps.test";
-const SCRIPT = `${ORIGIN}/assets/playerstack.min.js`;
-
-const SOURCES = {
-  youtube: "https://youtu.be/_cMxraX_5RE",
-  mp4: "https://media.w3.org/2010/05/sintel/trailer.mp4",
-  hls: "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8",
-  vimeo: "https://vimeo.com/76979871",
-};
-
-test.skip(!existsSync(join(DIST, "playerstack.min.js")), "standalone bundle not built");
-
-async function openEmbed(page: Page, src: string): Promise<string[]> {
-  const fetched: string[] = [];
-  page.on("request", (req: Request) => {
-    if (req.url().startsWith(`${ORIGIN}/assets/`)) fetched.push(req.url().split("/").pop()!);
-  });
-  await page.route(`${ORIGIN}/assets/*`, (route) => {
-    const file = new URL(route.request().url()).pathname.split("/").pop()!;
-    const path = join(DIST, file);
-    if (!existsSync(path)) return route.fulfill({ status: 404 });
-    return route.fulfill({ body: readFileSync(path), contentType: "application/javascript" });
-  });
-  await page.route(`${ORIGIN}/`, (route) =>
-    route.fulfill({
-      contentType: "text/html",
-      body: `<!doctype html><html><body>
-        <player-stack src="${src}" style="display:block;width:640px;height:360px"></player-stack>
-        <script src="${SCRIPT}"></script>
-      </body></html>`,
-    }),
-  );
-  await page.goto(`${ORIGIN}/`);
-  await expect(page.locator("player-stack media-controller")).toBeAttached();
-  return fetched;
-}
-
-const providerFiles = (files: string[]) => files.filter((f) => f !== "playerstack.min.js");
+// Exercises built standalone files as classic scripts from another origin.
+observeStandalone();
 
 test("YouTube loads only the youtube provider", async ({ page }) => {
   const fetched = await openEmbed(page, SOURCES.youtube);
   await expect(page.locator("player-stack youtube-video")).toBeAttached();
   expect(await page.evaluate(() => !!customElements.get("youtube-video"))).toBe(true);
-  expect(providerFiles(fetched)).toEqual([
+  expect(lazyFiles(fetched)).toEqual([
     expect.stringMatching(/^playerstack-youtube\.js\?v=[0-9a-f]{8}$/),
   ]);
 });
@@ -57,7 +26,7 @@ test("YouTube loads only the youtube provider", async ({ page }) => {
 test("MP4 loads no provider file", async ({ page }) => {
   const fetched = await openEmbed(page, SOURCES.mp4);
   await expect(page.locator("player-stack video")).toHaveAttribute("src", SOURCES.mp4);
-  expect(providerFiles(fetched)).toEqual([]);
+  expect(lazyFiles(fetched)).toEqual([]);
   expect(await page.evaluate(() => !!customElements.get("youtube-video"))).toBe(false);
 });
 
@@ -75,7 +44,7 @@ test("Shift+? opens keyboard help with shortcut content and Escape closes it", a
   await expect(dialog.locator(".shortcuts-table tr")).not.toHaveCount(0);
   await page.keyboard.press("Escape");
   await expect(dialog).not.toBeVisible();
-  expect(providerFiles(fetched)).toEqual([]);
+  expect(lazyFiles(fetched)).toEqual([]);
 });
 
 test("HLS loads only the hls provider next to the main script and plays in Chromium", async ({
@@ -84,7 +53,7 @@ test("HLS loads only the hls provider next to the main script and plays in Chrom
   const fetched = await openEmbed(page, SOURCES.hls);
   const hls = page.locator("player-stack hls-video");
   await expect(hls).toBeAttached();
-  expect(providerFiles(fetched)).toEqual([
+  expect(lazyFiles(fetched)).toEqual([
     expect.stringMatching(/^playerstack-hls\.js\?v=[0-9a-f]{8}$/),
   ]);
   await expect
@@ -96,7 +65,7 @@ test("Vimeo loads only the vimeo provider", async ({ page }) => {
   const fetched = await openEmbed(page, SOURCES.vimeo);
   await expect(page.locator("player-stack vimeo-video")).toBeAttached();
   expect(await page.evaluate(() => !!customElements.get("vimeo-video"))).toBe(true);
-  expect(providerFiles(fetched)).toEqual([
+  expect(lazyFiles(fetched)).toEqual([
     expect.stringMatching(/^playerstack-vimeo\.js\?v=[0-9a-f]{8}$/),
   ]);
 });
@@ -110,7 +79,7 @@ test("a failed provider download logs an error and emits playerstack:error", asy
   await page.route(`${ORIGIN}/`, (route) =>
     route.fulfill({
       contentType: "text/html",
-      body: `<!doctype html><html><body>
+      body: `<!doctype html><html><head><meta charset="utf-8"></head><body>
         <script>document.addEventListener("playerstack:error", (e) => { window.__psError = e.detail.tag; });</script>
         <player-stack src="${SOURCES.hls}"></player-stack>
         <script src="${SCRIPT}"></script>
@@ -143,7 +112,7 @@ async function openWithSlowProviders(page: Page, src: string, delayMs: number): 
   await page.route(`${ORIGIN}/`, (route) =>
     route.fulfill({
       contentType: "text/html",
-      body: `<!doctype html><html><body>
+      body: `<!doctype html><html><head><meta charset="utf-8"></head><body>
         <player-stack src="${src}"></player-stack>
         <script src="${SCRIPT}"></script>
       </body></html>`,

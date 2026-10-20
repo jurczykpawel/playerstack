@@ -35,6 +35,9 @@ jobs:
             bunx tsc --noEmit -p "$pkg/tsconfig.json"
           done
 
+      - name: Type check (embed)
+        run: bun run typecheck:embed
+
       - name: Format check
         run: bun run format:check
 

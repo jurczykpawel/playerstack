@@ -1,7 +1,5 @@
 #!/usr/bin/env bash
-# Copy the standalone script and its lazily loaded provider files into a
-# static site directory. They must stay side by side: playerstack.min.js
-# fetches playerstack-<provider>.js?v=<hash> from its own URL's directory.
+# Copy the main script, lazy providers/plugins and notices as one release.
 # Usage: bash scripts/copy-standalone.sh <target-dir>
 set -euo pipefail
 
@@ -11,6 +9,9 @@ dist="$(cd "$(dirname "$0")/../packages/embed/dist" && pwd)"
 files=(playerstack.min.js)
 for provider in youtube hls vimeo wistia twitch; do
   files+=("playerstack-${provider}.js")
+done
+for plugin in controls-policy autopreview branded-thumb email-gate saved-position action-bar chapters cta-end sticky yt-subscribe analytics watermark custom-css intro-card; do
+  files+=("playerstack-plugin-${plugin}.js")
 done
 for file in "${files[@]}"; do
   for required in "$file" "$file.LEGAL.txt"; do

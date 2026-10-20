@@ -41,8 +41,18 @@ together with the provider files it loads on demand for YouTube, HLS, Vimeo, Wis
 [`playerstack-vimeo.js`](https://playerstack.techskills.academy/playerstack-vimeo.js),
 [`playerstack-wistia.js`](https://playerstack.techskills.academy/playerstack-wistia.js),
 [`playerstack-twitch.js`](https://playerstack.techskills.academy/playerstack-twitch.js)),
-and each script's adjacent `*.LEGAL.txt` notice, all from the same release.
-Keep these six scripts and six notices in one directory, and point the script tag at your own path:
+all 14 conditional plugin files (`playerstack-plugin-controls-policy.js`,
+`playerstack-plugin-autopreview.js`, `playerstack-plugin-branded-thumb.js`,
+`playerstack-plugin-email-gate.js`, `playerstack-plugin-saved-position.js`,
+`playerstack-plugin-action-bar.js`, `playerstack-plugin-chapters.js`,
+`playerstack-plugin-cta-end.js`, `playerstack-plugin-sticky.js`,
+`playerstack-plugin-yt-subscribe.js`, `playerstack-plugin-analytics.js`,
+`playerstack-plugin-watermark.js`, `playerstack-plugin-custom-css.js`,
+`playerstack-plugin-intro-card.js`), and each script's adjacent `*.LEGAL.txt` notice,
+all from the same release. For a local build, run `bun install --frozen-lockfile`,
+`bun run --filter playerstack build` and `bash scripts/copy-standalone.sh <target-dir>`.
+The copy command requires all 20 scripts and 20 notices before replacing any files.
+Keep the complete set in one directory, and point the script tag at your own path:
 
 ```html
 <script src="/js/playerstack.min.js" defer></script>
@@ -52,9 +62,12 @@ It is Apache-2.0 licensed, so you can host and redistribute it freely. Keep a co
 
 With a Content Security Policy, allow the directory that serves the script (for example
 `script-src https://playerstack.techskills.academy/`), not only the full path of
-`playerstack.min.js`: the provider files are loaded from the same directory. A policy with
+`playerstack.min.js`: provider and enabled-plugin files load from the same directory. A policy with
 `require-trusted-types-for 'script'` blocks them. In both cases MP4 still plays; YouTube, HLS,
 Vimeo, Wistia and Twitch players stay empty and the element dispatches a `playerstack:error` event.
+A plugin download blocked by CSP emits the same DOM event with `reason: "plugin-load"`
+and the plugin name, and skips that plugin while playback continues. Plugin downloads time
+out after 15 seconds. A poster plugin failure falls back to the normal playback controls.
 
 ## Option 2: scoped packages
 

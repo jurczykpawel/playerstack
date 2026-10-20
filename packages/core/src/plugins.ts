@@ -24,6 +24,7 @@ export interface PluginRegistry {
 export function createPluginRegistry(): PluginRegistry {
   const plugins: PlayerstackPlugin[] = [];
   let initialized = false;
+  let generation = 0;
   let lastContext: PlayerstackContext | null = null;
 
   function register(plugin: PlayerstackPlugin): void {
@@ -41,15 +42,18 @@ export function createPluginRegistry(): PluginRegistry {
     if (initialized) {
       throw new Error("[playerstack] plugin registry already initialized — call destroy() first");
     }
+    const currentGeneration = ++generation;
     initialized = true;
     lastContext = ctx;
     for (const plugin of plugins) {
+      if (generation !== currentGeneration) return;
       await plugin.init(ctx);
     }
   }
 
   function destroy(): void {
     if (!lastContext) return;
+    generation++;
     const ctx = lastContext;
     for (let i = plugins.length - 1; i >= 0; i--) {
       const plugin = plugins[i];

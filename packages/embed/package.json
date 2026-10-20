@@ -24,7 +24,7 @@
   ],
   "scripts": {
     "build": "bun build.ts",
-    "test": "vitest run legal-notices.test.ts"
+    "test": "vitest run"
   },
   "dependencies": {
     "@playerstack/core": "workspace:*",

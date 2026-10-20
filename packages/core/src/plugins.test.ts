@@ -162,3 +162,23 @@ describe("createPluginRegistry", () => {
     expect(destroySpy).toHaveBeenCalledWith(ctx);
   });
 });
+
+it("destroy stops a pending initialization before the next plugin", async () => {
+  const reg = createPluginRegistry();
+  let finish!: () => void;
+  reg.register(
+    plugin("loading", {
+      init: () =>
+        new Promise<void>((resolve) => {
+          finish = resolve;
+        }),
+    }),
+  );
+  const next = plugin("next");
+  reg.register(next);
+  const initialized = reg.init(fakeContext());
+  reg.destroy();
+  finish();
+  await initialized;
+  expect(next.init).not.toHaveBeenCalled();
+});

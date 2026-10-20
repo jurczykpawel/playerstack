@@ -21,7 +21,7 @@ This is the standalone bundle for `<script src=...>` use. For composable usage (
 
 ## What's bundled
 
-This bundle pre-registers 15 of the 17 first-party plugins:
+The standalone script pre-registers 15 of the 17 first-party plugins. Only `sources` is included in the main script; the other 14 load when their configuration activates them:
 
 - `@playerstack/plugin-sources` — YouTube, Vimeo, MP4, HLS, WebM, DASH auto-detect
 - `@playerstack/plugin-controls-policy` — theme + show/hide controls
@@ -47,13 +47,40 @@ The standalone `playerstack.min.js`, built from this repository and measured on 
 
 | Compression         |   Bytes | KiB (1,024 bytes) |
 | ------------------- | ------: | ----------------: |
-| None                | 193,100 |             188.6 |
-| gzip (Bun zlib, 9)  |  49,451 |              48.3 |
-| Brotli (quality 11) |  41,866 |              40.9 |
+| None                | 165,091 |             161.2 |
+| gzip (Bun zlib, 9)  |  41,549 |              40.6 |
+| Brotli (quality 11) |  34,890 |              34.1 |
 
-This is all the Playerstack JavaScript a page with only MP4 players downloads. YouTube, HLS, Vimeo, Wistia and Twitch load on first use from `playerstack-<provider>.js` files in the same directory as `playerstack.min.js`; when self-hosting, copy `playerstack.min.js`, `playerstack-youtube.js`, `playerstack-hls.js`, `playerstack-vimeo.js`, `playerstack-wistia.js`, `playerstack-twitch.js` and each file's `*.LEGAL.txt` notice from the same release into one directory. Run `bash scripts/copy-standalone.sh <target-dir>` to copy and check this complete set. Per-source totals (gzip): YouTube 52.6 KiB, HLS 211.2 KiB, Vimeo 63.7 KiB, Wistia 51.5 KiB, Twitch 51.4 KiB — run `bun scripts/measure-bundle.ts` after a build. Bun 1.4.3 zlib was used; Node's zlib produces slightly different gzip bytes.
+This is the complete Playerstack JS download for an MP4 page without plugin configuration. With CTA and branded thumbnail it is 43.7 KiB gzip / 36.6 KiB Brotli; with controls and custom CSS as well it is 46.1 / 38.7 KiB. Without configured plugins, provider totals are YouTube 44.9 / 37.9 KiB, HLS 203.4 / 167.9 KiB, Vimeo 56.0 / 47.8 KiB, Wistia 43.7 / 36.8 KiB and Twitch 43.7 / 36.8 KiB.
 
-This measures the standalone build in this repository, not every possible local build. The standalone includes the media-chrome controls and their internal components (including keyboard help) and 15 plugins. Build from scoped source packages to choose your own plugins, then measure that output.
+Run `bun scripts/measure-bundle.ts` or `node scripts/measure-bundle.ts` after building. Totals sum each independently compressed JS file using gzip level 9 and Brotli quality 11, excluding maps, notices, HTTP headers and media. Bun 1.4.3 zlib was used above; Node produces slightly different gzip bytes. The main script retains media-chrome controls and keyboard help. ESM/CJS builds keep their existing eager plugin imports.
+
+## Conditional plugins and self-hosting
+
+Keep the main script, the five `playerstack-<provider>.js` files and all 14 `playerstack-plugin-<name>.js` files in one directory, each with its adjacent `*.LEGAL.txt` notice, from the same release. Run `bash scripts/copy-standalone.sh <target-dir>` to copy and check the complete set of 20 scripts and 20 notices. Copy `LICENSE` and `NOTICE` as well.
+
+| File suffix (`playerstack-plugin-<name>.js`) | Configuration that loads it      |
+| -------------------------------------------- | -------------------------------- |
+| controls-policy                              | `controls` is present and truthy |
+| autopreview                                  | `preview.enabled`                |
+| branded-thumb                                | `brandedThumb.enabled`           |
+| email-gate                                   | `emailGate.enabled`              |
+| saved-position                               | `savedPosition.enabled`          |
+| action-bar                                   | `actionBar.enabled`              |
+| chapters                                     | nonempty `chapters.points`       |
+| cta-end                                      | `ctaEnd.enabled`                 |
+| sticky                                       | `sticky.enabled`                 |
+| yt-subscribe                                 | `ytSubscribe.enabled`            |
+| analytics                                    | `analytics.enabled`              |
+| watermark                                    | `watermark.enabled`              |
+| custom-css                                   | `customCss.enabled`              |
+| intro-card                                   | `introCard.enabled`              |
+
+Enabled modules download concurrently before `sources.init` sets the media URL. Their `init(ctx)` calls then run in the existing registration order with the same context and event bus. Every player on a page shares one download per module. The plugin files bundle only their implementation and needed helpers, never another media-chrome engine.
+
+A network, CSP, missing-file or 15-second download timeout dispatches a bubbling `playerstack:error` DOM event with `detail: { reason: "plugin-load", plugin: "cta-end", error }`. The failed plugin is skipped for that player; playback and other plugins continue, and a later player retries. If branded-thumb cannot load, click-to-load falls back to normal media controls. A failed email-gate download also leaves playback available; client-side gates do not enforce access to the media URL. Errors thrown by a plugin's own `init` retain their existing behavior.
+
+Plugin filenames remain stable and requests use `?v=<content hash>`. Cached main scripts can therefore load newer plugin files: keep filenames, names, `init(ctx)`, destroy and event contracts compatible across releases. The internal module registry keys each implementation by its full versioned URL. Self-host all files together and allow their directory in CSP `script-src`.
 
 ## Provider files and compatibility
 
@@ -72,7 +99,7 @@ document.addEventListener("playerstack:error", (e) => {
 
 ## Third-party notices
 
-Every JavaScript build output has an adjacent `*.LEGAL.txt` file containing full dependency license texts and any upstream NOTICE files. Keep these notices with the scripts when redistributing. The build derives dependencies from esbuild output metadata and fails if a bundled package lacks a license text or a reviewed fallback. The copy step requires all six standalone scripts and all six notices before replacing any target files. HLS includes hls.js (Apache-2.0); the wrappers and media-chrome declare MIT. See [license source notes](licenses/README.md).
+Every JavaScript build output has an adjacent `*.LEGAL.txt` file containing full dependency license texts and any upstream NOTICE files. Keep these notices with the scripts when redistributing. The build derives dependencies from esbuild output metadata and fails if a bundled package lacks a license text or a reviewed fallback. Chunks containing only project code include the project license and NOTICE. The copy step requires all 20 standalone scripts and all 20 notices before replacing any target files. HLS includes hls.js (Apache-2.0); the wrappers and media-chrome declare MIT. See [license source notes](licenses/README.md).
 
 ## Custom config
 
