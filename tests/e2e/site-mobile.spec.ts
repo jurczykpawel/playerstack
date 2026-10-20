@@ -28,6 +28,12 @@ function pagesIn(dir: string, prefix = "/"): string[] {
 
 const PAGES = existsSync(DIST) ? pagesIn(DIST) : [];
 const WIDTHS = [320, 375];
+const FONTS = ["default", "wide fallback"] as const;
+const WIDE_FALLBACK = `
+  html, body, h1, h2, h3, h4, h5, h6, p, li, a {
+    font-family: "DejaVu Sans", Verdana, sans-serif !important;
+  }
+`;
 
 test.skip(!existsSync(join(DIST, "index.html")), "docs site not built");
 test("the docs site has pages to check", () => {
@@ -50,25 +56,41 @@ async function serveDist(page: Page) {
 }
 
 for (const width of WIDTHS) {
-  for (const path of PAGES) {
-    test(`no horizontal overflow at ${width}px: ${path}`, async ({ page }) => {
-      await page.setViewportSize({ width, height: 812 });
-      await serveDist(page);
-      await page.goto(`${ORIGIN}${path}`, { waitUntil: "load" });
+  for (const font of FONTS) {
+    for (const path of PAGES) {
+      test(`no horizontal overflow at ${width}px (${font}): ${path}`, async ({ page }) => {
+        await page.setViewportSize({ width, height: 812 });
+        await serveDist(page);
+        await page.goto(`${ORIGIN}${path}`, { waitUntil: "load" });
+        if (font === "wide fallback") await page.addStyleTag({ content: WIDE_FALLBACK });
+        await page.evaluate(() => document.fonts.ready);
 
-      const { scrollWidth, clientWidth, offenders } = await page.evaluate(() => {
-        const root = document.documentElement;
-        const wide = [...document.body.querySelectorAll<HTMLElement>("*")]
-          .filter((el) => el.getBoundingClientRect().right > root.clientWidth + 1)
-          .slice(0, 8)
-          .map((el) => `${el.tagName.toLowerCase()}.${[...el.classList].join(".")}`);
-        return { scrollWidth: root.scrollWidth, clientWidth: root.clientWidth, offenders: wide };
+        const { scrollWidth, clientWidth, offenders } = await page.evaluate(() => {
+          const root = document.documentElement;
+          const wide = [...document.body.querySelectorAll<HTMLElement>("*")]
+            .flatMap((el) => {
+              let right = el.getBoundingClientRect().right;
+              for (const node of el.childNodes) {
+                if (node.nodeType !== Node.TEXT_NODE || !node.textContent?.trim()) continue;
+                const range = document.createRange();
+                range.selectNodeContents(node);
+                right = Math.max(right, range.getBoundingClientRect().right);
+              }
+              return right > root.clientWidth + 1
+                ? [
+                    `${el.tagName.toLowerCase()}.${[...el.classList].join(".")} (right: ${right.toFixed(1)}px)`,
+                  ]
+                : [];
+            })
+            .slice(0, 8);
+          return { scrollWidth: root.scrollWidth, clientWidth: root.clientWidth, offenders: wide };
+        });
+
+        expect(
+          scrollWidth,
+          `elements past the right edge: ${offenders.join(", ")}`,
+        ).toBeLessThanOrEqual(clientWidth);
       });
-
-      expect(
-        scrollWidth,
-        `elements past the right edge: ${offenders.join(", ")}`,
-      ).toBeLessThanOrEqual(clientWidth);
-    });
+    }
   }
 }

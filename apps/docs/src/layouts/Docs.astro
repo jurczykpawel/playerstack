@@ -165,6 +165,13 @@ const path = Astro.url.pathname.replace(/\/$/, "");
     font-size: 17px;
     margin: 24px 0 8px;
   }
+  @media (max-width: 800px) {
+    article :global(h1) { font-size: clamp(28px, 7vw, 36px); }
+    article :global(h1), article :global(h2), article :global(h3),
+    article :global(h4), article :global(h5), article :global(h6) {
+      overflow-wrap: break-word;
+    }
+  }
   article :global(p), article :global(ul), article :global(ol) {
     line-height: 1.6;
   }
