@@ -35,6 +35,8 @@ Playerstack.use(brandedThumbPlugin).define();
 </player-stack>
 ```
 
+The thumbnail has one keyboard focus stop: its native play button. Tab to it and press Enter or Space to play. Clicking anywhere on the thumbnail also plays the video. Set `playLabel` to name the button in the page language.
+
 ## Config
 
 `config.brandedThumb`:

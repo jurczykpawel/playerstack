@@ -40,8 +40,6 @@ export const brandedThumbPlugin: PlayerstackPlugin = {
 
     const overlay = document.createElement("div");
     overlay.className = "playerstack-thumb";
-    overlay.setAttribute("role", "button");
-    overlay.setAttribute("tabindex", "0");
     // z-index 2 keeps overlay above <media-control-bar> and any UI Mux
     // media-chrome paints inside <media-controller>.
     const background = transparent ? "rgba(0,0,0,0.25)" : "#000";

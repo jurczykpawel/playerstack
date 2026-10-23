@@ -22,6 +22,27 @@ function makeContext(extra: Partial<PlayerstackConfig> = {}): PlayerstackContext
 }
 
 describe("brandedThumbPlugin", () => {
+  it("exposes one named native button without an interactive wrapper", async () => {
+    const ctx = makeContext({ brandedThumb: { enabled: true, playLabel: "Odtwórz film" } });
+    await brandedThumbPlugin.init(ctx);
+    const overlay = ctx.container.querySelector(".playerstack-thumb") as HTMLElement;
+    const stops = [overlay, ...overlay.querySelectorAll<HTMLElement>("*")]
+      .filter((element) => element.tabIndex >= 0);
+    expect(stops).toHaveLength(1);
+    expect(overlay.hasAttribute("role")).toBe(false);
+    const button = stops[0] as HTMLButtonElement;
+    expect(button).toBeInstanceOf(HTMLButtonElement);
+    expect(button.getAttribute("aria-label")).toBe("Odtwórz film");
+    const play = vi.fn();
+    (ctx.mediaPlayer as HTMLVideoElement).play = play;
+    const clicked = vi.fn();
+    ctx.events.on("thumb:click", clicked);
+    button.click();
+    expect(play).toHaveBeenCalledTimes(1);
+    expect(clicked).toHaveBeenCalledTimes(1);
+    expect(ctx.container.querySelector(".playerstack-thumb")).toBeNull();
+  });
+
   it("has a stable name", () => {
     expect(brandedThumbPlugin.name).toBe("branded-thumb");
   });
