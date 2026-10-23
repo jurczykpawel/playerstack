@@ -26,8 +26,9 @@ describe("brandedThumbPlugin", () => {
     const ctx = makeContext({ brandedThumb: { enabled: true, playLabel: "Odtwórz film" } });
     await brandedThumbPlugin.init(ctx);
     const overlay = ctx.container.querySelector(".playerstack-thumb") as HTMLElement;
-    const stops = [overlay, ...overlay.querySelectorAll<HTMLElement>("*")]
-      .filter((element) => element.tabIndex >= 0);
+    const stops = [overlay, ...overlay.querySelectorAll<HTMLElement>("*")].filter(
+      (element) => element.tabIndex >= 0,
+    );
     expect(stops).toHaveLength(1);
     expect(overlay.hasAttribute("role")).toBe(false);
     const button = stops[0] as HTMLButtonElement;

@@ -4,6 +4,12 @@ All notable changes to Playerstack will be documented in this file.
 
 ## Unreleased
 
+### Fixed
+
+- Forward the `preload` configuration and attribute to the media element before connection; `none` also disables automatic previews.
+- Respect reduced motion before setting preview autoplay attributes.
+- Give branded thumbnails one named native keyboard button, supporting Enter and Space while keeping the whole thumbnail clickable.
+
 ### License
 
 - The project license changes from MIT to Apache License 2.0. `LICENSE` is the

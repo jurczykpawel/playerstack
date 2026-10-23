@@ -27,6 +27,12 @@ The script is hosted by the documentation site. To self-host it, copy `playersta
 
 That's it. The custom element registers itself, parses the URL, mounts the right Mux media element underneath (`<video>` for MP4/WebM, `<youtube-video>`, `<vimeo-video>`, `<wistia-video>`, `<twitch-video>`, or `<hls-video>`) inside `<media-controller>`, and applies the plugins from `data-config`.
 
+## Loading and motion preferences
+
+Set `preload="none"` on `<player-stack>` or `"preload":"none"` in `data-config` to defer native MP4 loading until playback. Supported values are `none`, `metadata`, and `auto`; JSON configuration takes precedence over the attribute. When omitted, the browser keeps its default loading behavior.
+
+`preload: "none"` disables automatic previews so autoplay cannot trigger a download before interaction. With other loading modes, previews respect `prefers-reduced-motion: reduce` before the media element connects. Users can still start playback with the controls or the branded thumbnail's named native button, using Enter or Space.
+
 ## Why
 
 Plyr and the Mux media-elements are great engines for developers — no marketing layer.

@@ -93,7 +93,7 @@ interface ConfigProvider {
 }
 ```
 
-The default is `createInlineConfigProvider()`, which reads `src`, `poster`, `title` attributes plus the `data-config` JSON attribute. JSON wins on merge.
+The default is `createInlineConfigProvider()`, which reads `src`, `poster`, `title`, `preload` attributes plus the `data-config` JSON attribute. JSON wins on merge.
 
 Replace the default in a module that your entry file imports first:
 
@@ -120,9 +120,12 @@ interface PlayerstackConfig {
   src: string; // required
   poster?: string;
   title?: string;
+  preload?: "none" | "metadata" | "auto";
   [key: string]: unknown; // plugin-specific slices
 }
 ```
+
+`preload` is applied before the media element connects. For native MP4, `none` defers loading until playback and disables automatic previews. Omit it to preserve the browser default. Preview autoplay also respects `prefers-reduced-motion: reduce` from the first connection. Third-party providers determine their own loading behavior.
 
 Plugin-specific slices live alongside the core fields:
 

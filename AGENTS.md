@@ -72,3 +72,9 @@ tests/
 - Don't add abstractions or features beyond MVP scope without a design doc update.
 - Don't pull in React/Vue/Svelte into `@playerstack/core` or `packages/embed`. Embed must be framework-free.
 - Don't deploy on push. Releases are tagged manually until v1.0.
+
+## Playback preferences
+
+Core accepts `preload` (`none`, `metadata`, `auto`) from attributes or JSON, with JSON taking precedence. It sets loading and preview attributes before connecting the media. `none` disables automatic preview, and reduced motion prevents preview autoplay from the first connection. Branded thumbnails expose one named native button; keep their wrapper out of the tab order.
+
+After changing these paths, build the standalone script and run `bunx playwright test -c playwright.preferences.config.ts` to check MP4 requests and real keyboard playback in Chromium and WebKit. The tests intercept all network requests locally and use the repository demo video. Public ready/media/tracks APIs are not implemented; plugins can use `ctx.mediaPlayer`.
