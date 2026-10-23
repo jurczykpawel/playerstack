@@ -17,7 +17,7 @@ export const autopreviewPlugin: PlayerstackPlugin = {
   name: "autopreview",
   async init(ctx: PlayerstackContext): Promise<void> {
     const preview = (ctx.config as { preview?: AutopreviewConfig }).preview;
-    if (!preview?.enabled) return;
+    if (!preview?.enabled || ctx.config.preload === "none") return;
     if (prefersReducedMotion()) return;
 
     const player = ctx.mediaPlayer as HTMLElement & {
@@ -26,16 +26,8 @@ export const autopreviewPlugin: PlayerstackPlugin = {
       muted?: boolean;
     };
 
-    // Initial attributes (muted/autoplay/loop/load=eager) are set BEFORE
-    // connectedCallback by core/playerstack-element.buildMediaPlayer when
-    // config.preview.enabled is true. That's how Plyr-based players (e.g.
-    // Presto) get muted autoplay to work — browser policy honors initial
-    // HTML attributes; programmatic setAttribute after connect doesn't
-    // re-trigger the autoplay attempt.
-    //
-    // This plugin only wires up the IntersectionObserver to pause/resume
-    // based on viewport, plus re-mute on resume so a scrolled-back player
-    // never blasts audio.
+    // Core applies preview attributes before connection, subject to preload and
+    // reduced-motion preferences. This observer only controls viewport playback.
 
     const tryPlay = () => {
       try {

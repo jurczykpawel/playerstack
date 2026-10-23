@@ -2,6 +2,7 @@ export interface PlayerstackConfig {
   src: string;
   poster?: string;
   title?: string;
+  preload?: "none" | "metadata" | "auto";
   /**
    * Opt-in CORS mode for the inner media element. Default is unset — most
    * public MP4 hosts (W3C, GCS, plain S3, …) don't ship CORS headers, so
@@ -42,9 +43,11 @@ function readAttributes(element: HTMLElement): Partial<PlayerstackConfig> {
   const src = element.getAttribute("src");
   const poster = element.getAttribute("poster");
   const title = element.getAttribute("title");
+  const preload = element.getAttribute("preload");
   if (src !== null) result.src = src;
   if (poster !== null) result.poster = poster;
   if (title !== null) result.title = title;
+  if (preload === "none" || preload === "metadata" || preload === "auto") result.preload = preload;
   return result;
 }
 

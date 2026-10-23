@@ -124,6 +124,14 @@ describe("autopreviewPlugin", () => {
     expect(ctx.playSpy).not.toHaveBeenCalled();
   });
 
+  it("does not let viewport preview override preload none", async () => {
+    const ctx = makeContext({ preload: "none", preview: { enabled: true } });
+    await autopreviewPlugin.init(ctx);
+    observers[0]?.trigger(true);
+    expect(ctx.playSpy).not.toHaveBeenCalled();
+    expect(observers).toHaveLength(0);
+  });
+
   it("destroy disconnects the observer", async () => {
     const ctx = makeContext({ preview: { enabled: true } });
     await autopreviewPlugin.init(ctx);

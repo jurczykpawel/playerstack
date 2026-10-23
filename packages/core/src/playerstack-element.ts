@@ -16,7 +16,7 @@ import { createPluginRegistry, type PlayerstackPlugin } from "./plugins";
 import { isSafeHttpUrl } from "./safe-html";
 import { ensureMediaElement, type MediaElementTag } from "./providers";
 
-const OBSERVED_ATTRS = ["src", "poster", "title"] as const;
+const OBSERVED_ATTRS = ["src", "poster", "title", "preload"] as const;
 
 export type { MediaElementTag } from "./providers";
 
@@ -82,6 +82,8 @@ export class PlayerstackElement extends HTMLElement {
       if (this.initializing) this.destroyRegistry?.();
       return;
     }
+    if (name === "preload" && value !== null && !["none", "metadata", "auto"].includes(value))
+      return;
     if (value === null) {
       this.mediaPlayer.removeAttribute(name);
       return;
@@ -186,6 +188,11 @@ export class PlayerstackElement extends HTMLElement {
     if (this.pendingAttrs.size === 0) return config;
     const next = { ...config };
     for (const [name, value] of this.pendingAttrs) {
+      if (name === "preload") {
+        if (value === null) delete next.preload;
+        else if (value === "none" || value === "metadata" || value === "auto") next.preload = value;
+        continue;
+      }
       // `src` is required; removing it mid-boot keeps the configured source.
       if (value === null && name !== "src") delete next[name as "poster" | "title"];
       else if (value !== null) next[name as "src" | "poster" | "title"] = value;
@@ -217,6 +224,9 @@ export class PlayerstackElement extends HTMLElement {
       mediaEl.setAttribute("crossorigin", config.crossorigin);
     }
     if (isSafeHttpUrl(config.poster)) mediaEl.setAttribute("poster", config.poster);
+    if (config.preload === "none" || config.preload === "metadata" || config.preload === "auto") {
+      mediaEl.setAttribute("preload", config.preload);
+    }
     if (config.title) mediaEl.setAttribute("title", config.title);
     mediaEl.style.width = "100%";
     mediaEl.style.height = "100%";
@@ -240,7 +250,9 @@ export class PlayerstackElement extends HTMLElement {
     // for the browser autoplay policy to honor them.
     const preview = (config as { preview?: { enabled?: boolean; loopUntilInteraction?: boolean } })
       .preview;
-    if (preview?.enabled) {
+    const reducedMotion =
+      typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (preview?.enabled && config.preload !== "none" && !reducedMotion) {
       mediaEl.setAttribute("muted", "");
       mediaEl.setAttribute("autoplay", "");
       if (preview.loopUntilInteraction !== false) {

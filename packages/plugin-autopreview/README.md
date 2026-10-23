@@ -50,6 +50,8 @@ Playerstack.use(autopreviewPlugin).define();
 - When the player leaves the viewport, calls `pause()`.
 - If the user has `prefers-reduced-motion: reduce`, the plugin **does nothing** — no observer, no autoplay.
 
+- If top-level `preload` is `"none"`, preview is disabled so viewport entry does not start a media request. User playback remains available.
+
 ## Events
 
 None.
