@@ -29,7 +29,7 @@ That's it. The custom element registers itself, parses the URL, mounts the right
 
 ## Loading and motion preferences
 
-Set `preload="none"` on `<player-stack>` or `"preload":"none"` in `data-config` to defer native MP4 loading until playback. Supported values are `none`, `metadata`, and `auto`; JSON configuration takes precedence over the attribute. When omitted, the browser keeps its default loading behavior.
+Set `preload="none"` on `<player-stack>` or `"preload":"none"` in `data-config` to defer native MP4 loading until playback. Supported values are `none`, `metadata`, and `auto`; JSON configuration takes precedence over the attribute. During asynchronous initialization, changes to observed attributes (`src`, `poster`, `title`, `preload`) override JSON values; removing `src` keeps the configured source, while invalid `preload` values are ignored. When omitted, the browser keeps its default loading behavior.
 
 `preload: "none"` disables automatic previews so autoplay cannot trigger a download before interaction. With other loading modes, previews respect `prefers-reduced-motion: reduce` before the media element connects. Users can still start playback with the controls or the branded thumbnail's named native button, using Enter or Space.
 
