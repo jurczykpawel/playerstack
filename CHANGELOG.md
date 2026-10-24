@@ -6,6 +6,8 @@ All notable changes to Playerstack will be documented in this file.
 
 ### Fixed
 
+- Keep covered player controls out of the tab order and move focus to play when a branded thumbnail is activated.
+
 - Forward the `preload` configuration and attribute to the media element before connection; `none` also disables automatic previews.
 - Respect reduced motion before setting preview autoplay attributes.
 - Give branded thumbnails one named native keyboard button, supporting Enter and Space while keeping the whole thumbnail clickable.

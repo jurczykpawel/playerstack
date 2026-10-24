@@ -44,6 +44,34 @@ describe("brandedThumbPlugin", () => {
     expect(ctx.container.querySelector(".playerstack-thumb")).toBeNull();
   });
 
+  it("makes the controller inert until activation or destroy", async () => {
+    for (const action of ["activate", "destroy"]) {
+      const ctx = makeContext({ brandedThumb: { enabled: true } });
+      const controller = ctx.container.querySelector("media-controller")!;
+      await brandedThumbPlugin.init(ctx);
+      expect(controller.hasAttribute("inert")).toBe(true);
+      if (action === "activate") ctx.container.querySelector<HTMLButtonElement>("button")!.click();
+      else brandedThumbPlugin.destroy!(ctx);
+      expect(controller.hasAttribute("inert")).toBe(false);
+    }
+  });
+
+  it("moves focus to play after activation, falling back to the controller", async () => {
+    for (const withPlay of [true, false]) {
+      const ctx = makeContext({ brandedThumb: { enabled: true } });
+      const controller = ctx.container.querySelector<HTMLElement>("media-controller")!;
+      controller.tabIndex = 0;
+      const play = document.createElement("media-play-button");
+      play.tabIndex = 0;
+      if (withPlay) controller.appendChild(play);
+      await brandedThumbPlugin.init(ctx);
+      const button = ctx.container.querySelector<HTMLButtonElement>("button")!;
+      button.focus();
+      button.click();
+      expect(document.activeElement).toBe(withPlay ? play : controller);
+    }
+  });
+
   it("has a stable name", () => {
     expect(brandedThumbPlugin.name).toBe("branded-thumb");
   });

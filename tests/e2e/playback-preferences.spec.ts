@@ -99,6 +99,28 @@ test("normal motion preview actually plays", async ({ page }) => {
   await expect(page.locator("video")).toHaveJSProperty("muted", true);
 });
 
+test("thumbnail is the only Tab stop across the entire player", async ({ page }) => {
+  await open(page, { brandedThumb: { enabled: true, playLabel: "Watch demo" } });
+  await expect(page.locator(".playerstack-thumb")).toBeVisible();
+  await page.locator("#before").focus();
+  const stops: string[] = [];
+  for (let i = 0; i < 20; i++) {
+    await page.keyboard.press("Tab");
+    if (await page.locator("#after").evaluate((el) => el === document.activeElement)) break;
+    stops.push(
+      await page.evaluate(() => {
+        let active = document.activeElement;
+        while (active?.shadowRoot?.activeElement) active = active.shadowRoot.activeElement;
+        return active?.closest("player-stack") || document.activeElement?.closest("player-stack")
+          ? `${active?.tagName}:${active?.getAttribute("aria-label")}`
+          : "outside player";
+      }),
+    );
+  }
+  await expect(page.locator("#after")).toBeFocused();
+  expect(stops).toEqual(["BUTTON:Watch demo"]);
+});
+
 for (const key of ["Enter", "Space"]) {
   test(`thumbnail has one named Tab stop and plays with ${key}`, async ({ page }) => {
     await open(page, { brandedThumb: { enabled: true, playLabel: "Watch demo" } });
@@ -116,6 +138,9 @@ for (const key of ["Enter", "Space"]) {
     await page.keyboard.press(key);
     await expect(overlay).toHaveCount(0);
     await playing(page);
+    await expect(page.locator("media-play-button")).toBeFocused();
+    await page.keyboard.press("Space");
+    await expect(page.locator("video")).toHaveJSProperty("paused", true);
   });
 }
 

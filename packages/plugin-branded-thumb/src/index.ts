@@ -78,6 +78,9 @@ export const brandedThumbPlugin: PlayerstackPlugin = {
       }
     }
 
+    const controller = ctx.mediaPlayer.closest<HTMLElement>("media-controller");
+    controller?.setAttribute("inert", "");
+
     const onClick = () => {
       const state = states.get(ctx);
       // In clickToLoad mode the src was deferred — restore it now so the
@@ -115,6 +118,7 @@ export const brandedThumbPlugin: PlayerstackPlugin = {
       ctx.mediaPlayer.addEventListener("canplay", tryPlay, { once: true });
       ctx.events.emit("thumb:click", undefined);
       state?.cleanup();
+      (controller?.querySelector<HTMLElement>("media-play-button") ?? controller)?.focus();
     };
     overlay.addEventListener("click", onClick);
 
@@ -127,6 +131,7 @@ export const brandedThumbPlugin: PlayerstackPlugin = {
     const cleanup = () => {
       overlay.removeEventListener("click", onClick);
       overlay.remove();
+      controller?.removeAttribute("inert");
       states.delete(ctx);
     };
     states.set(ctx, { overlay, heldSrc, cleanup });
