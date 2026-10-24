@@ -81,7 +81,7 @@ export const brandedThumbPlugin: PlayerstackPlugin = {
     const controller = ctx.mediaPlayer.closest<HTMLElement>("media-controller");
     controller?.setAttribute("inert", "");
 
-    const onClick = () => {
+    const onClick = (event: MouseEvent) => {
       const state = states.get(ctx);
       // In clickToLoad mode the src was deferred — restore it now so the
       // element starts loading. In cover-only mode (clickToLoad: false) src is
@@ -118,7 +118,13 @@ export const brandedThumbPlugin: PlayerstackPlugin = {
       ctx.mediaPlayer.addEventListener("canplay", tryPlay, { once: true });
       ctx.events.emit("thumb:click", undefined);
       state?.cleanup();
-      (controller?.querySelector<HTMLElement>("media-play-button") ?? controller)?.focus();
+      if (event.detail === 0) {
+        const playButton = controller?.querySelector<HTMLElement>("media-play-button");
+        playButton?.focus();
+        if (!playButton || controller?.ownerDocument.activeElement !== playButton) {
+          controller?.focus();
+        }
+      }
     };
     overlay.addEventListener("click", onClick);
 

@@ -150,3 +150,27 @@ test("thumbnail background click starts playback", async ({ page }) => {
   await expect(page.locator(".playerstack-thumb")).toHaveCount(0);
   await playing(page);
 });
+
+for (const key of ["Enter", "Space"]) {
+  test(`thumbnail falls back to controller with hidden play after ${key}`, async ({ page }) => {
+    await open(page, { brandedThumb: { enabled: true }, controls: { show: ["progress"] } });
+    await expect(page.locator("media-play-button")).toBeHidden();
+    await page.getByRole("button", { name: "Play video", exact: true }).focus();
+    await page.keyboard.press(key);
+    await playing(page);
+    await expect(page.locator("media-controller")).toBeFocused();
+    await page.keyboard.press("Space");
+    await expect(page.locator("video")).toHaveJSProperty("paused", true);
+  });
+}
+
+for (const target of [".playerstack-thumb-play", ".playerstack-thumb"]) {
+  test(`thumbnail mouse click does not move focus to play (${target})`, async ({ page }) => {
+    await open(page, { brandedThumb: { enabled: true } });
+    await page
+      .locator(target)
+      .click(target === ".playerstack-thumb" ? { position: { x: 10, y: 10 } } : {});
+    await playing(page);
+    await expect(page.locator("media-play-button")).not.toBeFocused();
+  });
+}

@@ -6,7 +6,7 @@ All notable changes to Playerstack will be documented in this file.
 
 ### Fixed
 
-- Keep covered player controls out of the tab order and move focus to play when a branded thumbnail is activated.
+- Keep covered player controls out of the tab order and move focus to play (or the controller when play is hidden) after keyboard activation of a branded thumbnail; mouse activation leaves focus to the browser. Visible controls from other plugins remain in the tab order.
 
 - Forward the `preload` configuration and attribute to the media element before connection; `none` also disables automatic previews.
 - Respect reduced motion before setting preview autoplay attributes.

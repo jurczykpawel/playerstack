@@ -72,6 +72,19 @@ describe("brandedThumbPlugin", () => {
     }
   });
 
+  it("leaves mouse activation focus to the browser", async () => {
+    const ctx = makeContext({ brandedThumb: { enabled: true } });
+    const controller = ctx.container.querySelector<HTMLElement>("media-controller")!;
+    const play = document.createElement("media-play-button");
+    play.tabIndex = 0;
+    controller.appendChild(play);
+    await brandedThumbPlugin.init(ctx);
+    ctx.container
+      .querySelector("button")!
+      .dispatchEvent(new MouseEvent("click", { bubbles: true, detail: 1 }));
+    expect(document.activeElement).not.toBe(play);
+  });
+
   it("has a stable name", () => {
     expect(brandedThumbPlugin.name).toBe("branded-thumb");
   });
