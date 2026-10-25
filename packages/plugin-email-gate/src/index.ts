@@ -12,6 +12,13 @@ export type { LeadsChallenge, LeadsSubmission } from "./types";
 export interface EmailGateConfig {
   enabled?: boolean;
   privacy?: { text: string; linkText?: string; href?: string };
+  marketingConsent?: {
+    text: string;
+    version: string;
+    linkText?: string;
+    href?: string;
+    required?: boolean;
+  };
   product?: string;
   dismissible?: boolean;
   messages?: Partial<EmailGateMessages>;
@@ -55,6 +62,7 @@ export interface EmailGateMessages {
   rateLimit: string;
   networkError: string;
   dismiss: string;
+  consentRequired: string;
 }
 
 const defaultMessages: EmailGateMessages = {
@@ -71,6 +79,7 @@ const defaultMessages: EmailGateMessages = {
   rateLimit: "Too many requests. Please try again later.",
   networkError: "Could not complete verification. Please retry.",
   dismiss: "Skip",
+  consentRequired: "Please select the consent checkbox.",
 };
 
 function messagesFor(cfg: EmailGateConfig): EmailGateMessages {
@@ -154,6 +163,23 @@ export const emailGatePlugin: PlayerstackPlugin = {
     ) {
       console.warn(
         "[playerstack] email-gate: product must contain 1–100 characters. Plugin disabled.",
+      );
+      return;
+    }
+
+    const consent = cfg.marketingConsent;
+    if (
+      consent !== undefined &&
+      (!consent ||
+        typeof consent.text !== "string" ||
+        !consent.text.trim() ||
+        consent.text.length > 500 ||
+        typeof consent.version !== "string" ||
+        !consent.version.trim() ||
+        consent.version.length > 64)
+    ) {
+      console.warn(
+        "[playerstack] email-gate: marketingConsent requires text (1–500 characters) and version (1–64). Plugin disabled.",
       );
       return;
     }
@@ -280,24 +306,30 @@ function renderOverlay(
     const privacy = document.createElement("p");
     privacy.id = `playerstack-email-privacy-${crypto.getRandomValues(new Uint32Array(2)).join("-")}`;
     privacy.textContent = cfg.privacy.text;
-    const { href, linkText } = cfg.privacy;
-    let safe = false;
-    if (href) {
-      try {
-        safe = ["http:", "https:"].includes(new URL(href, document.baseURI).protocol);
-      } catch {
-        /* Omit invalid links. */
-      }
-    }
-    if (safe && href && linkText) {
-      const link = document.createElement("a");
-      link.href = href;
-      link.textContent = linkText;
-      link.rel = "noopener noreferrer";
-      privacy.append(" ", link);
-    }
+    appendConfiguredLink(privacy, cfg.privacy);
     input.setAttribute("aria-describedby", privacy.id);
     form.append(privacy);
+  }
+
+  const consentInput = cfg.marketingConsent ? document.createElement("input") : undefined;
+  if (consentInput && cfg.marketingConsent) {
+    const row = document.createElement("div");
+    row.style.cssText = "font-size:13px;text-align:left;";
+    const label = document.createElement("label");
+    label.style.cssText = "display:flex;align-items:flex-start;gap:8px;cursor:pointer;";
+    consentInput.type = "checkbox";
+    consentInput.name = "marketingConsent";
+    consentInput.required = cfg.marketingConsent.required === true;
+    consentInput.style.cssText = "flex-shrink:0;margin:3px 0 0;";
+    const text = document.createElement("span");
+    text.textContent = cfg.marketingConsent.text;
+    label.append(consentInput, text);
+    row.append(label);
+    appendConfiguredLink(row, cfg.marketingConsent);
+    form.append(row);
+    consentInput.addEventListener("change", () => {
+      if (isActive() && consentInput.checked) consentInput.removeAttribute("aria-invalid");
+    });
   }
 
   // Honeypot — invisible field. Bots fill every input; humans don't see this.
@@ -365,6 +397,22 @@ function renderOverlay(
       return;
     }
 
+    if (consentInput?.required && !consentInput.checked) {
+      status.textContent = messages.consentRequired;
+      consentInput.setAttribute("aria-invalid", "true");
+      consentInput.focus();
+      return;
+    }
+    const consent: ConsentFields = !cfg.marketingConsent
+      ? {}
+      : consentInput?.checked
+        ? {
+            marketingConsent: true,
+            consentVersion: cfg.marketingConsent.version,
+            consentText: cfg.marketingConsent.text,
+          }
+        : { marketingConsent: false };
+
     submit.disabled = true;
     status.textContent = messages.verifying;
 
@@ -377,6 +425,7 @@ function renderOverlay(
       status,
       submit,
       instance,
+      consent,
     }).catch(() => {
       if (!isActive() || !overlay.isConnected) return;
       submit.disabled = false;
@@ -388,6 +437,8 @@ function renderOverlay(
   return overlay;
 }
 
+type ConsentFields = Pick<LeadsSubmission, "marketingConsent" | "consentVersion" | "consentText">;
+
 interface SubmitArgs {
   cfg: EmailGateConfig;
   ctx: PlayerstackContext;
@@ -397,10 +448,11 @@ interface SubmitArgs {
   status: HTMLElement;
   submit: HTMLButtonElement;
   instance: GateState;
+  consent: ConsentFields;
 }
 
 async function handleSubmit(args: SubmitArgs): Promise<void> {
-  const { cfg, ctx, memoKey, email, overlay, status, submit, instance } = args;
+  const { cfg, ctx, memoKey, email, overlay, status, submit, instance, consent } = args;
   const release = () => releaseOverlay(instance);
 
   const messages = messagesFor(cfg);
@@ -411,6 +463,7 @@ async function handleSubmit(args: SubmitArgs): Promise<void> {
     if (!active()) return;
     ctx.events.emit("email-gate:submit", {
       email,
+      ...consent,
       ...(cfg.product === undefined ? {} : { product: cfg.product }),
     });
     if (!active()) return;
@@ -479,6 +532,7 @@ async function handleSubmit(args: SubmitArgs): Promise<void> {
   const submission: LeadsSubmission = {
     email,
     src: ctx.config.src,
+    ...consent,
     ...(cfg.product === undefined ? {} : { product: cfg.product }),
     nonce: challenge.nonce,
     altcha: cfg.altchaFormat === "base64" ? encodePayload(payload) : payload,
@@ -494,6 +548,24 @@ async function handleSubmit(args: SubmitArgs): Promise<void> {
     return;
   }
   success();
+}
+
+function appendConfiguredLink(
+  parent: HTMLElement,
+  config: { href?: string; linkText?: string },
+): void {
+  const { href, linkText } = config;
+  if (!href || !linkText) return;
+  try {
+    if (!["http:", "https:"].includes(new URL(href, document.baseURI).protocol)) return;
+  } catch {
+    return;
+  }
+  const link = document.createElement("a");
+  link.href = href;
+  link.textContent = linkText;
+  link.rel = "noopener noreferrer";
+  parent.append(" ", link);
 }
 
 function isChallenge(value: unknown): value is LeadsChallenge {

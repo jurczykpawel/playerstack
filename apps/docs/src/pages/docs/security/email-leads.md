@@ -107,3 +107,13 @@ async function submitLead(
 Every failure leaves the form available for another attempt with a fresh challenge and nonce. Closing or destroying a form stops later client success and further POSTs; an already-sent POST may still be processed by the backend. Define backend deduplication independently of nonce lifetime.
 
 For a contact form after playback, use `at: "after"`, provide privacy text/link and the product identifier, and choose `remember: false` or an explicit `rememberDays` retention period. These settings do not replace the application's privacy notice or server-side retention policy.
+
+## Marketing consent and integrator settings
+
+The optional `marketingConsent` checkbox is unchecked and not required by default. When absent from configuration, POST omits `marketingConsent`, `consentVersion`, and `consentText`. When configured but unchecked it sends only `marketingConsent: false`. When checked it sends `marketingConsent: true` and the configured version and exact label text (without its link). These fields do not change the challenge or nonce contract. Open mode emits the same fields on the event bus without making a POST.
+
+After atomically consuming the nonce, validate the consent boolean and, when true, the version (1–64 characters) and text (1–500 characters). Only true may authorize a list signup. Record time on the server. Verify the version against your own configured wording and retain its canonical text; client `consentText` is supplemental input. A list-only Sellf form uses `marketingConsent.required: true`; the browser blocks unchecked submission before networking, shows `messages.consentRequired`, and focuses the invalid checkbox. The server must enforce its own required-consent policy too.
+
+Allow the host page's origin explicitly (Sellf: seller domains), otherwise return 403. `product` is the backend slug or UUID (1–100 characters), checked against the allowlist and nonce binding. `src` is only recording/context data, never authorization, product selection, or a redirect target.
+
+Set `messages.success` for the backend's flow, for example “Sprawdź pocztę…” when email confirmation is required. All 2xx responses succeed regardless of body: empty, non-JSON, or `{ "status": "check_email" }`. PlayerStack does not parse the success body, and the message must not imply that access is already granted when confirmation is pending.

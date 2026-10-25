@@ -28,6 +28,12 @@ Part of [Playerstack](https://github.com/jurczykpawel/playerstack). The standalo
         "linkText": "Informacja o prywatności",
         "href": "/privacy/"
       },
+      "marketingConsent": {
+        "text": "Chcę otrzymywać wiadomości o nowych materiałach i produktach.",
+        "version": "2026-10",
+        "linkText": "Informacja o prywatności",
+        "href": "/privacy/"
+      },
       "messages": {
         "title": "Chcesz coś takiego u siebie? Zostaw maila",
         "emailLabel": "Adres email",
@@ -41,7 +47,8 @@ Part of [Playerstack](https://github.com/jurczykpawel/playerstack). The standalo
         "rejected": "Zgłoszenie odrzucono. Spróbuj ponownie.",
         "rateLimit": "Za dużo prób. Spróbuj później.",
         "networkError": "Nie udało się wysłać zgłoszenia. Spróbuj ponownie.",
-        "dismiss": "Pomiń"
+        "dismiss": "Pomiń",
+        "consentRequired": "Zaznacz zgodę, aby zapisać się na listę."
       }
     }
   }'
@@ -54,23 +61,24 @@ For open mode, omit **both** endpoint URLs. For a pre-roll gate use `at: "before
 
 ## Config
 
-| Field          | Type                                                 | Default                               | Description                                                                                                                                                                       |
-| -------------- | ---------------------------------------------------- | ------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `enabled`      | `boolean`                                            | `false`                               | Enable the plugin.                                                                                                                                                                |
-| `at`           | `"before" \| "after" \| number`                      | `"before"` unless `atPercent` is set  | Initialization, `ended`, or elapsed seconds.                                                                                                                                      |
-| `atPercent`    | `number`                                             | —                                     | Threshold percentage of a known duration. With numeric `at`, either threshold triggers the gate; explicit `before`/`after` takes precedence.                                      |
-| `webhookUrl`   | `string`                                             | —                                     | Absolute HTTP(S) submission endpoint; requires `challengeUrl`.                                                                                                                    |
-| `challengeUrl` | `string`                                             | —                                     | Absolute HTTP(S) challenge endpoint; requires `webhookUrl`.                                                                                                                       |
-| `altchaFormat` | `"object" \| "base64"`                               | `"object"`                            | Format of the POST `altcha` field. Mailstack/Selfware uses `base64`.                                                                                                              |
-| `product`      | `string`                                             | —                                     | Separate product identifier, 1–100 characters. Empty, whitespace-only, or longer values disable the plugin with `console.warn`.                                                   |
-| `privacy`      | `{ text: string; linkText?: string; href?: string }` | —                                     | Text below the email input, connected with `aria-describedby`. Text is rendered literally. A link requires text and an HTTP(S) or relative URL; uses `rel="noopener noreferrer"`. |
-| `dismissible`  | `boolean`                                            | `true` for `after`, otherwise `false` | Show a dismissal button and allow Escape within the overlay.                                                                                                                      |
-| `messages`     | `Partial<EmailGateMessages>`                         | English (table below)                 | Override any viewer-facing message, including accessible input label and live status.                                                                                             |
-| `title`        | `string`                                             | `"Watch the rest"`                    | Legacy heading override; `messages.title` takes precedence.                                                                                                                       |
-| `buttonLabel`  | `string`                                             | `"Continue watching →"`               | Legacy submit override; `messages.submit` takes precedence.                                                                                                                       |
-| `storageKey`   | `string`                                             | `"playerstack:email-gate"`            | Memo prefix; the full key is `<prefix>:<src>`.                                                                                                                                    |
-| `remember`     | `boolean`                                            | `true`                                | Store a timestamp after success; `false` performs no storage reads or writes.                                                                                                     |
-| `rememberDays` | `number`                                             | No expiry                             | Lifetime in days measured from successful submission. Expired entries are deleted on initialization. Use a finite non-negative value.                                             |
+| Field              | Type                                                                                      | Default                               | Description                                                                                                                                                                          |
+| ------------------ | ----------------------------------------------------------------------------------------- | ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `enabled`          | `boolean`                                                                                 | `false`                               | Enable the plugin.                                                                                                                                                                   |
+| `at`               | `"before" \| "after" \| number`                                                           | `"before"` unless `atPercent` is set  | Initialization, `ended`, or elapsed seconds.                                                                                                                                         |
+| `atPercent`        | `number`                                                                                  | —                                     | Threshold percentage of a known duration. With numeric `at`, either threshold triggers the gate; explicit `before`/`after` takes precedence.                                         |
+| `webhookUrl`       | `string`                                                                                  | —                                     | Absolute HTTP(S) submission endpoint; requires `challengeUrl`.                                                                                                                       |
+| `challengeUrl`     | `string`                                                                                  | —                                     | Absolute HTTP(S) challenge endpoint; requires `webhookUrl`.                                                                                                                          |
+| `altchaFormat`     | `"object" \| "base64"`                                                                    | `"object"`                            | Format of the POST `altcha` field. Mailstack/Selfware uses `base64`.                                                                                                                 |
+| `product`          | `string`                                                                                  | —                                     | Separate product identifier, 1–100 characters. Empty, whitespace-only, or longer values disable the plugin with `console.warn`.                                                      |
+| `privacy`          | `{ text: string; linkText?: string; href?: string }`                                      | —                                     | Text below the email input, connected with `aria-describedby`. Text is rendered literally. A link requires text and an HTTP(S) or relative URL; uses `rel="noopener noreferrer"`.    |
+| `marketingConsent` | `{ text: string; version: string; linkText?: string; href?: string; required?: boolean }` | —                                     | Optional checkbox; unchecked and not required by default. Text: 1–500 characters; version: 1–64. Invalid/blank values disable the plugin with a warning. Link rules match `privacy`. |
+| `dismissible`      | `boolean`                                                                                 | `true` for `after`, otherwise `false` | Show a dismissal button and allow Escape within the overlay.                                                                                                                         |
+| `messages`         | `Partial<EmailGateMessages>`                                                              | English (table below)                 | Override any viewer-facing message, including accessible input label and live status.                                                                                                |
+| `title`            | `string`                                                                                  | `"Watch the rest"`                    | Legacy heading override; `messages.title` takes precedence.                                                                                                                          |
+| `buttonLabel`      | `string`                                                                                  | `"Continue watching →"`               | Legacy submit override; `messages.submit` takes precedence.                                                                                                                          |
+| `storageKey`       | `string`                                                                                  | `"playerstack:email-gate"`            | Memo prefix; the full key is `<prefix>:<src>`.                                                                                                                                       |
+| `remember`         | `boolean`                                                                                 | `true`                                | Store a timestamp after success; `false` performs no storage reads or writes.                                                                                                        |
+| `rememberDays`     | `number`                                                                                  | No expiry                             | Lifetime in days measured from successful submission. Expired entries are deleted on initialization. Use a finite non-negative value.                                                |
 
 Storage errors do not prevent the form or playback. Existing timestamp memos remain compatible; without `rememberDays`, existing nonempty memos do not expire. No email or product is stored in the memo. Hosts supply privacy wording and retention appropriate to their service.
 
@@ -78,21 +86,68 @@ Storage errors do not prevent the form or playback. Existing timestamp memos rem
 
 The input has an accessible label. Validation and progress are announced in a polite `role="status"` region. On success the overlay is removed and the success region remains until the player is destroyed.
 
-| Key            | English default                                |
-| -------------- | ---------------------------------------------- |
-| `title`        | Watch the rest                                 |
-| `emailLabel`   | Email address                                  |
-| `placeholder`  | you@example.com                                |
-| `submit`       | Continue watching →                            |
-| `verifying`    | Verifying…                                     |
-| `solving`      | Solving challenge…                             |
-| `submitting`   | Submitting…                                    |
-| `success`      | Thank you. Your email was received.            |
-| `invalidEmail` | Please enter a valid email address.            |
-| `rejected`     | Submission rejected. Please retry.             |
-| `rateLimit`    | Too many requests. Please try again later.     |
-| `networkError` | Could not complete verification. Please retry. |
-| `dismiss`      | Skip                                           |
+| Key               | English default                                |
+| ----------------- | ---------------------------------------------- |
+| `title`           | Watch the rest                                 |
+| `emailLabel`      | Email address                                  |
+| `placeholder`     | you@example.com                                |
+| `submit`          | Continue watching →                            |
+| `verifying`       | Verifying…                                     |
+| `solving`         | Solving challenge…                             |
+| `submitting`      | Submitting…                                    |
+| `success`         | Thank you. Your email was received.            |
+| `invalidEmail`    | Please enter a valid email address.            |
+| `rejected`        | Submission rejected. Please retry.             |
+| `rateLimit`       | Too many requests. Please try again later.     |
+| `networkError`    | Could not complete verification. Please retry. |
+| `dismiss`         | Skip                                           |
+| `consentRequired` | Please select the consent checkbox.            |
+
+## Marketing consent
+
+Consent is separate from the contact request. The checkbox starts unchecked. Its visible label uses the configured `text` literally, without HTML; clicking the label toggles the checkbox. An optional link is separate from the label. The checkbox follows the email/privacy block in Tab order, before submit.
+
+Both the `email-gate:submit` event and hardened POST include the same snapshot taken on submit:
+
+| Configuration / selection | Consent fields                                                                                              |
+| ------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| Not configured            | All three fields omitted.                                                                                   |
+| Configured, unchecked     | `marketingConsent: false`; `consentVersion` and `consentText` omitted.                                      |
+| Checked                   | `marketingConsent: true`, `consentVersion: <version>`, `consentText: <exact configured text without link>`. |
+
+Open mode emits these fields on the bus without a network request. Hardened mode adds them to the existing POST in both object and base64 ALTCHA formats. Consent does not change the challenge URL, nonce handling, or memo. Retry preserves checkbox state; a new attempt takes a new snapshot. No consent text or selection is stored in the player memo.
+
+Set `marketingConsent.required: true` for a list-only signup that requires consent. The plugin sets the native input `required` attribute and blocks submission before any GET or POST when unchecked. It shows `messages.consentRequired`, sets `aria-invalid="true"`, and focuses the checkbox. Selecting it clears `aria-invalid`. With the default `required: false`, an unchecked form is still sent as a contact request.
+
+The backend must validate the consent boolean and the length of version/text. Only `marketingConsent === true` can authorize its list-signup path. Record consent time on the server together with the verified wording version and canonical server-side text. Client `consentText` describes what the page displayed; treat it as supplemental input, not trusted proof of your server's current wording.
+
+## Integrator requirements
+
+- Allow the page's exact origin on the backend. For Sellf this is a seller domain; an unlisted domain produces 403 and the configured rejection message.
+- Set `product` to the backend product slug or UUID (1–100 characters). Product selection and authorization belong to the backend.
+- `src` is recording/context data only. Never authorize access, select a product, or construct a redirect from it.
+- Set `messages.success` to match the backend workflow. Every 2xx response is success regardless of body, including empty, non-JSON, or `{ "status": "check_email" }`. The plugin does not parse a successful response body. A backend that requires email confirmation should say so; 2xx does not itself mean access was granted.
+
+For a Sellf list-only form, omit `product`, require consent, and provide endpoint URLs for that instance. For a product form use its slug/UUID:
+
+```ts
+emailGate: {
+  enabled: true,
+  at: "after",
+  product: "free-course",
+  webhookUrl: "https://your-sellf.example/api/leads/submit",
+  challengeUrl: "https://your-sellf.example/api/leads/challenge",
+  marketingConsent: {
+    text: "Chcę otrzymywać wiadomości o nowych materiałach i produktach.",
+    version: "2026-10",
+    required: true,
+  },
+  messages: {
+    success: "Sprawdź pocztę i kliknij link w wiadomości, aby potwierdzić zgłoszenie.",
+    consentRequired: "Zaznacz zgodę, aby zapisać się na listę.",
+  },
+}
+```
 
 ## Hardened mode contract
 
@@ -178,10 +233,10 @@ An after-video form moves player focus into the email field, including body focu
 
 ## Events
 
-| Name                 | Payload                               | When                                                                             |
-| -------------------- | ------------------------------------- | -------------------------------------------------------------------------------- |
-| `email-gate:submit`  | `{ email: string; product?: string }` | POST accepted, or valid open-mode submission. Product omitted if not configured. |
-| `email-gate:dismiss` | `{}`                                  | Dismissal button or Escape when dismissible; no memo.                            |
+| Name                 | Payload                                                                                                          | When                                                                             |
+| -------------------- | ---------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| `email-gate:submit`  | `{ email: string; product?: string; marketingConsent?: boolean; consentVersion?: string; consentText?: string }` | POST accepted, or valid open-mode submission. Product omitted if not configured. |
+| `email-gate:dismiss` | `{}`                                                                                                             | Dismissal button or Escape when dismissible; no memo.                            |
 
 ## License
 

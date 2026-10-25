@@ -36,6 +36,12 @@ export interface LeadsSubmission {
   src: string;
   /** Optional product identifier, 1–100 characters; validated by the server. */
   product?: string;
+  /** Omitted when not configured; false for contact only, true when selected. */
+  marketingConsent?: boolean;
+  /** Consent wording version, present only when selected. */
+  consentVersion?: string;
+  /** Exact configured label text, without its optional link; present only when selected. */
+  consentText?: string;
   /** Echoed nonce from the challenge — must be marked consumed on the first POST carrying it, regardless of outcome. */
   nonce: string;
   /** ALTCHA object by default, or base64 UTF-8 JSON when `altchaFormat` is "base64". */

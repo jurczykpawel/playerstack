@@ -10,6 +10,7 @@ async function open(
   email?: "before" | "after",
   cta = true,
   localized = false,
+  consentMode?: "optional" | "required",
 ) {
   await page.route("**/*", async (route) => {
     const url = new URL(route.request().url());
@@ -35,6 +36,12 @@ async function open(
         nonce: "test-nonce",
         altcha: { number: 0 },
       });
+      if (consentMode)
+        expect(payload).toMatchObject({
+          marketingConsent: true,
+          consentVersion: "2026-10",
+          consentText: "Chcę otrzymywać wiadomości o nowych materiałach.",
+        });
       return route.fulfill({ status: 204 });
     }
     if (url.pathname === "/demo.mp4") return route.fulfill({ body: mp4, contentType: "video/mp4" });
@@ -45,7 +52,7 @@ async function open(
       });
     return route.fulfill({
       contentType: "text/html",
-      body: `<!doctype html><html lang="en"><style>body{margin:16px}player-stack{display:block;width:min(100%,720px);aspect-ratio:16/9}</style><button id="before">Before</button><player-stack src="${origin}/demo.mp4" data-config='${JSON.stringify({ preload: "none", brandedThumb: { enabled: true, clickToLoad: true, playLabel: "Watch demo" }, ctaEnd: { enabled: cta, button: { label: "Offer", url: "https://example.com" }, showReplay: true }, ...(email ? { emailGate: { enabled: true, at: email, dismissible: true, remember: false, product: "Demo", webhookUrl: `${origin}/lead`, challengeUrl: `${origin}/challenge`, ...(localized ? { privacy: { text: "Zostaw maila, a odezwę się w sprawie podobnego rozwiązania.", linkText: "Polityka prywatności", href: "/privacy" }, messages: { title: "Chcesz coś takiego u siebie? Zostaw maila", emailLabel: "Adres e-mail", submit: "Wyślij zgłoszenie", dismiss: "Pomiń" } } : {}) } } : {}), ...(intro ? { introCard: { enabled: true, dismissible: true, title: "Welcome" } } : {}) })}'></player-stack><button id="after">After</button><script src="/assets/playerstack.min.js"></script></html>`,
+      body: `<!doctype html><html lang="en"><style>body{margin:16px}player-stack{display:block;width:min(100%,720px);aspect-ratio:16/9}</style><button id="before">Before</button><player-stack src="${origin}/demo.mp4" data-config='${JSON.stringify({ preload: "none", brandedThumb: { enabled: true, clickToLoad: true, playLabel: "Watch demo" }, ctaEnd: { enabled: cta, button: { label: "Offer", url: "https://example.com" }, showReplay: true }, ...(email ? { emailGate: { enabled: true, at: email, dismissible: true, remember: false, product: "Demo", webhookUrl: `${origin}/lead`, challengeUrl: `${origin}/challenge`, ...(consentMode ? { marketingConsent: { text: "Chcę otrzymywać wiadomości o nowych materiałach.", version: "2026-10", required: consentMode === "required" }, privacy: { text: "Kontakt w sprawie podobnego rozwiązania." } } : {}), ...(localized ? { privacy: { text: "Zostaw maila, a odezwę się w sprawie podobnego rozwiązania.", linkText: "Polityka prywatności", href: "/privacy" }, messages: { title: "Chcesz coś takiego u siebie? Zostaw maila", emailLabel: "Adres e-mail", submit: "Wyślij zgłoszenie", dismiss: "Pomiń" } } : {}) } } : {}), ...(intro ? { introCard: { enabled: true, dismissible: true, title: "Welcome" } } : {}) })}'></player-stack><button id="after">After</button><script src="/assets/playerstack.min.js"></script></html>`,
     });
   });
   await page.goto(origin);
@@ -171,6 +178,69 @@ for (const width of [390, 1440]) {
       }
       await page.keyboard.press("Shift+Tab");
       await page.keyboard.press("Escape");
+      await visibleFocus(page.locator("media-play-button"));
+    });
+    test("optional consent has visible Tab stops and Space changes its selection", async ({
+      page,
+    }) => {
+      await open(page, false, "after", false, false, "optional");
+      await page.locator(".playerstack-thumb-play").focus();
+      await page.keyboard.press("Enter");
+      await end(page);
+      const consent = page.getByRole("checkbox");
+      await expect(consent).not.toBeChecked();
+      await page.locator("#before").focus();
+      for (const target of [
+        page.locator('input[type="email"]'),
+        consent,
+        page.locator('button[type="submit"]'),
+        page.getByRole("button", { name: "Skip", exact: true }),
+        page.locator("#after"),
+      ]) {
+        await page.keyboard.press("Tab");
+        await visibleFocus(target);
+        if (await target.evaluate((el) => el.matches('input[type="checkbox"]'))) {
+          await page.keyboard.press("Space");
+          await expect(consent).toBeChecked();
+        }
+      }
+      for (const target of [
+        page.getByRole("button", { name: "Skip", exact: true }),
+        page.locator('button[type="submit"]'),
+        consent,
+        page.locator('input[type="email"]'),
+        page.locator("#before"),
+      ]) {
+        await page.keyboard.press("Shift+Tab");
+        await visibleFocus(target);
+      }
+    });
+    test("required consent blocks requests and focuses checkbox until Space accepts it", async ({
+      page,
+    }) => {
+      const requests: string[] = [];
+      page.on("request", (request) => {
+        if (/\/(challenge|lead)(\?|$)/.test(request.url())) requests.push(request.url());
+      });
+      await open(page, false, "after", false, false, "required");
+      await page.locator(".playerstack-thumb-play").focus();
+      await page.keyboard.press("Enter");
+      await end(page);
+      await page.locator('input[type="email"]').fill("viewer@example.com");
+      await page.keyboard.press("Tab");
+      await page.keyboard.press("Tab");
+      await page.keyboard.press("Enter");
+      const consent = page.getByRole("checkbox");
+      await visibleFocus(consent);
+      await expect(consent).toHaveAttribute("aria-invalid", "true");
+      expect(requests).toEqual([]);
+      await page.keyboard.press("Space");
+      await expect(consent).toBeChecked();
+      await expect(consent).not.toHaveAttribute("aria-invalid");
+      await page.keyboard.press("Tab");
+      await page.keyboard.press("Enter");
+      await expect(page.locator(".playerstack-email-gate")).toHaveCount(0);
+      expect(requests).toHaveLength(2);
       await visibleFocus(page.locator("media-play-button"));
     });
     test("email after submission exposes the remaining CTA and Enter replays", async ({ page }) => {

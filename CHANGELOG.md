@@ -6,6 +6,8 @@ All notable changes to Playerstack will be documented in this file.
 
 ### Added
 
+- Configurable marketing consent in email forms, with unchecked-by-default selection, wording/version payloads, and an optional required signup mode with translated validation.
+
 - Email-gate after-video forms (`at: "after"`), optional privacy text/link and product identifier, dismissal, translated messages, and configurable memo retention.
 - Email-gate supports object or base64 ALTCHA submissions with a fresh challenge and nonce per attempt; the README specifies the endpoint contract and response handling.
 
@@ -28,7 +30,7 @@ All notable changes to Playerstack will be documented in this file.
 
 - On 2026-10-25 at `d1c216b`, the standalone MP4 configuration with controls-policy, CTA and branded thumbnail measured 45.9 KiB gzip; adding email-gate measured 50.1 KiB (51,260 B), 60 B above the aspirational 50 KiB budget. Bun 1.4.4, zlib gzip level 9, KiB = 1024 B; sum of individually compressed downloaded JS files, excluding maps, notices, HTTP and media.
 
-- Shared controller-lock and lifecycle integration brings the same configurations to 46.2 KiB (47,258 B) and 50.5 KiB (51,700 B, 500 B above budget), using the same date, runtime and compression method.
+- Shared controller-lock, lifecycle, and consent integration brings the same configurations to 46.2 KiB (47,258 B) and 50.9 KiB (52,085 B, 885 B above budget), using the same date, runtime and compression method.
 
 ### License
 
