@@ -170,7 +170,7 @@ The public types `EmailGateConfig`, `EmailGateMessages`, `LeadsChallenge`, and `
 
 ### 1. GET challenge
 
-Every submission attempt starts with `GET <challengeUrl>`, without credentials (cookies) and `Accept: application/json`. If `product` is configured, the plugin sets a URL-encoded `product` query parameter, preserving other query parameters. The host configures the brand in `challengeUrl`.
+Every submission attempt starts with `GET <challengeUrl>`, without credentials (cookies), with `Accept: application/json`. If `product` is configured, the plugin sets a URL-encoded `product` query parameter, preserving other query parameters. The host configures the brand in `challengeUrl`.
 
 Both GET and POST use `credentials: "omit"`. For cross-origin requests, return `Access-Control-Allow-Origin` with the exact embedding origin and allow the required methods and headers in preflight responses. `Access-Control-Allow-Credentials` is not required.
 
@@ -199,7 +199,7 @@ The plugin never retains a challenge for another attempt. Every retry fetches a 
 
 ### 2. POST submission
 
-`POST <webhookUrl>` omits credentials (cookies) and `Content-Type: application/json`. `product` is omitted when not configured; it is independent of the video `src`.
+`POST <webhookUrl>` omits credentials (cookies) and sends `Content-Type: application/json`. `product` is omitted when not configured; it is independent of the video `src`.
 
 Default `altchaFormat: "object"` (compatible with existing clients):
 
