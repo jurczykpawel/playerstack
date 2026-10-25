@@ -71,7 +71,7 @@ tests/
 
 - Don't add abstractions or features beyond MVP scope without a design doc update.
 - Don't pull in React/Vue/Svelte into `@playerstack/core` or `packages/embed`. Embed must be framework-free.
-- Don't deploy on push. Releases are tagged manually until v1.0.
+- `.github/workflows/ci.yml` deploys Cloudflare Pages project `playerstack` after every push to `main`, publishing both docs and the hosted `playerstack.min.js`. Manual deployment is exceptional and must include `--commit-hash`. Releases are tagged manually until v1.0.
 
 ## Playback preferences
 
