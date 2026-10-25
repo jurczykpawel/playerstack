@@ -250,6 +250,51 @@ describe("email overlay layers", () => {
       });
     }
   }
+  for (const mode of ["before", "after", "seconds", "percent"] as const) {
+    it(`old destruction preserves a restarted instance (${mode})`, async () => {
+      const options =
+        mode === "seconds"
+          ? { at: 5 }
+          : mode === "percent"
+            ? { at: undefined, atPercent: 50 }
+            : { at: mode };
+      const { ctx, container, play } = setup({ ...options, dismissible: true });
+      Object.assign(ctx.mediaPlayer, { currentTime: 6 });
+      Object.defineProperty(ctx.mediaPlayer, "duration", { value: 10, configurable: true });
+      const trigger = () => {
+        if (mode !== "before")
+          ctx.mediaPlayer.dispatchEvent(new Event(mode === "after" ? "ended" : "timeupdate"));
+      };
+      play.focus();
+      await emailGatePlugin.init(ctx);
+      trigger();
+      let restarted = false;
+      play.addEventListener(
+        "focus",
+        () => {
+          emailGatePlugin.destroy?.(ctx);
+          void emailGatePlugin.init(ctx);
+          restarted = true;
+        },
+        { once: true },
+      );
+      emailGatePlugin.destroy?.(ctx);
+      await Promise.resolve();
+      expect(restarted).toBe(true);
+      expect(container.querySelectorAll(".playerstack-email-gate")).toHaveLength(
+        mode === "before" ? 1 : 0,
+      );
+      expect(!!play.closest("[inert]")).toBe(mode === "before");
+      emailGatePlugin.destroy?.(ctx);
+      trigger();
+      await Promise.resolve();
+      expect(container.querySelector(".playerstack-email-gate")).toBeNull();
+      expect(play.closest("[inert]")).toBeNull();
+      expect(
+        (container as unknown as Record<symbol, unknown>)[Symbol.for("playerstack.overlayLayers")],
+      ).toBeUndefined();
+    });
+  }
   it("focuses email after player interaction and releases covered controls on Escape", async () => {
     const { ctx, container, play } = setup();
     await emailGatePlugin.init(ctx);

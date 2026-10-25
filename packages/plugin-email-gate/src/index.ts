@@ -110,6 +110,13 @@ function saveMemo(cfg: EmailGateConfig, key: string): void {
 }
 
 interface GateState {
+  destroyed: boolean;
+  shown: boolean;
+  interacted: boolean;
+  overlay?: HTMLElement;
+  status?: HTMLElement;
+  release?: () => void;
+  removeTimeListener?: () => void;
   cleanup: () => void;
 }
 
@@ -157,55 +164,49 @@ export const emailGatePlugin: PlayerstackPlugin = {
     }
 
     const at = cfg.at ?? (cfg.atPercent === undefined ? "before" : undefined);
-    let shown = false;
-    let destroyed = false;
-    const isActive = () => !destroyed;
-    let release: (() => void) | undefined;
-    let interacted = false;
+    const instance: GateState = {
+      destroyed: false,
+      shown: false,
+      interacted: false,
+      cleanup: () => {
+        if (instance.destroyed) return;
+        instance.destroyed = true;
+        instance.removeTimeListener?.();
+        instance.removeTimeListener = undefined;
+        ctx.container.removeEventListener("focusin", onInteraction);
+        ctx.container.removeEventListener("pointerdown", onInteraction);
+        releaseOverlay(instance);
+        instance.overlay?.remove();
+        instance.status?.remove();
+      },
+    };
     const onInteraction = () => {
-      interacted = true;
+      instance.interacted = true;
     };
     ctx.container.addEventListener("focusin", onInteraction);
     ctx.container.addEventListener("pointerdown", onInteraction);
-    const releaseOverlay = () => {
-      const currentRelease = release;
-      release = undefined;
-      currentRelease?.();
-    };
-    let removeTimeListener: (() => void) | null = null;
+    states.set(ctx, instance);
 
     const show = () => {
-      if (shown || destroyed) return;
-      shown = true;
-      removeTimeListener?.();
-      removeTimeListener = null;
+      if (instance.shown || instance.destroyed) return;
+      instance.shown = true;
+      instance.removeTimeListener?.();
+      instance.removeTimeListener = undefined;
 
       const player = ctx.mediaPlayer as HTMLElement & { pause?: () => void };
       player.pause?.();
-      if (!isActive()) return;
-      const overlay = renderOverlay(cfg, ctx, memoKey, releaseOverlay, isActive);
+      if (instance.destroyed) return;
+      const overlay = renderOverlay(cfg, ctx, memoKey, instance);
       ctx.container.appendChild(overlay);
-      release = activateOverlay(ctx.container, overlay, 4, interacted);
-      if (!isActive()) releaseOverlay();
+      instance.release = activateOverlay(ctx.container, overlay, 4, instance.interacted);
+      if (instance.destroyed) releaseOverlay(instance);
     };
-
-    states.set(ctx, {
-      cleanup: () => {
-        destroyed = true;
-        removeTimeListener?.();
-        ctx.container.removeEventListener("focusin", onInteraction);
-        ctx.container.removeEventListener("pointerdown", onInteraction);
-        releaseOverlay();
-        ctx.container.querySelector(".playerstack-email-gate")?.remove();
-        ctx.container.querySelector(".playerstack-email-gate-status")?.remove();
-      },
-    });
 
     if (at === "before") {
       show();
     } else if (at === "after") {
       ctx.mediaPlayer.addEventListener("ended", show);
-      removeTimeListener = () => ctx.mediaPlayer.removeEventListener("ended", show);
+      instance.removeTimeListener = () => ctx.mediaPlayer.removeEventListener("ended", show);
     } else {
       const seconds = typeof at === "number" ? at : undefined;
       const atPercent = cfg.atPercent;
@@ -221,24 +222,34 @@ export const emailGatePlugin: PlayerstackPlugin = {
         if (triggerSeconds || triggerPercent) show();
       };
       ctx.mediaPlayer.addEventListener("timeupdate", onTime);
-      removeTimeListener = () => ctx.mediaPlayer.removeEventListener("timeupdate", onTime);
+      instance.removeTimeListener = () => ctx.mediaPlayer.removeEventListener("timeupdate", onTime);
     }
   },
   destroy(ctx: PlayerstackContext): void {
-    states.get(ctx)?.cleanup();
-    states.delete(ctx);
+    const instance = states.get(ctx);
+    if (!instance) return;
+    if (states.get(ctx) === instance) states.delete(ctx);
+    instance.cleanup();
   },
 };
+
+function releaseOverlay(instance: GateState): void {
+  const release = instance.release;
+  instance.release = undefined;
+  release?.();
+}
 
 function renderOverlay(
   cfg: EmailGateConfig,
   ctx: PlayerstackContext,
   memoKey: string,
-  release: () => void,
-  isActive: () => boolean,
+  instance: GateState,
 ): HTMLElement {
+  const isActive = () => !instance.destroyed;
+  const release = () => releaseOverlay(instance);
   const messages = messagesFor(cfg);
   const overlay = document.createElement("div");
+  instance.overlay = overlay;
   overlay.className = "playerstack-email-gate";
   overlay.style.cssText =
     "position:absolute;inset:0;display:flex;align-items:center;justify-content:center;" +
@@ -308,6 +319,7 @@ function renderOverlay(
   form.appendChild(submit);
 
   const status = document.createElement("p");
+  instance.status = status;
   status.setAttribute("role", "status");
   status.setAttribute("aria-live", "polite");
   status.className = "playerstack-email-gate-status";
@@ -364,8 +376,7 @@ function renderOverlay(
       overlay,
       status,
       submit,
-      release,
-      isActive,
+      instance,
     }).catch(() => {
       if (!isActive() || !overlay.isConnected) return;
       submit.disabled = false;
@@ -385,15 +396,15 @@ interface SubmitArgs {
   overlay: HTMLElement;
   status: HTMLElement;
   submit: HTMLButtonElement;
-  release: () => void;
-  isActive: () => boolean;
+  instance: GateState;
 }
 
 async function handleSubmit(args: SubmitArgs): Promise<void> {
-  const { cfg, ctx, memoKey, email, overlay, status, submit, release, isActive } = args;
+  const { cfg, ctx, memoKey, email, overlay, status, submit, instance } = args;
+  const release = () => releaseOverlay(instance);
 
   const messages = messagesFor(cfg);
-  const active = () => isActive() && overlay.isConnected;
+  const active = () => !instance.destroyed && overlay.isConnected;
   const success = () => {
     if (!active()) return;
     saveMemo(cfg, memoKey);
