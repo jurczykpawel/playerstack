@@ -6,8 +6,15 @@ export type { LeadsChallenge, LeadsSubmission } from "./types";
 
 export interface EmailGateConfig {
   enabled?: boolean;
-  /** "before" shows form on init. A number is ALWAYS seconds. For percent use `atPercent`. */
-  at?: "before" | number;
+  privacy?: { text: string; linkText?: string; href?: string };
+  product?: string;
+  dismissible?: boolean;
+  messages?: Partial<EmailGateMessages>;
+  remember?: boolean;
+  rememberDays?: number;
+  altchaFormat?: "object" | "base64";
+  /** "before" shows on init, "after" on ended. Numbers are seconds; use `atPercent` for percentages. */
+  at?: "before" | "after" | number;
   /** Optional percent threshold (0-100) of duration. */
   atPercent?: number;
   /**
@@ -27,6 +34,74 @@ export interface EmailGateConfig {
   title?: string;
   /** Submit button label. */
   buttonLabel?: string;
+}
+
+export interface EmailGateMessages {
+  title: string;
+  emailLabel: string;
+  placeholder: string;
+  submit: string;
+  verifying: string;
+  solving: string;
+  submitting: string;
+  success: string;
+  invalidEmail: string;
+  rejected: string;
+  rateLimit: string;
+  networkError: string;
+  dismiss: string;
+}
+
+const defaultMessages: EmailGateMessages = {
+  title: "Watch the rest",
+  emailLabel: "Email address",
+  placeholder: "you@example.com",
+  submit: "Continue watching →",
+  verifying: "Verifying…",
+  solving: "Solving challenge…",
+  submitting: "Submitting…",
+  success: "Thank you. Your email was received.",
+  invalidEmail: "Please enter a valid email address.",
+  rejected: "Submission rejected. Please retry.",
+  rateLimit: "Too many requests. Please try again later.",
+  networkError: "Could not complete verification. Please retry.",
+  dismiss: "Skip",
+};
+
+function messagesFor(cfg: EmailGateConfig): EmailGateMessages {
+  return {
+    ...defaultMessages,
+    title: cfg.title ?? defaultMessages.title,
+    submit: cfg.buttonLabel ?? defaultMessages.submit,
+    ...cfg.messages,
+  };
+}
+
+function hasMemo(cfg: EmailGateConfig, key: string): boolean {
+  if (cfg.remember === false) return false;
+  try {
+    const memo = localStorage.getItem(key);
+    if (!memo) return false;
+    if (cfg.rememberDays !== undefined) {
+      const timestamp = Date.parse(memo);
+      if (!Number.isFinite(timestamp) || Date.now() >= timestamp + cfg.rememberDays * 86400000) {
+        localStorage.removeItem(key);
+        return false;
+      }
+    }
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function saveMemo(cfg: EmailGateConfig, key: string): void {
+  if (cfg.remember === false) return;
+  try {
+    localStorage.setItem(key, new Date().toISOString());
+  } catch {
+    /* Storage is optional. */
+  }
 }
 
 interface GateState {
@@ -61,12 +136,22 @@ export const emailGatePlugin: PlayerstackPlugin = {
       }
     }
 
-    const memoKey = `${cfg.storageKey ?? "playerstack:email-gate"}:${ctx.config.src}`;
-    if (typeof localStorage !== "undefined" && localStorage.getItem(memoKey)) {
+    if (
+      cfg.product !== undefined &&
+      (typeof cfg.product !== "string" || !cfg.product.trim() || cfg.product.length > 100)
+    ) {
+      console.warn(
+        "[playerstack] email-gate: product must contain 1–100 characters. Plugin disabled.",
+      );
       return;
     }
 
-    const at = cfg.at ?? "before";
+    const memoKey = `${cfg.storageKey ?? "playerstack:email-gate"}:${ctx.config.src}`;
+    if (hasMemo(cfg, memoKey)) {
+      return;
+    }
+
+    const at = cfg.at ?? (cfg.atPercent === undefined ? "before" : undefined);
     let shown = false;
     let removeTimeListener: (() => void) | null = null;
 
@@ -84,6 +169,9 @@ export const emailGatePlugin: PlayerstackPlugin = {
 
     if (at === "before") {
       show();
+    } else if (at === "after") {
+      ctx.mediaPlayer.addEventListener("ended", show);
+      removeTimeListener = () => ctx.mediaPlayer.removeEventListener("ended", show);
     } else {
       const seconds = typeof at === "number" ? at : undefined;
       const atPercent = cfg.atPercent;
@@ -106,6 +194,7 @@ export const emailGatePlugin: PlayerstackPlugin = {
       cleanup: () => {
         removeTimeListener?.();
         ctx.container.querySelector(".playerstack-email-gate")?.remove();
+        ctx.container.querySelector(".playerstack-email-gate-status")?.remove();
       },
     });
   },
@@ -120,6 +209,7 @@ function renderOverlay(
   ctx: PlayerstackContext,
   memoKey: string,
 ): HTMLElement {
+  const messages = messagesFor(cfg);
   const overlay = document.createElement("div");
   overlay.className = "playerstack-email-gate";
   overlay.style.cssText =
@@ -127,10 +217,11 @@ function renderOverlay(
     "background:rgba(0,0,0,0.85);color:#fff;padding:24px;z-index:3;";
 
   const form = document.createElement("form");
+  form.noValidate = true;
   form.style.cssText = "display:grid;gap:12px;max-width:420px;width:100%;text-align:center;";
 
   const heading = document.createElement("h3");
-  heading.textContent = cfg.title ?? "Watch the rest";
+  heading.textContent = messages.title;
   heading.style.cssText = "margin:0;font-size:22px;font-weight:600;";
   form.appendChild(heading);
 
@@ -138,12 +229,37 @@ function renderOverlay(
   input.type = "email";
   input.name = "email";
   input.required = true;
-  input.placeholder = "you@example.com";
+  input.placeholder = messages.placeholder;
+  input.setAttribute("aria-label", messages.emailLabel);
   input.autocomplete = "email";
   input.style.cssText =
     "padding:10px 12px;border-radius:6px;border:1px solid rgba(255,255,255,0.2);" +
     "background:rgba(255,255,255,0.05);color:#fff;font-size:15px;";
   form.appendChild(input);
+
+  if (cfg.privacy) {
+    const privacy = document.createElement("p");
+    privacy.id = `playerstack-email-privacy-${crypto.getRandomValues(new Uint32Array(2)).join("-")}`;
+    privacy.textContent = cfg.privacy.text;
+    const { href, linkText } = cfg.privacy;
+    let safe = false;
+    if (href) {
+      try {
+        safe = ["http:", "https:"].includes(new URL(href, document.baseURI).protocol);
+      } catch {
+        /* Omit invalid links. */
+      }
+    }
+    if (safe && href && linkText) {
+      const link = document.createElement("a");
+      link.href = href;
+      link.textContent = linkText;
+      link.rel = "noopener noreferrer";
+      privacy.append(" ", link);
+    }
+    input.setAttribute("aria-describedby", privacy.id);
+    form.append(privacy);
+  }
 
   // Honeypot — invisible field. Bots fill every input; humans don't see this.
   const honey = document.createElement("input");
@@ -157,34 +273,59 @@ function renderOverlay(
 
   const submit = document.createElement("button");
   submit.type = "submit";
-  submit.textContent = cfg.buttonLabel ?? "Continue watching →";
+  submit.textContent = messages.submit;
   submit.style.cssText =
     "padding:10px 16px;border-radius:6px;border:none;background:var(--ps-accent,#008aff);" +
     "color:#fff;font-weight:600;cursor:pointer;";
   form.appendChild(submit);
 
   const status = document.createElement("p");
+  status.setAttribute("role", "status");
+  status.setAttribute("aria-live", "polite");
   status.className = "playerstack-email-gate-status";
   status.style.cssText = "margin:0;font-size:13px;min-height:1.2em;opacity:0.85;";
   form.appendChild(status);
 
+  const dismissible = cfg.dismissible ?? cfg.at === "after";
+  if (dismissible) {
+    const dismiss = () => {
+      overlay.remove();
+      ctx.events.emit("email-gate:dismiss", {});
+      if (cfg.at !== "after") resumePlayback(ctx);
+    };
+    const button = document.createElement("button");
+    button.type = "button";
+    button.textContent = messages.dismiss;
+    button.addEventListener("click", dismiss);
+    form.append(button);
+    overlay.addEventListener("keydown", (event) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        dismiss();
+      }
+    });
+  }
+
   form.addEventListener("submit", (e) => {
     e.preventDefault();
+    if (submit.disabled) return;
     if (honey.value) {
       // Bot tripped the honeypot. Pretend success silently — no signal back.
       overlay.remove();
       return;
     }
     const email = input.value.trim();
-    if (!email || !input.checkValidity()) return;
+    if (!email || !input.checkValidity()) {
+      status.textContent = messages.invalidEmail;
+      return;
+    }
 
     submit.disabled = true;
-    status.textContent = "Verifying…";
+    status.textContent = messages.verifying;
 
-    void handleSubmit({ cfg, ctx, memoKey, email, overlay, status, submit }).catch((err) => {
+    void handleSubmit({ cfg, ctx, memoKey, email, overlay, status, submit }).catch(() => {
       submit.disabled = false;
-      status.textContent =
-        err instanceof Error ? `Sorry — ${err.message}` : "Sorry — verification failed.";
+      if (overlay.isConnected) status.textContent = messages.networkError;
     });
   });
 
@@ -205,35 +346,52 @@ interface SubmitArgs {
 async function handleSubmit(args: SubmitArgs): Promise<void> {
   const { cfg, ctx, memoKey, email, overlay, status, submit } = args;
 
-  // Open mode — no webhook, no verification. Event bus + memo only.
-  if (!cfg.webhookUrl || !cfg.challengeUrl) {
-    ctx.events.emit("email-gate:submit", { email });
-    if (typeof localStorage !== "undefined") {
-      localStorage.setItem(memoKey, new Date().toISOString());
-    }
+  const messages = messagesFor(cfg);
+  const success = () => {
+    if (!overlay.isConnected) return;
+    saveMemo(cfg, memoKey);
+    ctx.events.emit("email-gate:submit", {
+      email,
+      ...(cfg.product === undefined ? {} : { product: cfg.product }),
+    });
+    status.textContent = messages.success;
+    ctx.container.append(status);
     overlay.remove();
-    resumePlayback(ctx);
+    if (cfg.at !== "after") resumePlayback(ctx);
+  };
+  const fail = (code?: number) => {
+    if (!overlay.isConnected) return;
+    submit.disabled = false;
+    status.textContent =
+      code === 429
+        ? messages.rateLimit
+        : code !== undefined && code >= 400 && code < 500
+          ? messages.rejected
+          : messages.networkError;
+  };
+
+  if (!cfg.webhookUrl || !cfg.challengeUrl) {
+    success();
     return;
   }
 
-  // Hardened mode — full proof-of-work flow.
-  const challengeRes = await fetch(cfg.challengeUrl, {
+  const challengeUrl = new URL(cfg.challengeUrl);
+  if (cfg.product !== undefined) challengeUrl.searchParams.set("product", cfg.product);
+  const challengeRes = await fetch(challengeUrl.href, {
     credentials: "include",
     headers: { Accept: "application/json" },
   });
+  if (!overlay.isConnected) return;
   if (!challengeRes.ok) {
-    submit.disabled = false;
-    status.textContent = "Could not reach verification server.";
+    fail(challengeRes.status);
     return;
   }
-  const challenge = (await challengeRes.json()) as LeadsChallenge;
-  if (!challenge?.altcha?.challenge || !challenge?.nonce) {
-    submit.disabled = false;
-    status.textContent = "Verification response was malformed.";
+  const challenge: unknown = await challengeRes.json();
+  if (!isChallenge(challenge)) {
+    fail();
     return;
   }
-
-  status.textContent = "Solving challenge…";
+  status.textContent = messages.solving;
   const { promise } = solveChallenge(
     challenge.altcha.challenge,
     challenge.altcha.salt,
@@ -241,26 +399,27 @@ async function handleSubmit(args: SubmitArgs): Promise<void> {
     challenge.altcha.maxnumber,
   );
   const solution = await promise;
+  if (!overlay.isConnected) return;
   if (!solution) {
-    submit.disabled = false;
-    status.textContent = "Verification timed out. Please retry.";
+    fail();
     return;
   }
 
-  status.textContent = "Submitting…";
+  status.textContent = messages.submitting;
+  const payload = {
+    algorithm: challenge.altcha.algorithm,
+    challenge: challenge.altcha.challenge,
+    salt: challenge.altcha.salt,
+    signature: challenge.altcha.signature,
+    number: solution.number,
+  };
   const submission: LeadsSubmission = {
     email,
     src: ctx.config.src,
+    ...(cfg.product === undefined ? {} : { product: cfg.product }),
     nonce: challenge.nonce,
-    altcha: {
-      algorithm: challenge.altcha.algorithm,
-      challenge: challenge.altcha.challenge,
-      salt: challenge.altcha.salt,
-      signature: challenge.altcha.signature,
-      number: solution.number,
-    },
+    altcha: cfg.altchaFormat === "base64" ? encodePayload(payload) : payload,
   };
-
   const submitRes = await fetch(cfg.webhookUrl, {
     method: "POST",
     credentials: "include",
@@ -268,17 +427,31 @@ async function handleSubmit(args: SubmitArgs): Promise<void> {
     body: JSON.stringify(submission),
   });
   if (!submitRes.ok) {
-    submit.disabled = false;
-    status.textContent = `Submission rejected (HTTP ${submitRes.status}).`;
+    fail(submitRes.status);
     return;
   }
+  success();
+}
 
-  ctx.events.emit("email-gate:submit", { email });
-  if (typeof localStorage !== "undefined") {
-    localStorage.setItem(memoKey, new Date().toISOString());
-  }
-  overlay.remove();
-  resumePlayback(ctx);
+function isChallenge(value: unknown): value is LeadsChallenge {
+  if (!value || typeof value !== "object") return false;
+  const { altcha, nonce } = value as Partial<LeadsChallenge>;
+  return (
+    typeof nonce === "string" &&
+    nonce.trim().length > 0 &&
+    !!altcha &&
+    ["SHA-1", "SHA-256", "SHA-512"].includes(altcha.algorithm) &&
+    [altcha.challenge, altcha.salt, altcha.signature].every(
+      (field) => typeof field === "string" && field.length > 0,
+    ) &&
+    (altcha.maxnumber === undefined ||
+      (Number.isSafeInteger(altcha.maxnumber) && altcha.maxnumber >= 0))
+  );
+}
+
+function encodePayload(payload: Exclude<LeadsSubmission["altcha"], string>): string {
+  const bytes = new TextEncoder().encode(JSON.stringify(payload));
+  return btoa(Array.from(bytes, (byte) => String.fromCharCode(byte)).join(""));
 }
 
 function resumePlayback(ctx: PlayerstackContext): void {

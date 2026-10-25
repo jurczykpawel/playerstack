@@ -11,7 +11,7 @@
  * Track `nonce` in your store (Redis recommended) for single-use enforcement.
  */
 
-/** Server response from `GET <challengeUrl>` — issued once per form display. */
+/** Server response from `GET <challengeUrl>` — issued anew for every submission attempt. */
 export interface LeadsChallenge {
   /** Altcha proof-of-work challenge from `altcha-lib createChallenge()`. */
   altcha: {
@@ -34,14 +34,18 @@ export interface LeadsSubmission {
   email: string;
   /** Source URL of the video that displayed the gate. */
   src: string;
-  /** Echoed nonce from the challenge — must be marked consumed after first valid submit. */
+  /** Optional product identifier, 1–100 characters; validated by the server. */
+  product?: string;
+  /** Echoed nonce from the challenge — must be marked consumed on the first POST carrying it, regardless of outcome. */
   nonce: string;
-  /** Altcha payload (challenge + signature + solution) — pass to `verifySolution()`. */
-  altcha: {
-    algorithm: "SHA-1" | "SHA-256" | "SHA-512";
-    challenge: string;
-    number: number;
-    salt: string;
-    signature: string;
-  };
+  /** ALTCHA object by default, or base64 UTF-8 JSON when `altchaFormat` is "base64". */
+  altcha:
+    | string
+    | {
+        algorithm: "SHA-1" | "SHA-256" | "SHA-512";
+        challenge: string;
+        number: number;
+        salt: string;
+        signature: string;
+      };
 }
