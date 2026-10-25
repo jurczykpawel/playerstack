@@ -4,7 +4,14 @@ All notable changes to Playerstack will be documented in this file.
 
 ## Unreleased
 
+### Added
+
+- Email-gate after-video forms (`at: "after"`), optional privacy text/link and product identifier, dismissal, translated messages, and configurable memo retention.
+- Email-gate supports object or base64 ALTCHA submissions with a fresh challenge and nonce per attempt; the README specifies the endpoint contract and response handling.
+
 ### Fixed
+
+- Honor `emailGate.atPercent` without requiring an explicit `at` value.
 
 - Keep covered player controls out of the tab order and move focus to play (or the controller when play is hidden) after keyboard activation of a branded thumbnail; mouse activation leaves focus to the browser. Visible controls from other plugins remain in the tab order.
 

@@ -1,181 +1,181 @@
 # @playerstack/plugin-email-gate
 
-Lead capture with **secure-by-default** verification. Pauses the video, shows an email form, forwards the lead to your server only after an [Altcha](https://altcha.org) proof-of-work challenge is solved AND a single-use server-issued nonce is consumed. Without server-side verification configured, the plugin runs in event-bus-only "open mode" and never POSTs anywhere.
+An email form before, during, or after a video. In open mode it emits an event without network requests. Hardened mode obtains an ALTCHA challenge and a server-issued nonce for each submission attempt, then sends the completed form to your endpoint.
 
-Part of [Playerstack](https://github.com/jurczykpawel/playerstack). Included in the standalone [`playerstack`](https://playerstack.techskills.academy/playerstack.min.js) bundle.
+Part of [Playerstack](https://github.com/jurczykpawel/playerstack). The standalone script loads the plugin on demand. The `@playerstack/*` packages are not published to npm yet.
 
-## Install
-
-This plugin is included in the standalone script, so there is nothing to install:
+## After-video form
 
 ```html
 <script
   src="https://playerstack.techskills.academy/playerstack.min.js"
   defer
 ></script>
-```
-
-The `@playerstack/*` packages are not published to npm yet; to compose your own bundle, build it from this repository.
-
-## Use — open mode (event bus only, no network)
-
-```html
 <player-stack
-  src="https://files.example.com/lesson.mp4"
+  src="https://files.example.com/demo.mp4"
   data-config='{
     "emailGate": {
       "enabled": true,
-      "at": "before",
-      "title": "Drop your email to watch the full lesson",
-      "buttonLabel": "Unlock video →"
+      "at": "after",
+      "product": "Selfware",
+      "webhookUrl": "https://your-api.com/leads",
+      "challengeUrl": "https://your-api.com/challenge?brand=selfware",
+      "altchaFormat": "base64",
+      "rememberDays": 30,
+      "dismissible": true,
+      "privacy": {
+        "text": "Zostaw maila, a odezwę się w sprawie podobnego rozwiązania.",
+        "linkText": "Informacja o prywatności",
+        "href": "/privacy/"
+      },
+      "messages": {
+        "title": "Chcesz coś takiego u siebie? Zostaw maila",
+        "emailLabel": "Adres email",
+        "placeholder": "Ty@example.pl",
+        "submit": "Wyślij",
+        "verifying": "Sprawdzam zgłoszenie…",
+        "solving": "Trwa weryfikacja…",
+        "submitting": "Wysyłam…",
+        "success": "Dziękuję. Zgłoszenie zostało wysłane.",
+        "invalidEmail": "Wpisz poprawny adres email.",
+        "rejected": "Zgłoszenie odrzucono. Spróbuj ponownie.",
+        "rateLimit": "Za dużo prób. Spróbuj później.",
+        "networkError": "Nie udało się wysłać zgłoszenia. Spróbuj ponownie.",
+        "dismiss": "Pomiń"
+      }
     }
   }'
 ></player-stack>
 ```
 
-The form pauses the video and emits `email-gate:submit` on the event bus. Nothing is POSTed anywhere — your code listens via a custom plugin if needed.
+`after` waits for `ended`, independently of `atPercent`. Success or dismissal leaves playback completed. Other triggers pause playback and resume it on success or dismissal. The form appears once per player initialization. Dismissal never writes a memo.
 
-## Use — hardened mode (recommended for any public deployment)
-
-```html
-<player-stack
-  src="https://files.example.com/lesson.mp4"
-  data-config='{
-    "emailGate": {
-      "enabled": true,
-      "at": "before",
-      "webhookUrl":   "https://your-api.com/api/leads",
-      "challengeUrl": "https://your-api.com/api/leads/challenge"
-    }
-  }'
-></player-stack>
-```
-
-When `webhookUrl` is set, **`challengeUrl` is required** — the plugin refuses to render otherwise (logs a console error). This prevents accidentally exposing an unauthenticated lead-capture endpoint.
+For open mode, omit **both** endpoint URLs. For a pre-roll gate use `at: "before"`; for a mid-roll gate use `at: 30` (seconds) or `atPercent: 50` without `at`. Setting `webhookUrl` without `challengeUrl`, or configuring either with a non-HTTP(S) URL, disables the plugin.
 
 ## Config
 
-| Field          | Type                 | Default                    | Description                                                                       |
-| -------------- | -------------------- | -------------------------- | --------------------------------------------------------------------------------- |
-| `enabled`      | `boolean`            | `false`                    | Plugin is a no-op unless `true`                                                   |
-| `at`           | `"before" \| number` | `"before"`                 | Show on init, or after N seconds of playback                                      |
-| `atPercent`    | `number`             | —                          | Alternative trigger at N% of duration                                             |
-| `webhookUrl`   | `string`             | —                          | Where to POST `LeadsSubmission`. **Requires `challengeUrl`.**                     |
-| `challengeUrl` | `string`             | —                          | Where to GET `LeadsChallenge`. Server issues Altcha challenge + single-use nonce. |
-| `title`        | `string`             | `"Watch the rest"`         | Heading text                                                                      |
-| `buttonLabel`  | `string`             | `"Continue watching →"`    | Submit button label                                                               |
-| `storageKey`   | `string`             | `"playerstack:email-gate"` | localStorage key prefix                                                           |
+| Field          | Type                                                 | Default                               | Description                                                                                                                                                                       |
+| -------------- | ---------------------------------------------------- | ------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `enabled`      | `boolean`                                            | `false`                               | Enable the plugin.                                                                                                                                                                |
+| `at`           | `"before" \| "after" \| number`                      | `"before"` unless `atPercent` is set  | Initialization, `ended`, or elapsed seconds.                                                                                                                                      |
+| `atPercent`    | `number`                                             | —                                     | Threshold percentage of a known duration. With numeric `at`, either threshold triggers the gate; explicit `before`/`after` takes precedence.                                      |
+| `webhookUrl`   | `string`                                             | —                                     | Absolute HTTP(S) submission endpoint; requires `challengeUrl`.                                                                                                                    |
+| `challengeUrl` | `string`                                             | —                                     | Absolute HTTP(S) challenge endpoint; requires `webhookUrl`.                                                                                                                       |
+| `altchaFormat` | `"object" \| "base64"`                               | `"object"`                            | Format of the POST `altcha` field. Mailstack/Selfware uses `base64`.                                                                                                              |
+| `product`      | `string`                                             | —                                     | Separate product identifier, 1–100 characters. Empty, whitespace-only, or longer values disable the plugin with `console.warn`.                                                   |
+| `privacy`      | `{ text: string; linkText?: string; href?: string }` | —                                     | Text below the email input, connected with `aria-describedby`. Text is rendered literally. A link requires text and an HTTP(S) or relative URL; uses `rel="noopener noreferrer"`. |
+| `dismissible`  | `boolean`                                            | `true` for `after`, otherwise `false` | Show a dismissal button and allow Escape within the overlay.                                                                                                                      |
+| `messages`     | `Partial<EmailGateMessages>`                         | English (table below)                 | Override any viewer-facing message, including accessible input label and live status.                                                                                             |
+| `title`        | `string`                                             | `"Watch the rest"`                    | Legacy heading override; `messages.title` takes precedence.                                                                                                                       |
+| `buttonLabel`  | `string`                                             | `"Continue watching →"`               | Legacy submit override; `messages.submit` takes precedence.                                                                                                                       |
+| `storageKey`   | `string`                                             | `"playerstack:email-gate"`            | Memo prefix; the full key is `<prefix>:<src>`.                                                                                                                                    |
+| `remember`     | `boolean`                                            | `true`                                | Store a timestamp after success; `false` performs no storage reads or writes.                                                                                                     |
+| `rememberDays` | `number`                                             | No expiry                             | Lifetime in days measured from successful submission. Expired entries are deleted on initialization. Use a finite non-negative value.                                             |
 
-## Server protocol (TypeScript types exported)
+Storage errors do not prevent the form or playback. Existing timestamp memos remain compatible; without `rememberDays`, existing nonempty memos do not expire. No email or product is stored in the memo. Hosts supply privacy wording and retention appropriate to their service.
 
-```ts
-import type {
-  LeadsChallenge,
-  LeadsSubmission,
-} from "@playerstack/plugin-email-gate";
-```
+### Messages
 
-`GET <challengeUrl>` returns:
+The input has an accessible label. Validation and progress are announced in a polite `role="status"` region. On success the overlay is removed and the success region remains until the player is destroyed.
 
-```ts
-interface LeadsChallenge {
-  altcha: {
-    algorithm: "SHA-256";
-    challenge: string;
-    salt: string;
-    signature: string;
-    maxnumber?: number;
-  };
-  nonce: string; // single-use, MUST be tracked server-side with TTL
+| Key            | English default                                |
+| -------------- | ---------------------------------------------- |
+| `title`        | Watch the rest                                 |
+| `emailLabel`   | Email address                                  |
+| `placeholder`  | you@example.com                                |
+| `submit`       | Continue watching →                            |
+| `verifying`    | Verifying…                                     |
+| `solving`      | Solving challenge…                             |
+| `submitting`   | Submitting…                                    |
+| `success`      | Thank you. Your email was received.            |
+| `invalidEmail` | Please enter a valid email address.            |
+| `rejected`     | Submission rejected. Please retry.             |
+| `rateLimit`    | Too many requests. Please try again later.     |
+| `networkError` | Could not complete verification. Please retry. |
+| `dismiss`      | Skip                                           |
+
+## Hardened mode contract
+
+The public types `EmailGateConfig`, `EmailGateMessages`, `LeadsChallenge`, and `LeadsSubmission` are exported from `@playerstack/plugin-email-gate`.
+
+### 1. GET challenge
+
+Every submission attempt starts with `GET <challengeUrl>`, with credentials included and `Accept: application/json`. If `product` is configured, the plugin sets a URL-encoded `product` query parameter, preserving other query parameters. The host configures the brand in `challengeUrl`.
+
+Example: `GET https://your-api.com/challenge?brand=selfware&product=Selfware`
+
+The JSON response has `nonce` at the top level, next to `altcha`:
+
+```json
+{
+  "altcha": {
+    "algorithm": "SHA-256",
+    "challenge": "challenge-digest",
+    "maxnumber": 100000,
+    "salt": "server-salt",
+    "signature": "server-signature"
+  },
+  "nonce": "server-issued-one-time-value"
 }
 ```
 
-`POST <webhookUrl>` accepts:
+`algorithm` supports `SHA-1`, `SHA-256`, and `SHA-512`. `maxnumber` is optional. A flat challenge, missing nonce, or malformed response produces the network-error message and no POST.
 
-```ts
-interface LeadsSubmission {
-  email: string;
-  src: string;
-  nonce: string; // echo from challenge — server marks consumed on first valid submit
-  altcha: { algorithm; challenge; number; salt; signature }; // pass to verifySolution()
-}
-```
+The server associates the nonce with the product and a TTL (Mailstack: approximately ten minutes). The first POST carrying a nonce consumes it atomically, **regardless of result**, including invalid ALTCHA, email, product, or a 4xx/5xx response. The server validates the requested product against the brand allowlist and the nonce-bound product. Nonce consumption must precede validation paths returning an error.
 
-## Server implementation (Next.js example)
+The plugin never retains a challenge for another attempt. Every retry fetches a new challenge and nonce; there is no automatic POST retry. Server code must also enforce nonce lifetime and single use.
 
-```ts
-// app/api/leads/challenge/route.ts
-import { createChallenge } from "altcha-lib";
-import { randomUUID } from "node:crypto";
-import { redis } from "@/lib/redis";
+### 2. POST submission
 
-const NONCE_TTL_SECONDS = 300;
+`POST <webhookUrl>` includes credentials and `Content-Type: application/json`. `product` is omitted when not configured; it is independent of the video `src`.
 
-export async function GET() {
-  const altcha = await createChallenge({
-    hmacKey: process.env.ALTCHA_HMAC_KEY!,
-    expires: new Date(Date.now() + NONCE_TTL_SECONDS * 1000),
-  });
-  const nonce = randomUUID();
-  await redis.set(`leads:nonce:${nonce}`, "1", { EX: NONCE_TTL_SECONDS });
-  return Response.json({ altcha, nonce });
-}
-```
+Default `altchaFormat: "object"` (compatible with existing clients):
 
-```ts
-// app/api/leads/route.ts
-import { verifySolution } from "altcha-lib";
-import { redis } from "@/lib/redis";
-import { ratelimit } from "@/lib/ratelimit";
-
-export async function POST(req: Request) {
-  if (!isAllowedOrigin(req.headers.get("origin"))) {
-    return Response.json({ error: "forbidden" }, { status: 403 });
+```json
+{
+  "email": "viewer@example.com",
+  "src": "https://files.example.com/demo.mp4",
+  "product": "Selfware",
+  "nonce": "server-issued-one-time-value",
+  "altcha": {
+    "algorithm": "SHA-256",
+    "challenge": "challenge-digest",
+    "number": 7,
+    "salt": "server-salt",
+    "signature": "server-signature"
   }
-  const ip = req.headers.get("x-forwarded-for")?.split(",")[0] ?? "unknown";
-  const rl = await ratelimit.limit(`leads:${ip}`);
-  if (!rl.success) return Response.json({ error: "too many" }, { status: 429 });
-
-  const { email, src, nonce, altcha } = await req.json();
-
-  // Single-use nonce — atomic check-and-delete
-  const consumed = await redis.del(`leads:nonce:${nonce}`);
-  if (consumed !== 1) return Response.json({ error: "nonce" }, { status: 400 });
-
-  const valid = await verifySolution(altcha, process.env.ALTCHA_HMAC_KEY!);
-  if (!valid) return Response.json({ error: "altcha" }, { status: 400 });
-
-  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
-    return Response.json({ error: "email" }, { status: 400 });
-  }
-
-  await saveLead({ email, src });
-  return Response.json({ ok: true });
 }
 ```
 
-## What this protocol stops
+For `altchaFormat: "base64"`, the same POST has a string `altcha` field containing standard base64 of the UTF-8 JSON payload `{ algorithm, challenge, number, salt, signature }`. For example, this is a complete serialized POST using illustrative short values:
 
-| Attack                              | Mitigation                                                                                 |
-| ----------------------------------- | ------------------------------------------------------------------------------------------ |
-| Bot floods endpoint with fake leads | Altcha PoW (1–2 s CPU per submit) + rate limit per IP                                      |
-| Replay attack                       | Single-use `nonce` (Redis `DEL` returns 0 on second use)                                   |
-| CSRF from another domain            | Origin allowlist + HMAC-signed altcha tied to your server secret                           |
-| Stolen `webhookUrl` from DevTools   | URL alone is useless — needs valid Altcha + unused nonce, both server-issued               |
-| Headless browser farm               | Each submit still costs CPU; combined with rate limit makes large-scale spam uneconomical  |
-| Honeypot bypass                     | Off-screen `name="website"` input — bots fill all fields, plugin silently drops the submit |
+```json
+{
+  "email": "viewer@example.com",
+  "src": "https://files.example.com/demo.mp4",
+  "product": "Selfware",
+  "nonce": "server-issued-one-time-value",
+  "altcha": "eyJhbGdvcml0aG0iOiJTSEEtMjU2IiwiY2hhbGxlbmdlIjoiYyIsIm51bWJlciI6Nywic2FsdCI6InMiLCJzaWduYXR1cmUiOiJzaWcifQ=="
+}
+```
 
-## Built-in client-side protections
+The server must support the selected format. These example values illustrate shape, not a valid proof. The form also includes an off-screen `website` field; filled submissions are dropped locally without a POST, event, or memo.
 
-- **Honeypot field** — invisible `name="website"` input. Filled = silent drop, no event, no fetch.
-- **`localStorage` memo** — successful submission stores a timestamp keyed on `src`. Same browser doesn't see the gate twice.
-- **Refuse-on-misconfig** — `webhookUrl` without `challengeUrl` logs an error and renders nothing.
+| Response                                                           | Client result                                                                                    |
+| ------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
+| Any 2xx from POST                                                  | Emit submit, store memo if enabled, remove overlay, announce success. No response body required. |
+| 429                                                                | `messages.rateLimit`; re-enable submit.                                                          |
+| Other 4xx                                                          | `messages.rejected`; re-enable submit.                                                           |
+| 5xx, transport/JSON error, malformed challenge, or failed solution | `messages.networkError`; re-enable submit.                                                       |
+
+Every failure keeps the form available for retry with a fresh challenge and nonce. Closing or destroying the form while a request is pending prevents later client success or further POSTs; an already-sent POST may still be processed by the server.
 
 ## Events
 
-| Name                | Payload             | When                                                                                |
-| ------------------- | ------------------- | ----------------------------------------------------------------------------------- |
-| `email-gate:submit` | `{ email: string }` | Server accepted the submission (or open-mode form was filled, honeypot not tripped) |
+| Name                 | Payload                               | When                                                                             |
+| -------------------- | ------------------------------------- | -------------------------------------------------------------------------------- |
+| `email-gate:submit`  | `{ email: string; product?: string }` | POST accepted, or valid open-mode submission. Product omitted if not configured. |
+| `email-gate:dismiss` | `{}`                                  | Dismissal button or Escape when dismissible; no memo.                            |
 
 ## License
 
