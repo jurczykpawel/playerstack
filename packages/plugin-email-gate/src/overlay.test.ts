@@ -147,7 +147,7 @@ describe("email overlay layers", () => {
       expect(document.activeElement).toBe(input(container));
       close(container);
       expect(document.activeElement).toBe(play);
-      expect(ctx.mediaPlayer.play).toHaveBeenCalledOnce();
+      expect((ctx.mediaPlayer as HTMLVideoElement).play).toHaveBeenCalledOnce();
       emailGatePlugin.destroy?.(ctx);
     });
   }

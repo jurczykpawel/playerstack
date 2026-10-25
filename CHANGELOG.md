@@ -22,6 +22,10 @@ All notable changes to Playerstack will be documented in this file.
 - Respect reduced motion before setting preview autoplay attributes.
 - Give branded thumbnails one named native keyboard button, supporting Enter and Space while keeping the whole thumbnail clickable.
 
+### Bundle size
+
+- On 2026-10-25, the standalone MP4 configuration with controls-policy, CTA and branded thumbnail measured 45.9 KiB gzip; adding email-gate measured 50.1 KiB (51,260 B), 60 B above the aspirational 50 KiB budget. Bun 1.4.4, zlib gzip level 9, KiB = 1024 B; sum of individually compressed downloaded JS files, excluding maps, notices, HTTP and media.
+
 ### License
 
 - The project license changes from MIT to Apache License 2.0. `LICENSE` is the
