@@ -108,9 +108,45 @@ if (missing.length > 0) {
   throw new Error(`provider files missing for: ${missing.join(", ")}`);
 }
 
+// Optional email features use stable sibling filenames, like providers.
+const emailChunks: Record<string, string> = {};
+for (const [module, name] of [
+  ["hardened", "hardened"],
+  ["optional-fields", "fields"],
+]) {
+  const file = `playerstack-email-gate-${name}.js`;
+  const result = await build({
+    bundle: true,
+    target: "es2020",
+    format: "esm",
+    minify: true,
+    sourcemap: true,
+    legalComments: "linked",
+    entryPoints: [join(root, `../plugin-email-gate/src/${module}.ts`)],
+    outfile: join(outdir, file),
+    metafile: true,
+  });
+  writeLegalNotices(result.metafile, process.cwd());
+  const version = createHash("sha256")
+    .update(readFileSync(join(outdir, file)))
+    .digest("hex")
+    .slice(0, 8);
+  emailChunks[module!] = `${file}?v=${version}`;
+}
+
 const pluginEntries: Plugin = {
   name: "plugin-entries",
   setup(b) {
+    b.onResolve({ filter: /\/load-(hardened|optional-fields)$/ }, (args) => ({
+      path: args.path.split("/load-")[1]!,
+      namespace: "email-loader",
+    }));
+    b.onLoad({ filter: /.*/, namespace: "email-loader" }, (args) => ({
+      contents: `import { createModuleLoader } from "./src/module-imports";
+        const base = document.currentScript.src;
+        export const ${args.path === "hardened" ? "loadHardened" : "loadOptionalFields"} = createModuleLoader(base, ${JSON.stringify(emailChunks[args.path])});`,
+      resolveDir: root,
+    }));
     b.onResolve({ filter: /^plugin:/ }, (args) => ({
       path: args.path.slice(7),
       namespace: "plugin",

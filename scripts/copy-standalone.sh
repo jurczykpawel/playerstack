@@ -6,7 +6,7 @@ set -euo pipefail
 target="${1:?usage: copy-standalone.sh <target-dir>}"
 dist="$(cd "$(dirname "$0")/../packages/embed/dist" && pwd)"
 
-files=(playerstack.min.js)
+files=(playerstack.min.js playerstack-email-gate-hardened.js playerstack-email-gate-fields.js)
 for provider in youtube hls vimeo wistia twitch; do
   files+=("playerstack-${provider}.js")
 done

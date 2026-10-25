@@ -4,8 +4,10 @@ import {
   type PlayerstackPlugin,
   type PlayerstackContext,
 } from "@playerstack/core";
-import { solveChallenge } from "altcha-lib";
-import type { LeadsChallenge, LeadsSubmission } from "./types";
+import { loadHardened } from "./load-hardened";
+import { loadOptionalFields } from "./load-optional-fields";
+type OptionalFields = typeof import("./optional-fields");
+import type { LeadsSubmission } from "./types";
 
 export type { LeadsChallenge, LeadsSubmission } from "./types";
 
@@ -65,24 +67,24 @@ export interface EmailGateMessages {
   consentRequired: string;
 }
 
-const defaultMessages: EmailGateMessages = {
+type FormMessages = Omit<
+  EmailGateMessages,
+  "solving" | "submitting" | "rejected" | "rateLimit" | "consentRequired"
+>;
+
+const defaultMessages: FormMessages = {
   title: "Watch the rest",
   emailLabel: "Email address",
   placeholder: "you@example.com",
   submit: "Continue watching →",
   verifying: "Verifying…",
-  solving: "Solving challenge…",
-  submitting: "Submitting…",
   success: "Thank you. Your email was received.",
   invalidEmail: "Please enter a valid email address.",
-  rejected: "Submission rejected. Please retry.",
-  rateLimit: "Too many requests. Please try again later.",
   networkError: "Could not complete verification. Please retry.",
   dismiss: "Skip",
-  consentRequired: "Please select the consent checkbox.",
 };
 
-function messagesFor(cfg: EmailGateConfig): EmailGateMessages {
+function messagesFor(cfg: EmailGateConfig): FormMessages {
   return {
     ...defaultMessages,
     title: cfg.title ?? defaultMessages.title,
@@ -141,8 +143,7 @@ export const emailGatePlugin: PlayerstackPlugin = {
     // Both URLs are required together. Plugin will not render with just one.
     if (cfg.webhookUrl && !cfg.challengeUrl) {
       console.error(
-        "[playerstack] email-gate: `webhookUrl` requires `challengeUrl`. Plugin disabled. " +
-          "See https://playerstack.techskills.academy/docs/email-gate for the contract.",
+        "[playerstack] email-gate: `webhookUrl` requires `challengeUrl`. Plugin disabled.",
       );
       return;
     }
@@ -156,33 +157,6 @@ export const emailGatePlugin: PlayerstackPlugin = {
         );
         return;
       }
-    }
-
-    if (
-      cfg.product !== undefined &&
-      (typeof cfg.product !== "string" || !cfg.product.trim() || cfg.product.length > 100)
-    ) {
-      console.warn(
-        "[playerstack] email-gate: product must contain 1–100 characters. Plugin disabled.",
-      );
-      return;
-    }
-
-    const consent = cfg.marketingConsent;
-    if (
-      consent !== undefined &&
-      (!consent ||
-        typeof consent.text !== "string" ||
-        !consent.text.trim() ||
-        consent.text.length > 500 ||
-        typeof consent.version !== "string" ||
-        !consent.version.trim() ||
-        consent.version.length > 64)
-    ) {
-      console.warn(
-        "[playerstack] email-gate: marketingConsent requires text (1–500 characters) and version (1–64). Plugin disabled.",
-      );
-      return;
     }
 
     const memoKey = `${cfg.storageKey ?? "playerstack:email-gate"}:${ctx.config.src}`;
@@ -214,6 +188,20 @@ export const emailGatePlugin: PlayerstackPlugin = {
     ctx.container.addEventListener("focusin", onInteraction);
     ctx.container.addEventListener("pointerdown", onInteraction);
     states.set(ctx, instance);
+    let optional: OptionalFields | undefined;
+    if (cfg.privacy || cfg.marketingConsent !== undefined || cfg.product !== undefined) {
+      try {
+        optional = await loadOptionalFields();
+      } catch (error) {
+        instance.cleanup();
+        throw error;
+      }
+      if (instance.destroyed) return;
+      if (!optional.validConfig(cfg)) {
+        instance.cleanup();
+        return;
+      }
+    }
 
     const show = () => {
       if (instance.shown || instance.destroyed) return;
@@ -224,7 +212,7 @@ export const emailGatePlugin: PlayerstackPlugin = {
       const player = ctx.mediaPlayer as HTMLElement & { pause?: () => void };
       player.pause?.();
       if (instance.destroyed) return;
-      const overlay = renderOverlay(cfg, ctx, memoKey, instance);
+      const overlay = renderOverlay(cfg, ctx, memoKey, instance, optional);
       ctx.container.appendChild(overlay);
       instance.release = activateOverlay(ctx.container, overlay, 4, instance.interacted);
       if (instance.destroyed) releaseOverlay(instance);
@@ -272,6 +260,7 @@ function renderOverlay(
   ctx: PlayerstackContext,
   memoKey: string,
   instance: GateState,
+  optional?: OptionalFields,
 ): HTMLElement {
   const isActive = () => !instance.destroyed;
   const release = () => releaseOverlay(instance);
@@ -306,35 +295,7 @@ function renderOverlay(
     "background:rgba(255,255,255,0.05);color:#fff;font-size:15px;";
   form.appendChild(input);
 
-  if (cfg.privacy) {
-    const privacy = document.createElement("p");
-    privacy.id = `playerstack-email-privacy-${crypto.getRandomValues(new Uint32Array(2)).join("-")}`;
-    privacy.textContent = cfg.privacy.text;
-    appendConfiguredLink(privacy, cfg.privacy);
-    input.setAttribute("aria-describedby", privacy.id);
-    form.append(privacy);
-  }
-
-  const consentInput = cfg.marketingConsent ? document.createElement("input") : undefined;
-  if (consentInput && cfg.marketingConsent) {
-    const row = document.createElement("div");
-    row.style.cssText = "font-size:13px;text-align:left;";
-    const label = document.createElement("label");
-    label.style.cssText = "display:flex;align-items:flex-start;gap:8px;cursor:pointer;";
-    consentInput.type = "checkbox";
-    consentInput.name = "marketingConsent";
-    consentInput.required = cfg.marketingConsent.required === true;
-    consentInput.style.cssText = "flex-shrink:0;margin:3px 0 0;";
-    const text = document.createElement("span");
-    text.textContent = cfg.marketingConsent.text;
-    label.append(consentInput, text);
-    row.append(label);
-    appendConfiguredLink(row, cfg.marketingConsent);
-    form.append(row);
-    consentInput.addEventListener("change", () => {
-      if (isActive() && consentInput.checked) consentInput.removeAttribute("aria-invalid");
-    });
-  }
+  const consentInput = optional?.renderFields(cfg, form, input, isActive);
 
   // Honeypot — invisible field. Bots fill every input; humans don't see this.
   const honey = document.createElement("input");
@@ -385,6 +346,62 @@ function renderOverlay(
     });
   }
 
+  async function handleSubmit(email: string, consent: ConsentFields): Promise<void> {
+    const active = () => !instance.destroyed && overlay.isConnected;
+    const success = () => {
+      if (!active()) return;
+      saveMemo(cfg, memoKey);
+      if (!active()) return;
+      ctx.events.emit("email-gate:submit", {
+        email,
+        ...consent,
+        ...(cfg.product === undefined ? {} : { product: cfg.product }),
+      });
+      if (!active()) return;
+      status.textContent = messages.success;
+      release();
+      if (!active()) return;
+      ctx.container.append(status);
+      overlay.remove();
+      if (cfg.at !== "after") resumePlayback(ctx);
+    };
+    const fail = () => {
+      if (!active()) return;
+      instance.submitting = false;
+      submit.disabled = false;
+    };
+
+    if (!cfg.webhookUrl || !cfg.challengeUrl) {
+      success();
+      return;
+    }
+
+    const challengeUrl = new URL(cfg.challengeUrl);
+    if (cfg.product !== undefined) challengeUrl.searchParams.set("product", cfg.product);
+    const response = fetch(challengeUrl.href, {
+      credentials: "include",
+      headers: { Accept: "application/json" },
+    }).then(
+      (value) => ({ value }),
+      () => ({}),
+    );
+    const { submitChallenge } = await loadHardened();
+    if (!active()) return;
+    await submitChallenge({
+      cfg,
+      src: ctx.config.src,
+      email,
+      consent,
+      response,
+      active,
+      success,
+      fail,
+      setStatus: (message) => {
+        status.textContent = message;
+      },
+    });
+  }
+
   form.addEventListener("submit", (e) => {
     e.preventDefault();
     if (!isActive() || !overlay.isConnected || instance.submitting || submit.disabled) return;
@@ -401,21 +418,9 @@ function renderOverlay(
       return;
     }
 
-    if (consentInput?.required && !consentInput.checked) {
-      status.textContent = messages.consentRequired;
-      consentInput.setAttribute("aria-invalid", "true");
-      consentInput.focus();
-      return;
-    }
-    const consent: ConsentFields = !cfg.marketingConsent
-      ? {}
-      : consentInput?.checked
-        ? {
-            marketingConsent: true,
-            consentVersion: cfg.marketingConsent.version,
-            consentText: cfg.marketingConsent.text,
-          }
-        : { marketingConsent: false };
+    const consent =
+      optional?.readConsent(cfg, consentInput, status) ?? (cfg.marketingConsent ? undefined : {});
+    if (!consent) return;
 
     instance.submitting = true;
     if (overlay.ownerDocument.activeElement === submit) {
@@ -425,17 +430,7 @@ function renderOverlay(
     submit.disabled = true;
     status.textContent = messages.verifying;
 
-    void handleSubmit({
-      cfg,
-      ctx,
-      memoKey,
-      email,
-      overlay,
-      status,
-      submit,
-      instance,
-      consent,
-    }).catch(() => {
+    void handleSubmit(email, consent).catch(() => {
       if (!isActive() || !overlay.isConnected) return;
       instance.submitting = false;
       submit.disabled = false;
@@ -448,157 +443,6 @@ function renderOverlay(
 }
 
 type ConsentFields = Pick<LeadsSubmission, "marketingConsent" | "consentVersion" | "consentText">;
-
-interface SubmitArgs {
-  cfg: EmailGateConfig;
-  ctx: PlayerstackContext;
-  memoKey: string;
-  email: string;
-  overlay: HTMLElement;
-  status: HTMLElement;
-  submit: HTMLButtonElement;
-  instance: GateState;
-  consent: ConsentFields;
-}
-
-async function handleSubmit(args: SubmitArgs): Promise<void> {
-  const { cfg, ctx, memoKey, email, overlay, status, submit, instance, consent } = args;
-  const release = () => releaseOverlay(instance);
-
-  const messages = messagesFor(cfg);
-  const active = () => !instance.destroyed && overlay.isConnected;
-  const success = () => {
-    if (!active()) return;
-    saveMemo(cfg, memoKey);
-    if (!active()) return;
-    ctx.events.emit("email-gate:submit", {
-      email,
-      ...consent,
-      ...(cfg.product === undefined ? {} : { product: cfg.product }),
-    });
-    if (!active()) return;
-    status.textContent = messages.success;
-    release();
-    if (!active()) return;
-    ctx.container.append(status);
-    overlay.remove();
-    if (cfg.at !== "after") resumePlayback(ctx);
-  };
-  const fail = (code?: number) => {
-    if (!active()) return;
-    instance.submitting = false;
-    submit.disabled = false;
-    status.textContent =
-      code === 429
-        ? messages.rateLimit
-        : code !== undefined && code >= 400 && code < 500
-          ? messages.rejected
-          : messages.networkError;
-  };
-
-  if (!cfg.webhookUrl || !cfg.challengeUrl) {
-    success();
-    return;
-  }
-
-  const challengeUrl = new URL(cfg.challengeUrl);
-  if (cfg.product !== undefined) challengeUrl.searchParams.set("product", cfg.product);
-  const challengeRes = await fetch(challengeUrl.href, {
-    credentials: "include",
-    headers: { Accept: "application/json" },
-  });
-  if (!active()) return;
-  if (!challengeRes.ok) {
-    fail(challengeRes.status);
-    return;
-  }
-  const challenge: unknown = await challengeRes.json();
-  if (!active()) return;
-  if (!isChallenge(challenge)) {
-    fail();
-    return;
-  }
-  status.textContent = messages.solving;
-  const { promise } = solveChallenge(
-    challenge.altcha.challenge,
-    challenge.altcha.salt,
-    challenge.altcha.algorithm,
-    challenge.altcha.maxnumber,
-  );
-  const solution = await promise;
-  if (!active()) return;
-  if (!solution) {
-    fail();
-    return;
-  }
-
-  status.textContent = messages.submitting;
-  const payload = {
-    algorithm: challenge.altcha.algorithm,
-    challenge: challenge.altcha.challenge,
-    salt: challenge.altcha.salt,
-    signature: challenge.altcha.signature,
-    number: solution.number,
-  };
-  const submission: LeadsSubmission = {
-    email,
-    src: ctx.config.src,
-    ...consent,
-    ...(cfg.product === undefined ? {} : { product: cfg.product }),
-    nonce: challenge.nonce,
-    altcha: cfg.altchaFormat === "base64" ? encodePayload(payload) : payload,
-  };
-  const submitRes = await fetch(cfg.webhookUrl, {
-    method: "POST",
-    credentials: "include",
-    headers: { "Content-Type": "application/json", Accept: "application/json" },
-    body: JSON.stringify(submission),
-  });
-  if (!submitRes.ok) {
-    fail(submitRes.status);
-    return;
-  }
-  success();
-}
-
-function appendConfiguredLink(
-  parent: HTMLElement,
-  config: { href?: string; linkText?: string },
-): void {
-  const { href, linkText } = config;
-  if (!href || !linkText) return;
-  try {
-    if (!["http:", "https:"].includes(new URL(href, document.baseURI).protocol)) return;
-  } catch {
-    return;
-  }
-  const link = document.createElement("a");
-  link.href = href;
-  link.textContent = linkText;
-  link.rel = "noopener noreferrer";
-  parent.append(" ", link);
-}
-
-function isChallenge(value: unknown): value is LeadsChallenge {
-  if (!value || typeof value !== "object") return false;
-  const { altcha, nonce } = value as Partial<LeadsChallenge>;
-  return (
-    typeof nonce === "string" &&
-    nonce.trim().length > 0 &&
-    !!altcha &&
-    ["SHA-1", "SHA-256", "SHA-512"].includes(altcha.algorithm) &&
-    [altcha.challenge, altcha.salt, altcha.signature].every(
-      (field) => typeof field === "string" && field.length > 0,
-    ) &&
-    (altcha.maxnumber === undefined ||
-      (Number.isSafeInteger(altcha.maxnumber) && altcha.maxnumber >= 0))
-  );
-}
-
-function encodePayload(payload: Exclude<LeadsSubmission["altcha"], string>): string {
-  const bytes = new TextEncoder().encode(JSON.stringify(payload));
-  return btoa(Array.from(bytes, (byte) => String.fromCharCode(byte)).join(""));
-}
 
 function resumePlayback(ctx: PlayerstackContext): void {
   const player = ctx.mediaPlayer as HTMLElement & { play?: () => Promise<void> | void };

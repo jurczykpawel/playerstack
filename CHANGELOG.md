@@ -6,6 +6,8 @@ All notable changes to Playerstack will be documented in this file.
 
 ### Added
 
+- Load email-gate optional fields and hardened submission code as separate versioned standalone modules; open forms never download the ALTCHA solver.
+
 - Demonstrate uninterrupted after-video email collection on the landing page with a typed configuration example.
 
 - Configurable marketing consent in email forms, with unchecked-by-default selection, wording/version payloads, and an optional required signup mode with translated validation.

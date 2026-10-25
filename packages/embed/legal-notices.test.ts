@@ -98,6 +98,8 @@ const standaloneFiles = ["min", "youtube", "hls", "vimeo", "wistia", "twitch"].m
   name === "min" ? "playerstack.min.js" : `playerstack-${name}.js`,
 );
 
+standaloneFiles.push("playerstack-email-gate-hardened.js", "playerstack-email-gate-fields.js");
+
 standaloneFiles.push(...pluginNames.map((name) => `playerstack-plugin-${name}.js`));
 
 describe("standalone copy", () => {

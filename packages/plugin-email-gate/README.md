@@ -59,6 +59,19 @@ Part of [Playerstack](https://github.com/jurczykpawel/playerstack). The standalo
 
 For open mode, omit **both** endpoint URLs. For a pre-roll gate use `at: "before"`; for a mid-roll gate use `at: 30` (seconds) or `atPercent: 50` without `at`. Setting `webhookUrl` without `challengeUrl`, or configuring either with a non-HTTP(S) URL, disables the plugin.
 
+## Standalone downloads
+
+Ship the complete output with `scripts/copy-standalone.sh`. The standalone email plugin loads versioned ES module siblings relative to its own script URL:
+
+- `playerstack-email-gate-fields.js`: loaded during initialization only when `privacy`, `marketingConsent`, or `product` is configured. It contains optional field rendering and validation, without the ALTCHA solver.
+- `playerstack-email-gate-hardened.js`: loaded on the first valid hardened submission, alongside the challenge GET. It contains challenge validation, the ALTCHA solver, and POST serialization. Open mode never downloads this file, including open forms with optional fields.
+
+Both filenames remain stable across releases; the plugin adds a content-version query. Successful downloads are reused. A failed hardened module download displays `messages.networkError` and re-enables submission. Retrying requests a fresh challenge and a fresh module URL. Destroying the player during a download prevents subsequent UI updates and POSTs.
+
+Serve these files with a JavaScript MIME type. For a cross-origin script CDN, allow the embedding page's origin through CORS for the ES modules. The page's script CSP must also permit their URLs. ESM/CJS package consumers continue to use their bundler's module handling.
+
+The basic open configuration is within the 50 KiB gzip budget; optional-field and hardened downloads add to the total. See `AGENTS.md` and `bun scripts/measure-bundle.ts` for measurements.
+
 ## Config
 
 | Field              | Type                                                                                      | Default                               | Description                                                                                                                                                                          |
