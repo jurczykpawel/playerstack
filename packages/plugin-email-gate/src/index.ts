@@ -190,9 +190,9 @@ export const emailGatePlugin: PlayerstackPlugin = {
       instance.unlisten = undefined;
       if (fields) {
         optional = await fields;
-        if (instance.dead) return;
+        if (instance.dead || !instance.shown) return;
         if (!optional) optional = await loadOptionalFields().catch(() => undefined);
-        if (instance.dead) return;
+        if (instance.dead || !instance.shown) return;
         if (optional && !optional.validConfig(cfg)) {
           instance.stop();
           return;
@@ -334,6 +334,7 @@ function renderOverlay(
   if (dismissible) {
     const dismiss = () => {
       if (!active()) return;
+      instance.shown = false;
       release();
       if (!isActive()) return;
       overlay.remove();

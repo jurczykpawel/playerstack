@@ -181,3 +181,98 @@ it("stops retry completion when restoring focus destroys the gate", async () => 
   ctx.container.querySelector<HTMLButtonElement>("button[type=submit]")!.click();
   await vi.waitFor(() => expect(ctx.container.querySelector(".playerstack-email-gate")).toBeNull());
 });
+
+it.each([
+  ["before", false],
+  ["before", true],
+  ["after", false],
+  ["after", true],
+  [5, false],
+  [5, true],
+] as const)("keeps dismissal final during %s field retry (reject=%s)", async (at, reject) => {
+  load.mockReset().mockRejectedValue(new Error("offline"));
+  const ctx = context(at, true);
+  const control = document.createElement("button");
+  ctx.container.append(control);
+  control.focus();
+  const dismissed = vi.fn();
+  ctx.events.on("email-gate:dismiss", dismissed);
+  const init = emailGatePlugin.init(ctx);
+  ctx.mediaPlayer.dispatchEvent(new Event(at === "after" ? "ended" : "timeupdate"));
+  await init;
+  await vi.waitFor(() => expect(ctx.container.textContent).toContain("Download failed"));
+  let finish!: (value: unknown) => void;
+  let fail!: (error: Error) => void;
+  load.mockReturnValue(
+    new Promise((resolve, reject) => {
+      finish = resolve;
+      fail = reject;
+    }),
+  );
+  ctx.container.querySelector<HTMLButtonElement>("button[type=submit]")!.click();
+  await vi.waitFor(() => expect(load).toHaveBeenCalledTimes(3));
+  ctx.container.querySelector<HTMLButtonElement>("button[type=button]")!.click();
+  expect(dismissed).toHaveBeenCalledOnce();
+  expect(ctx.container.querySelector("form")).toBeNull();
+  const pause = (ctx.mediaPlayer as HTMLElement & { pause: ReturnType<typeof vi.fn> }).pause;
+  pause.mockClear();
+  control.focus();
+  if (reject) fail(new Error("offline"));
+  else finish(await import("./optional-fields"));
+  await new Promise((resolve) => setTimeout(resolve, 0));
+  ctx.mediaPlayer.dispatchEvent(new Event(at === "after" ? "ended" : "timeupdate"));
+  expect(ctx.container.querySelector("form")).toBeNull();
+  expect(pause).not.toHaveBeenCalled();
+  expect(document.activeElement).toBe(control);
+  expect(control.hasAttribute("inert")).toBe(false);
+  emailGatePlugin.destroy?.(ctx);
+});
+
+it.each(["before", "after", 5] as const)(
+  "stops %s retry before starting another download when dismissed immediately",
+  async (at) => {
+    load.mockRejectedValue(new Error("offline"));
+    const ctx = context(at, true);
+    const init = emailGatePlugin.init(ctx);
+    ctx.mediaPlayer.dispatchEvent(new Event(at === "after" ? "ended" : "timeupdate"));
+    await init;
+    await vi.waitFor(() => expect(ctx.container.textContent).toContain("Download failed"));
+    ctx.container.querySelector<HTMLButtonElement>("button[type=submit]")!.click();
+    ctx.container.querySelector<HTMLButtonElement>("button[type=button]")!.click();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(load).toHaveBeenCalledTimes(2);
+    expect(ctx.container.querySelector("form")).toBeNull();
+    emailGatePlugin.destroy?.(ctx);
+  },
+);
+
+it.each([
+  ["before", false],
+  ["before", true],
+  ["after", false],
+  ["after", true],
+  [5, false],
+  [5, true],
+] as const)("ignores first %s field download after destroy (reject=%s)", async (at, reject) => {
+  let finish!: (value: unknown) => void;
+  let fail!: (error: Error) => void;
+  load.mockReturnValue(
+    new Promise((resolve, reject) => {
+      finish = resolve;
+      fail = reject;
+    }),
+  );
+  const ctx = context(at, true);
+  const init = emailGatePlugin.init(ctx);
+  ctx.mediaPlayer.dispatchEvent(new Event(at === "after" ? "ended" : "timeupdate"));
+  emailGatePlugin.destroy?.(ctx);
+  if (reject) fail(new Error("offline"));
+  else finish(await import("./optional-fields"));
+  await init;
+  await new Promise((resolve) => setTimeout(resolve, 0));
+  expect(load).toHaveBeenCalledOnce();
+  expect(ctx.container.querySelector("form")).toBeNull();
+  expect(
+    (ctx.mediaPlayer as HTMLElement & { pause: ReturnType<typeof vi.fn> }).pause,
+  ).not.toHaveBeenCalled();
+});

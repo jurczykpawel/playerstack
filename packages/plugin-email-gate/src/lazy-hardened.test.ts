@@ -109,3 +109,27 @@ it.each([false, true])("ignores chunk completion after destroy (reject=%s)", asy
   expect(f.ctx.container.querySelector("form")).toBeNull();
   expect(f.ctx.container.querySelector(".playerstack-email-gate-status")).toBeNull();
 });
+
+it.each([false, true])("ignores chunk completion after dismissal (reject=%s)", async (reject) => {
+  vi.stubGlobal("fetch", vi.fn().mockResolvedValue(Response.json({})));
+  let finish!: (value: unknown) => void;
+  let fail!: (error: Error) => void;
+  load.mockReturnValue(
+    new Promise((resolve, reject) => {
+      finish = resolve;
+      fail = reject;
+    }),
+  );
+  const f = await setup(true, { dismissible: true });
+  f.send();
+  expect(load).toHaveBeenCalledOnce();
+  f.ctx.container.querySelector<HTMLButtonElement>("button[type=button]")!.click();
+  const validate = vi.fn();
+  if (reject) fail(new Error("offline"));
+  else finish({ submitChallenge: validate });
+  await new Promise((resolve) => setTimeout(resolve, 0));
+  expect(validate).not.toHaveBeenCalled();
+  expect(f.emitted).not.toHaveBeenCalled();
+  expect(f.ctx.container.querySelector("form")).toBeNull();
+  expect(f.ctx.container.querySelector(".playerstack-email-gate-status")).toBeNull();
+});
