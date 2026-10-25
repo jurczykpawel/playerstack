@@ -38,7 +38,7 @@ Pre-roll splash overlay with marketing content — title, subtitle, badge, optio
 | `badge`       | `string`                               | —              | Small uppercase pill above the title                                           |
 | `title`       | `string`                               | —              | Heading                                                                        |
 | `subtitle`    | `string`                               | —              | Supporting line                                                                |
-| `html`        | `string`                               | —              | Arbitrary trusted HTML between subtitle and play button                        |
+| `html`        | `string`                               | —              | HTML filtered through core sanitizeHtml between subtitle and play button       |
 | `cta`         | `{ label, url, utm? }`                 | —              | Optional click-through link separate from the play button                      |
 | `image`       | `string`                               | —              | Background image URL                                                           |
 | `position`    | `"fullscreen" \| "bottom" \| "center"` | `"fullscreen"` | Layout: cover the whole player, sit at the bottom, or float as a centered card |
@@ -60,9 +60,18 @@ Pre-roll splash overlay with marketing content — title, subtitle, badge, optio
 | `intro-card:cta-click`  | `{ label?: string; url?: string }` | CTA link clicked     |
 | `intro-card:dismiss`    | `undefined`                        | Close button clicked |
 
-## Security
+## HTML rendering rules
 
-`html` and `cta.url` are inserted as-is — treat them as trusted strings from your config provider. `cta.url` must be `http(s)`; other schemes silently drop the link wrapper. CTA always opens in a new tab with `rel="noopener noreferrer"`.
+`html` passes through core's [sanitizeHtml](https://github.com/jurczykpawel/playerstack/blob/main/packages/core/src/safe-html.ts) before the resulting fragment is assigned to `innerHTML`.
+
+- Allowed elements: `a`, `b`, `br`, `code`, `em`, `h3`–`h6`, `i`, `li`, `ol`, `p`, `small`, `span`, `strong`, `sub`, `sup`, `u`, and `ul`.
+- Allowed attributes on those elements: `class`, `data-*`, `aria-*`, and `role`; anchors may also have `href`. Event attributes (`on*`), `style`, `id`, and other attributes are removed.
+- Anchor `href` must parse as an absolute HTTP(S) URL. Other values, including relative URLs and fragments, lose `href`. Anchors with an accepted `href` get `target="_blank"` and `rel="noopener noreferrer"`.
+- The walk removes comments. When it encounters a disallowed element, `script`, `style`, `iframe`, `noscript`, `object`, and `embed` are removed with their contents; other disallowed elements are replaced by a plain text node containing their `textContent`.
+
+This is a browser DOM-based rendering allowlist; without `document`, the helper returns an empty string. URL host policy and server-side validation remain the integrator's responsibility.
+
+`cta.url` is checked separately with `isSafeHttpUrl` from the same source file: only absolute HTTP(S) URLs render the CTA anchor. Valid CTAs open in a new tab with `rel="noopener noreferrer"`.
 
 ## Use cases
 

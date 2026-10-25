@@ -49,16 +49,16 @@ Playerstack.use(ctaEndPlugin).define();
 
 `config.ctaEnd`:
 
-| Field          | Type       | Description                                                                          |
-| -------------- | ---------- | ------------------------------------------------------------------------------------ |
-| `enabled`      | `boolean`  | Plugin is a no-op unless `true`                                                      |
-| `title`        | `string?`  | Heading text inside the overlay                                                      |
-| `html`         | `string?`  | Custom HTML rendered inside the overlay (use carefully — innerHTML, no sanitization) |
-| `button.label` | `string`   | Visible text                                                                         |
-| `button.url`   | `string`   | Destination URL                                                                      |
-| `button.utm`   | `string?`  | Query string appended to URL (e.g. `utm_source=...`)                                 |
-| `showReplay`   | `boolean?` | Render a "Replay" button that re-plays the video and dismisses the overlay           |
-| `replayLabel`  | `string?`  | Replay button text (default `"Replay"`); set it in the page language                 |
+| Field          | Type       | Description                                                                |
+| -------------- | ---------- | -------------------------------------------------------------------------- |
+| `enabled`      | `boolean`  | Plugin is a no-op unless `true`                                            |
+| `title`        | `string?`  | Heading text inside the overlay                                            |
+| `html`         | `string?`  | HTML filtered through core sanitizeHtml before rendering (see rules below) |
+| `button.label` | `string`   | Visible text                                                               |
+| `button.url`   | `string`   | Destination URL                                                            |
+| `button.utm`   | `string?`  | Query string appended to URL (e.g. `utm_source=...`)                       |
+| `showReplay`   | `boolean?` | Render a "Replay" button that re-plays the video and dismisses the overlay |
+| `replayLabel`  | `string?`  | Replay button text (default `"Replay"`); set it in the page language       |
 
 ## Events
 
@@ -77,6 +77,17 @@ ctx.events.on("cta:click", ({ label, url }) => {
   );
 });
 ```
+
+## HTML rendering rules
+
+`html` passes through core's [sanitizeHtml](https://github.com/jurczykpawel/playerstack/blob/main/packages/core/src/safe-html.ts) before the resulting fragment is assigned to `innerHTML`.
+
+- Allowed elements: `a`, `b`, `br`, `code`, `em`, `h3`–`h6`, `i`, `li`, `ol`, `p`, `small`, `span`, `strong`, `sub`, `sup`, `u`, and `ul`.
+- Allowed attributes on those elements: `class`, `data-*`, `aria-*`, and `role`; anchors may also have `href`. Event attributes (`on*`), `style`, `id`, and other attributes are removed.
+- Anchor `href` must parse as an absolute HTTP(S) URL. Other values, including relative URLs and fragments, lose `href`. Anchors with an accepted `href` get `target="_blank"` and `rel="noopener noreferrer"`.
+- The walk removes comments. When it encounters a disallowed element, `script`, `style`, `iframe`, `noscript`, `object`, and `embed` are removed with their contents; other disallowed elements are replaced by a plain text node containing their `textContent`.
+
+This is a browser DOM-based rendering allowlist; without `document`, the helper returns an empty string. URL host policy and server-side validation remain the integrator's responsibility.
 
 ## Styling
 
