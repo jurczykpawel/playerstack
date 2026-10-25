@@ -98,7 +98,7 @@ export async function submitChallenge(args: HardenedArgs): Promise<void> {
   };
   const submitRes = await fetch(cfg.webhookUrl!, {
     method: "POST",
-    credentials: "include",
+    credentials: "omit",
     headers: { "Content-Type": "application/json", Accept: "application/json" },
     body: JSON.stringify(submission),
   });

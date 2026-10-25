@@ -17,6 +17,8 @@ All notable changes to Playerstack will be documented in this file.
 
 ### Fixed
 
+- Send email-gate challenge and submission requests without cookies; support CORS endpoints that allow the embedding origin without Allow-Credentials.
+
 - Keep email-gate triggers active while optional fields download; retry failed field downloads and show the configured network error without an incomplete form.
 - Shorten the missing `challengeUrl` console diagnostic, including removal of its documentation URL.
 

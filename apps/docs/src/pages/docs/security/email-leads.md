@@ -10,7 +10,9 @@ The [`email-gate`](/docs/plugins/email-gate) plugin requires both `webhookUrl` a
 
 ## Challenge and submission
 
-Every attempt starts with `GET <challengeUrl>`, with credentials and `Accept: application/json`. When configured, `product` is added as a query parameter; existing query parameters remain. The server validates it against the brand's allowlist and stores it with the nonce. Product identifiers contain 1–100 characters. When product is omitted, bind the nonce to that absence as well.
+Every attempt starts with `GET <challengeUrl>`, without credentials (cookies) and `Accept: application/json`. When configured, `product` is added as a query parameter; existing query parameters remain. The server validates it against the brand's allowlist and stores it with the nonce. Product identifiers contain 1–100 characters. When product is omitted, bind the nonce to that absence as well.
+
+Both GET and POST use `credentials: "omit"`. For cross-origin requests, return `Access-Control-Allow-Origin` with the exact embedding origin and allow the required methods and headers in preflight responses. `Access-Control-Allow-Credentials` is not required.
 
 Return a wrapped challenge, with `nonce` at the top level:
 
@@ -29,7 +31,7 @@ Return a wrapped challenge, with `nonce` at the top level:
 
 `algorithm` supports `SHA-1`, `SHA-256`, or `SHA-512`; `maxnumber` is optional. A flat challenge or missing nonce is not accepted. Store an expiry with each nonce and align it with challenge expiry. The duration is a backend policy (Mailstack: approximately ten minutes), not a lifetime supplied by the browser.
 
-The browser solves the challenge and sends `POST <webhookUrl>`, with credentials and `Content-Type: application/json`:
+The browser solves the challenge and sends `POST <webhookUrl>`, without credentials (cookies) and `Content-Type: application/json`:
 
 ```json
 {

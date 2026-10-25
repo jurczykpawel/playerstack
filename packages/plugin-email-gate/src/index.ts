@@ -386,7 +386,7 @@ function renderOverlay(
     const challengeUrl = new URL(cfg.challengeUrl);
     if (cfg.product !== undefined) challengeUrl.searchParams.set("product", cfg.product);
     const response = fetch(challengeUrl.href, {
-      credentials: "include",
+      credentials: "omit",
       headers: { Accept: "application/json" },
     }).then(
       (value) => ({ value }),

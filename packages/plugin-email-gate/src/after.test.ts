@@ -60,6 +60,19 @@ afterEach(() => {
 });
 
 describe("email gate extensions", () => {
+  it.each([0, 1])("omits credentials from request %i", async (requestIndex) => {
+    const fetcher = vi
+      .fn()
+      .mockResolvedValueOnce(Response.json(challenge()))
+      .mockResolvedValueOnce(new Response(null, { status: 204 }));
+    vi.stubGlobal("fetch", fetcher);
+    const ctx = context(hardened);
+    await emailGatePlugin.init(ctx);
+    submit(ctx);
+    await vi.waitFor(() => expect(fetcher).toHaveBeenCalledTimes(2));
+    expect(fetcher.mock.calls[requestIndex]![1]).toMatchObject({ credentials: "omit" });
+  });
+
   it("after waits for ended, ignores percent, and does not restart completed playback", async () => {
     const ctx = context({ at: "after", atPercent: 10 });
     await emailGatePlugin.init(ctx);
