@@ -44,21 +44,54 @@ async function open(
         });
       return route.fulfill({ status: 204 });
     }
-    if (url.pathname === "/demo.mp4") return route.fulfill({ body: mp4, contentType: "video/mp4" });
+    if (url.pathname === "/demo.mp4") {
+      const range = route.request().headers()["range"];
+      const match = range?.match(/^bytes=(\d*)-(\d*)$/);
+      const start = match
+        ? match[1]
+          ? Number(match[1])
+          : Math.max(0, mp4.length - Number(match[2]))
+        : 0;
+      const end =
+        match?.[1] && match[2] ? Math.min(Number(match[2]), mp4.length - 1) : mp4.length - 1;
+      if (start > end || start >= mp4.length)
+        return route.fulfill({
+          status: 416,
+          headers: { "Content-Range": `bytes */${mp4.length}` },
+        });
+      const body = mp4.subarray(start, end + 1);
+      return route.fulfill({
+        status: match ? 206 : 200,
+        body,
+        contentType: "video/mp4",
+        headers: {
+          "Accept-Ranges": "bytes",
+          "Content-Length": String(body.length),
+          ...(match ? { "Content-Range": `bytes ${start}-${end}/${mp4.length}` } : {}),
+        },
+      });
+    }
     if (url.pathname.startsWith("/assets/"))
       return route.fulfill({
         body: readFileSync(resolve(dist, url.pathname.split("/").pop()!)),
         contentType: "application/javascript",
       });
     return route.fulfill({
-      contentType: "text/html",
-      body: `<!doctype html><html lang="en"><style>body{margin:16px}player-stack{display:block;width:min(100%,720px);aspect-ratio:16/9}</style><button id="before">Before</button><player-stack src="${origin}/demo.mp4" data-config='${JSON.stringify({ preload: "none", brandedThumb: { enabled: true, clickToLoad: true, playLabel: "Watch demo" }, ctaEnd: { enabled: cta, button: { label: "Offer", url: "https://example.com" }, showReplay: true }, ...(email ? { emailGate: { enabled: true, at: email, dismissible: true, remember: false, product: "Demo", webhookUrl: `${origin}/lead`, challengeUrl: `${origin}/challenge`, ...(consentMode ? { marketingConsent: { text: "Chcę otrzymywać wiadomości o nowych materiałach.", version: "2026-10", required: consentMode === "required" }, privacy: { text: "Kontakt w sprawie podobnego rozwiązania." } } : {}), ...(localized ? { privacy: { text: "Zostaw maila, a odezwę się w sprawie podobnego rozwiązania.", linkText: "Polityka prywatności", href: "/privacy" }, messages: { title: "Chcesz coś takiego u siebie? Zostaw maila", emailLabel: "Adres e-mail", submit: "Wyślij zgłoszenie", dismiss: "Pomiń" } } : {}) } } : {}), ...(intro ? { introCard: { enabled: true, dismissible: true, title: "Welcome" } } : {}) })}'></player-stack><button id="after">After</button><script src="/assets/playerstack.min.js"></script></html>`,
+      contentType: "text/html; charset=utf-8",
+      body: `<!doctype html><html lang="en"><meta charset="utf-8"><style>body{margin:16px}player-stack{display:block;width:min(100%,720px);aspect-ratio:16/9}</style><button id="before">Before</button><player-stack src="${origin}/demo.mp4" data-config='${JSON.stringify({ preload: "none", brandedThumb: { enabled: true, clickToLoad: true, playLabel: "Watch demo" }, ctaEnd: { enabled: cta, button: { label: "Offer", url: "https://example.com" }, showReplay: true }, ...(email ? { emailGate: { enabled: true, at: email, dismissible: true, remember: false, product: "Demo", webhookUrl: `${origin}/lead`, challengeUrl: `${origin}/challenge`, ...(consentMode ? { marketingConsent: { text: "Chcę otrzymywać wiadomości o nowych materiałach.", version: "2026-10", required: consentMode === "required" }, privacy: { text: "Kontakt w sprawie podobnego rozwiązania." } } : {}), ...(localized ? { privacy: { text: "Zostaw maila, a odezwę się w sprawie podobnego rozwiązania.", linkText: "Polityka prywatności", href: "/privacy" }, messages: { title: "Chcesz coś takiego u siebie? Zostaw maila", emailLabel: "Adres e-mail", submit: "Wyślij zgłoszenie", dismiss: "Pomiń" } } : {}) } } : {}), ...(intro ? { introCard: { enabled: true, dismissible: true, title: "Welcome" } } : {}) })}'></player-stack><button id="after">After</button><script src="/assets/playerstack.min.js"></script></html>`,
     });
   });
   await page.goto(origin);
   await expect(page.locator(".playerstack-thumb-play")).toBeAttached();
   if (email === "before") await expect(page.locator(".playerstack-email-gate")).toBeVisible();
   if (intro) await expect(page.locator(".playerstack-intro-card")).toBeVisible();
+}
+async function press(page: Page, key: string) {
+  // Option+Tab includes links in WebKit's macOS keyboard navigation.
+  const webkit = test.info().project.name === "webkit";
+  await page.keyboard.press(
+    webkit && key === "Tab" ? "Alt+Tab" : webkit && key === "Shift+Tab" ? "Alt+Shift+Tab" : key,
+  );
 }
 async function visibleFocus(target: Locator) {
   await expect(target).toBeFocused();
@@ -89,28 +122,29 @@ for (const width of [390, 1440]) {
     }) => {
       await open(page);
       await page.locator("#before").focus();
-      await page.keyboard.press("Tab");
+      await press(page, "Tab");
       await visibleFocus(page.locator(".playerstack-thumb-play"));
-      await page.keyboard.press("Tab");
+      await press(page, "Tab");
       await visibleFocus(page.locator("#after"));
-      await page.keyboard.press("Shift+Tab");
+      await press(page, "Shift+Tab");
       await visibleFocus(page.locator(".playerstack-thumb-play"));
-      await page.keyboard.press("Enter");
+      await press(page, "Enter");
       await expect(page.locator("media-play-button")).toBeFocused();
       await end(page);
-      await visibleFocus(page.locator(".playerstack-cta-button"));
+      // Continue to Tab assertions when checking an older build without focus transfer.
+      await expect.soft(page.locator(".playerstack-cta-button")).toBeFocused();
       await page.locator("#before").focus();
       for (const selector of [".playerstack-cta-button", ".playerstack-cta-replay", "#after"]) {
-        await page.keyboard.press("Tab");
+        await press(page, "Tab");
         await visibleFocus(page.locator(selector));
       }
       for (const selector of [".playerstack-cta-replay", ".playerstack-cta-button", "#before"]) {
-        await page.keyboard.press("Shift+Tab");
+        await press(page, "Shift+Tab");
         await visibleFocus(page.locator(selector));
       }
-      await page.keyboard.press("Tab");
-      await page.keyboard.press("Tab");
-      await page.keyboard.press("Enter");
+      await press(page, "Tab");
+      await press(page, "Tab");
+      await press(page, "Enter");
       await expect(page.locator(".playerstack-cta")).toHaveCount(0);
       await expect(page.locator("media-play-button")).toBeFocused();
       await expect
@@ -131,7 +165,7 @@ for (const width of [390, 1440]) {
     }) => {
       await open(page, false, "after", false);
       await page.locator(".playerstack-thumb-play").focus();
-      await page.keyboard.press("Enter");
+      await press(page, "Enter");
       await end(page);
       const email = page.locator('input[type="email"]');
       await visibleFocus(email);
@@ -142,7 +176,7 @@ for (const width of [390, 1440]) {
         page.getByRole("button", { name: "Skip" }),
         page.locator("#after"),
       ]) {
-        await page.keyboard.press("Tab");
+        await press(page, "Tab");
         await visibleFocus(target);
       }
       for (const target of [
@@ -151,11 +185,11 @@ for (const width of [390, 1440]) {
         email,
         page.locator("#before"),
       ]) {
-        await page.keyboard.press("Shift+Tab");
+        await press(page, "Shift+Tab");
         await visibleFocus(target);
       }
-      await page.keyboard.press("Tab");
-      await page.keyboard.press("Escape");
+      await press(page, "Tab");
+      await press(page, "Escape");
       await expect(page.locator(".playerstack-email-gate")).toHaveCount(0);
       await visibleFocus(page.locator("media-play-button"));
     });
@@ -164,7 +198,7 @@ for (const width of [390, 1440]) {
     }) => {
       await open(page, false, "after", false, true);
       await page.locator(".playerstack-thumb-play").focus();
-      await page.keyboard.press("Enter");
+      await press(page, "Enter");
       await end(page);
       await visibleFocus(page.getByRole("textbox", { name: "Adres e-mail" }));
       for (const target of [
@@ -173,11 +207,11 @@ for (const width of [390, 1440]) {
         page.getByRole("button", { name: "Pomiń" }),
         page.locator("#after"),
       ]) {
-        await page.keyboard.press("Tab");
+        await press(page, "Tab");
         await visibleFocus(target);
       }
-      await page.keyboard.press("Shift+Tab");
-      await page.keyboard.press("Escape");
+      await press(page, "Shift+Tab");
+      await press(page, "Escape");
       await visibleFocus(page.locator("media-play-button"));
     });
     test("optional consent has visible Tab stops and Space changes its selection", async ({
@@ -185,7 +219,7 @@ for (const width of [390, 1440]) {
     }) => {
       await open(page, false, "after", false, false, "optional");
       await page.locator(".playerstack-thumb-play").focus();
-      await page.keyboard.press("Enter");
+      await press(page, "Enter");
       await end(page);
       const consent = page.getByRole("checkbox");
       await expect(consent).not.toBeChecked();
@@ -197,10 +231,10 @@ for (const width of [390, 1440]) {
         page.getByRole("button", { name: "Skip", exact: true }),
         page.locator("#after"),
       ]) {
-        await page.keyboard.press("Tab");
+        await press(page, "Tab");
         await visibleFocus(target);
         if (await target.evaluate((el) => el.matches('input[type="checkbox"]'))) {
-          await page.keyboard.press("Space");
+          await press(page, "Space");
           await expect(consent).toBeChecked();
         }
       }
@@ -211,7 +245,7 @@ for (const width of [390, 1440]) {
         page.locator('input[type="email"]'),
         page.locator("#before"),
       ]) {
-        await page.keyboard.press("Shift+Tab");
+        await press(page, "Shift+Tab");
         await visibleFocus(target);
       }
     });
@@ -224,21 +258,21 @@ for (const width of [390, 1440]) {
       });
       await open(page, false, "after", false, false, "required");
       await page.locator(".playerstack-thumb-play").focus();
-      await page.keyboard.press("Enter");
+      await press(page, "Enter");
       await end(page);
       await page.locator('input[type="email"]').fill("viewer@example.com");
-      await page.keyboard.press("Tab");
-      await page.keyboard.press("Tab");
-      await page.keyboard.press("Enter");
+      await press(page, "Tab");
+      await press(page, "Tab");
+      await press(page, "Enter");
       const consent = page.getByRole("checkbox");
       await visibleFocus(consent);
       await expect(consent).toHaveAttribute("aria-invalid", "true");
       expect(requests).toEqual([]);
-      await page.keyboard.press("Space");
+      await press(page, "Space");
       await expect(consent).toBeChecked();
       await expect(consent).not.toHaveAttribute("aria-invalid");
-      await page.keyboard.press("Tab");
-      await page.keyboard.press("Enter");
+      await press(page, "Tab");
+      await press(page, "Enter");
       await expect(page.locator(".playerstack-email-gate")).toHaveCount(0);
       expect(requests).toHaveLength(2);
       await visibleFocus(page.locator("media-play-button"));
@@ -246,17 +280,17 @@ for (const width of [390, 1440]) {
     test("email after submission exposes the remaining CTA and Enter replays", async ({ page }) => {
       await open(page, false, "after");
       await page.locator(".playerstack-thumb-play").focus();
-      await page.keyboard.press("Enter");
+      await press(page, "Enter");
       await end(page);
       await visibleFocus(page.locator('input[type="email"]'));
       await page.locator('input[type="email"]').fill("viewer@example.com");
-      await page.keyboard.press("Tab");
-      await page.keyboard.press("Enter");
+      await press(page, "Tab");
+      await press(page, "Enter");
       await expect(page.locator(".playerstack-email-gate")).toHaveCount(0);
       await visibleFocus(page.locator(".playerstack-cta-button"));
-      await page.keyboard.press("Tab");
+      await press(page, "Tab");
       await visibleFocus(page.locator(".playerstack-cta-replay"));
-      await page.keyboard.press("Enter");
+      await press(page, "Enter");
       await visibleFocus(page.locator("media-play-button"));
     });
     test("email after skip exposes CTA and preserves external focus on ending", async ({
@@ -267,9 +301,9 @@ for (const width of [390, 1440]) {
       await page.locator("#after").focus();
       await end(page);
       await visibleFocus(page.locator("#after"));
-      await page.keyboard.press("Shift+Tab");
+      await press(page, "Shift+Tab");
       await visibleFocus(page.getByRole("button", { name: "Skip" }));
-      await page.keyboard.press("Enter");
+      await press(page, "Enter");
       await visibleFocus(page.locator(".playerstack-cta-button"));
     });
     test("email before covers thumbnail and dismissal restores its focus", async ({ page }) => {
@@ -281,30 +315,30 @@ for (const width of [390, 1440]) {
         page.getByRole("button", { name: "Skip" }),
         page.locator("#after"),
       ]) {
-        await page.keyboard.press("Tab");
+        await press(page, "Tab");
         await visibleFocus(target);
       }
-      await page.keyboard.press("Shift+Tab");
-      await page.keyboard.press("Enter");
+      await press(page, "Shift+Tab");
+      await press(page, "Enter");
       await visibleFocus(page.locator(".playerstack-thumb-play"));
-      await page.keyboard.press("Tab");
+      await press(page, "Tab");
       await visibleFocus(page.locator("#after"));
     });
     test("intro card covers thumbnail and dismissal restores it", async ({ page }) => {
       await open(page, true);
       await page.locator("#before").focus();
-      await page.keyboard.press("Tab");
+      await press(page, "Tab");
       await visibleFocus(page.locator(".playerstack-intro-card-close"));
-      await page.keyboard.press("Tab");
+      await press(page, "Tab");
       await visibleFocus(page.locator(".playerstack-intro-card-play"));
-      await page.keyboard.press("Tab");
+      await press(page, "Tab");
       await visibleFocus(page.locator("#after"));
-      await page.keyboard.press("Shift+Tab");
+      await press(page, "Shift+Tab");
       await visibleFocus(page.locator(".playerstack-intro-card-play"));
-      await page.keyboard.press("Shift+Tab");
-      await page.keyboard.press("Enter");
+      await press(page, "Shift+Tab");
+      await press(page, "Enter");
       await visibleFocus(page.locator(".playerstack-thumb-play"));
-      await page.keyboard.press("Tab");
+      await press(page, "Tab");
       await visibleFocus(page.locator("#after"));
     });
   });
