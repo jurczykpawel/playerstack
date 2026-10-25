@@ -1,3 +1,5 @@
+import type { EmailGateConfig } from "../../../../packages/plugin-email-gate/src/index";
+
 // Landing-page copy as structured data so a second locale can be added later
 // without touching markup. `en` is the source of truth; add `pl` and a resolver
 // when translations are needed.
@@ -47,6 +49,14 @@ export const demoCredit = {
   license: "CC BY 3.0",
   licenseHref: "https://creativecommons.org/licenses/by/3.0/",
 };
+
+const emailGateAfterConfig = {
+  enabled: true,
+  at: "after",
+  title: "Want to know more? Leave your email",
+  buttonLabel: "Send request",
+  remember: false,
+} satisfies EmailGateConfig;
 
 export const en = {
   meta: {
@@ -166,25 +176,21 @@ export const en = {
       {
         key: "email-gate",
         label: "Capture",
-        title: "Gate it behind an email.",
+        title: "Let the video finish. Then ask.",
         blurb:
-          "Pause playback and ask for an email before the video plays. Open mode emits an event; production mode POSTs to your endpoint with proof-of-work.",
+          "Collect an email before playback or after the full video. After-video forms leave playback uninterrupted. Open mode emits an event; production mode POSTs with proof-of-work.",
         config: {
           controls: { accent: "#8b5cf6" },
-          emailGate: {
-            enabled: true,
-            at: "before",
-            title: "Drop your email to watch",
-            buttonLabel: "Unlock video",
-          },
+          emailGate: emailGateAfterConfig,
         },
+        action: "end",
         code: [
           { text: "data-config='{" },
           { text: '"controls": { … },', indent: 1 },
           { text: '"emailGate": {', indent: 1, add: true },
           { text: '"enabled": true,', indent: 2, add: true },
-          { text: '"at": "before",', indent: 2, add: true },
-          { text: '"title": "Drop your email to watch"', indent: 2, add: true },
+          { text: '"at": "after",', indent: 2, add: true },
+          { text: '"title": "Want to know more? Leave your email"', indent: 2, add: true },
           { text: "}", indent: 1, add: true },
           { text: "}'" },
         ],
@@ -236,7 +242,7 @@ export const en = {
           {
             name: "Email gate",
             pkg: "email-gate",
-            desc: "Pause and require an email before playback continues.",
+            desc: "Collect email before playback, at a checkpoint, or after the video finishes.",
           },
           {
             name: "YouTube subscribe",

@@ -6,6 +6,8 @@ All notable changes to Playerstack will be documented in this file.
 
 ### Added
 
+- Demonstrate uninterrupted after-video email collection on the landing page with a typed configuration example.
+
 - Configurable marketing consent in email forms, with unchecked-by-default selection, wording/version payloads, and an optional required signup mode with translated validation.
 
 - Email-gate after-video forms (`at: "after"`), optional privacy text/link and product identifier, dismissal, translated messages, and configurable memo retention.
