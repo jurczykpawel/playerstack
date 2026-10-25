@@ -1,257 +1,109 @@
 ---
 layout: ../../../layouts/Docs.astro
 title: Email lead capture security — Playerstack
-description: Server protocol for secure email-gate lead capture — Altcha proof-of-work + single-use nonce + rate limit + origin check. Examples for Next.js, Hono, and Cloudflare Workers.
+description: Server contract for email-gate lead capture, challenge formats, nonce lifetime, product binding, and response handling.
 ---
 
 # Email lead capture security
 
-The [`email-gate`](/docs/plugins/email-gate) plugin is **secure-by-default**: setting `webhookUrl` without `challengeUrl` makes the plugin refuse to render. This page documents the protocol and shows server implementations for the three runtimes Playerstack users actually deploy on: Next.js, Hono, and Cloudflare Workers.
+The [`email-gate`](/docs/plugins/email-gate) plugin requires both `webhookUrl` and `challengeUrl` for network submissions. With neither URL it runs in open mode and emits an event only. This page describes the same endpoint contract as the [plugin README](https://github.com/jurczykpawel/playerstack/tree/main/packages/plugin-email-gate); the backend belongs to the integrating application.
 
-## Threat model
+## Challenge and submission
 
-What the protocol stops:
+Every attempt starts with `GET <challengeUrl>`, with credentials and `Accept: application/json`. When configured, `product` is added as a query parameter; existing query parameters remain. The server validates it against the brand's allowlist and stores it with the nonce. Product identifiers contain 1–100 characters. When product is omitted, bind the nonce to that absence as well.
 
-| Attack                                    | How it's blocked                                                                           |
-| ----------------------------------------- | ------------------------------------------------------------------------------------------ |
-| Bot flooding the endpoint with fake leads | Altcha proof-of-work (1–2 s CPU per submit) + rate limit per IP                            |
-| Replay attack with captured payload       | Single-use `nonce` — Redis `DEL` returns 0 on second use                                   |
-| CSRF from another origin                  | Origin allowlist + HMAC-signed Altcha challenge tied to your server secret                 |
-| Stolen `webhookUrl` from DevTools         | URL alone is useless — needs a valid, unused, non-expired Altcha challenge + nonce         |
-| Headless browser farm                     | Each submit still costs CPU; combined with rate limit makes large-scale spam uneconomical  |
-| Honeypot bypass                           | Off-screen `name="website"` input — bots fill all fields, plugin drops the submit silently |
+Return a wrapped challenge, with `nonce` at the top level:
 
-## Protocol
-
-```
-Browser                         Your server
-   │                                  │
-   │  GET <challengeUrl>              │
-   │ ───────────────────────────────► │
-   │                                  │ 1. createChallenge(hmacKey, expires)
-   │                                  │ 2. randomUUID() → store nonce in Redis (TTL 5 min)
-   │                                  │
-   │ ◄─────────────────────────────── │  { altcha: {...}, nonce: "uuid" }
-   │                                  │
-   │  solveChallenge(...)             │
-   │  (1–2 s CPU)                     │
-   │                                  │
-   │  POST <webhookUrl>               │
-   │  { email, src, nonce, altcha }   │
-   │ ───────────────────────────────► │
-   │                                  │ 1. Origin allowlist
-   │                                  │ 2. Rate limit per IP
-   │                                  │ 3. Redis DEL nonce → must return 1
-   │                                  │ 4. verifySolution(altcha, hmacKey)
-   │                                  │ 5. Email format
-   │                                  │ 6. Save lead, forward to Listmonk/etc
-   │                                  │
-   │ ◄─────────────────────────────── │  { ok: true }
-   │                                  │
-```
-
-## TypeScript types
-
-```ts
-import type {
-  LeadsChallenge,
-  LeadsSubmission,
-} from "@playerstack/plugin-email-gate";
-```
-
-```ts
-interface LeadsChallenge {
-  altcha: {
-    algorithm: "SHA-1" | "SHA-256" | "SHA-512";
-    challenge: string;
-    salt: string;
-    signature: string;
-    maxnumber?: number;
-  };
-  nonce: string; // single-use, MUST track server-side with TTL
-}
-
-interface LeadsSubmission {
-  email: string;
-  src: string;
-  nonce: string; // echo from challenge
-  altcha: { algorithm; challenge; number; salt; signature };
-}
-```
-
-## Implementation: Next.js (App Router)
-
-`app/api/leads/challenge/route.ts`:
-
-```ts
-import { createChallenge } from "altcha-lib";
-import { randomUUID } from "node:crypto";
-import { redis } from "@/lib/redis";
-
-const NONCE_TTL_SECONDS = 300;
-
-export async function GET() {
-  const altcha = await createChallenge({
-    hmacKey: process.env.ALTCHA_HMAC_KEY!,
-    expires: new Date(Date.now() + NONCE_TTL_SECONDS * 1000),
-  });
-  const nonce = randomUUID();
-  await redis.set(`leads:nonce:${nonce}`, "1", { EX: NONCE_TTL_SECONDS });
-  return Response.json({ altcha, nonce });
-}
-```
-
-`app/api/leads/route.ts`:
-
-```ts
-import { verifySolution } from "altcha-lib";
-import { Ratelimit } from "@upstash/ratelimit";
-import { Redis } from "@upstash/redis";
-import { redis } from "@/lib/redis";
-
-const ALLOWED_ORIGINS = new Set([
-  "https://your-domain.com",
-  "https://app.your-domain.com",
-]);
-const ratelimit = new Ratelimit({
-  redis: Redis.fromEnv(),
-  limiter: Ratelimit.slidingWindow(5, "1 h"),
-});
-
-export async function POST(req: Request) {
-  // 1. Origin allowlist
-  const origin = req.headers.get("origin");
-  if (!origin || !ALLOWED_ORIGINS.has(origin)) {
-    return Response.json({ error: "forbidden" }, { status: 403 });
-  }
-
-  // 2. Rate limit per IP
-  const ip =
-    req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
-  const { success } = await ratelimit.limit(`leads:${ip}`);
-  if (!success) return Response.json({ error: "too many" }, { status: 429 });
-
-  const { email, src, nonce, altcha } = await req.json();
-  if (!email || !src || !nonce || !altcha) {
-    return Response.json({ error: "malformed" }, { status: 400 });
-  }
-
-  // 3. Single-use nonce — atomic check-and-delete
-  const consumed = await redis.del(`leads:nonce:${nonce}`);
-  if (consumed !== 1) return Response.json({ error: "nonce" }, { status: 400 });
-
-  // 4. Altcha PoW + HMAC signature
-  const valid = await verifySolution(altcha, process.env.ALTCHA_HMAC_KEY!);
-  if (!valid) return Response.json({ error: "altcha" }, { status: 400 });
-
-  // 5. Email format
-  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
-    return Response.json({ error: "email" }, { status: 400 });
-  }
-
-  // 6. Save + forward
-  await saveLead({ email, src });
-  // void forwardToListmonk({ email });
-  return Response.json({ ok: true });
-}
-```
-
-## Implementation: Hono (Bun / Node / Edge)
-
-```ts
-import { Hono } from "hono";
-import { createChallenge, verifySolution } from "altcha-lib";
-import { randomUUID } from "node:crypto";
-
-const app = new Hono();
-const NONCE_TTL = 300;
-
-app.get("/api/leads/challenge", async (c) => {
-  const altcha = await createChallenge({
-    hmacKey: c.env.ALTCHA_HMAC_KEY,
-    expires: new Date(Date.now() + NONCE_TTL * 1000),
-  });
-  const nonce = randomUUID();
-  await c.env.KV.put(`leads:nonce:${nonce}`, "1", { expirationTtl: NONCE_TTL });
-  return c.json({ altcha, nonce });
-});
-
-app.post("/api/leads", async (c) => {
-  const origin = c.req.header("origin");
-  if (origin !== c.env.ALLOWED_ORIGIN)
-    return c.json({ error: "forbidden" }, 403);
-
-  const { email, src, nonce, altcha } = await c.req.json();
-
-  const stored = await c.env.KV.get(`leads:nonce:${nonce}`);
-  if (!stored) return c.json({ error: "nonce" }, 400);
-  await c.env.KV.delete(`leads:nonce:${nonce}`);
-
-  const valid = await verifySolution(altcha, c.env.ALTCHA_HMAC_KEY);
-  if (!valid) return c.json({ error: "altcha" }, 400);
-
-  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email))
-    return c.json({ error: "email" }, 400);
-
-  await saveLead(c.env.DB, { email, src });
-  return c.json({ ok: true });
-});
-```
-
-## Implementation: Cloudflare Workers (KV-backed)
-
-```ts
-import { createChallenge, verifySolution } from "altcha-lib";
-
-const NONCE_TTL = 300;
-
-export default {
-  async fetch(req: Request, env: Env): Promise<Response> {
-    const url = new URL(req.url);
-
-    if (req.method === "GET" && url.pathname === "/api/leads/challenge") {
-      const altcha = await createChallenge({
-        hmacKey: env.ALTCHA_HMAC_KEY,
-        expires: new Date(Date.now() + NONCE_TTL * 1000),
-      });
-      const nonce = crypto.randomUUID();
-      await env.NONCE_KV.put(`leads:nonce:${nonce}`, "1", {
-        expirationTtl: NONCE_TTL,
-      });
-      return Response.json({ altcha, nonce });
-    }
-
-    if (req.method === "POST" && url.pathname === "/api/leads") {
-      if (req.headers.get("origin") !== env.ALLOWED_ORIGIN) {
-        return Response.json({ error: "forbidden" }, { status: 403 });
-      }
-      const { email, src, nonce, altcha } = await req.json();
-      const stored = await env.NONCE_KV.get(`leads:nonce:${nonce}`);
-      if (!stored) return Response.json({ error: "nonce" }, { status: 400 });
-      await env.NONCE_KV.delete(`leads:nonce:${nonce}`);
-      const valid = await verifySolution(altcha, env.ALTCHA_HMAC_KEY);
-      if (!valid) return Response.json({ error: "altcha" }, { status: 400 });
-      if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
-        return Response.json({ error: "email" }, { status: 400 });
-      }
-      await env.DB.prepare("INSERT INTO leads (email, src) VALUES (?, ?)")
-        .bind(email, src)
-        .run();
-      return Response.json({ ok: true });
-    }
-
-    return new Response("not found", { status: 404 });
+```json
+{
+  "altcha": {
+    "algorithm": "SHA-256",
+    "challenge": "challenge-digest",
+    "salt": "server-salt",
+    "signature": "server-signature",
+    "maxnumber": 100000
   },
-};
+  "nonce": "server-issued-one-time-value"
+}
 ```
 
-## Operational checklist
+`algorithm` supports `SHA-1`, `SHA-256`, or `SHA-512`; `maxnumber` is optional. A flat challenge or missing nonce is not accepted. Store an expiry with each nonce and align it with challenge expiry. The duration is a backend policy (Mailstack: approximately ten minutes), not a lifetime supplied by the browser.
 
-- [ ] `ALTCHA_HMAC_KEY` is a strong random secret (min 32 bytes), stored in env, never committed
-- [ ] Redis / KV TTL on nonces is ≤ 5 minutes (matches Altcha challenge expiry)
-- [ ] Rate limit per IP set to a reasonable threshold (5–10 emails / hour is a sane default)
-- [ ] Origin allowlist includes only domains that should display the gate (no wildcards)
-- [ ] Email validation includes MX record check if you forward to a paid email service (cheap to add, kills 90% of garbage emails)
-- [ ] Disposable email blocklist (npm: `disposable-email-domains`) if leads quality matters
-- [ ] Saved leads are deduped on `(email, src)` for the last N days — prevents one user from filling DB by retrying
-- [ ] Logs include enough metadata to spot abuse patterns (IP, user-agent, timestamp) but no PII beyond what you need
+The browser solves the challenge and sends `POST <webhookUrl>`, with credentials and `Content-Type: application/json`:
+
+```json
+{
+  "email": "viewer@example.com",
+  "src": "https://files.example.com/demo.mp4",
+  "product": "Selfware",
+  "nonce": "server-issued-one-time-value",
+  "altcha": {
+    "algorithm": "SHA-256",
+    "challenge": "challenge-digest",
+    "number": 7,
+    "salt": "server-salt",
+    "signature": "server-signature"
+  }
+}
+```
+
+`product` is optional and independent of `src`. The default `altchaFormat: "object"` sends the object above. With `altchaFormat: "base64"`, `altcha` is a string: standard base64 of the UTF-8 JSON for that same object. Configure the backend to accept the chosen format. Example values above describe the shape, not a valid solution.
+
+## Required server ordering
+
+1. Read the bounded request body to identify the nonce. For a request with a usable nonce, **atomically consume it at the beginning of POST handling, before validation or any error response**. Consumption returns the stored product and expiry and removes the nonce in the same operation. A malformed body without an identifiable nonce cannot consume a record.
+2. Reject a missing, already-consumed, or expired record. Expiry must be enforced by the consuming operation even if physical storage cleanup is delayed.
+3. Validate the origin, apply the rate limit, and validate the payload, including email and `src`. Validate `product` against both the brand allowlist and the nonce-bound value, including presence/absence.
+4. Verify the ALTCHA solution and signature with the server secret and check its expiry. Decode base64 as UTF-8 JSON first when that format is selected.
+5. Save or forward the accepted lead and return a 2xx response.
+
+The first POST consumes the nonce **regardless of outcome**: invalid email, product, ALTCHA, origin, rate limit, and downstream 4xx/5xx errors all require a new challenge and nonce. Do not validate and then consume, and do not restore a consumed nonce after failure. A client retry always starts with a new GET; the plugin never automatically repeats a POST.
+
+## Atomic storage boundary
+
+Use a storage operation that returns and deletes a record atomically, scoped to the integrating brand. For example, an atomic Redis `GETDEL` can return a serialized `{ product, expiresAt }` record; a transactional database operation or a Durable Object can provide the same boundary. Check expiry from the returned record before accepting it.
+
+**Cloudflare KV `get` followed by `delete` does not meet this contract.** Separate reads and deletes must not be used as the nonce-consumption implementation. Use a transactional store or serialize consumption in a Durable Object instead. The pseudocode below makes the application-owned storage boundary explicit; it is not a complete server implementation:
+
+```ts
+async function submitLead(
+  request: Request,
+  services: LeadServices,
+): Promise<Response> {
+  const payload = await services.readBoundedJson(request);
+  const record = await services.nonces.consume(payload?.nonce);
+  // consume returns and removes one record atomically; it never restores it.
+  if (!record || record.expiresAt <= Date.now()) {
+    return Response.json({ error: "nonce" }, { status: 400 });
+  }
+  if (!services.allowedOrigin(request)) {
+    return Response.json({ error: "origin" }, { status: 403 });
+  }
+  if (!(await services.withinRateLimit(request))) {
+    return Response.json({ error: "limit" }, { status: 429 });
+  }
+  if (!services.validPayload(payload, record.product)) {
+    return Response.json({ error: "payload" }, { status: 400 });
+  }
+  if (!(await services.validSolution(payload.altcha))) {
+    return Response.json({ error: "altcha" }, { status: 400 });
+  }
+  await services.saveLead(payload);
+  return new Response(null, { status: 204 });
+}
+```
+
+`consume` must handle absent/invalid nonce values as a missing record. `validPayload` checks the product allowlist and exact stored binding as well as the remaining fields. Exceptions after consumption return an error without making the nonce usable again. Apply origin checks and rate limits to challenge issuance too. Keep secrets exclusively on the server.
+
+## Responses and retry
+
+| Response                                                           | Client behavior                                                                                   |
+| ------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------- |
+| Any POST 2xx                                                       | Emit submit, save memo when enabled, close the form, announce success. No response body required. |
+| 429                                                                | Show `messages.rateLimit`; re-enable submit.                                                      |
+| Other 4xx                                                          | Show `messages.rejected`; re-enable submit.                                                       |
+| 5xx, transport or JSON error, malformed challenge, failed solution | Show `messages.networkError`; re-enable submit.                                                   |
+
+Every failure leaves the form available for another attempt with a fresh challenge and nonce. Closing or destroying a form stops later client success and further POSTs; an already-sent POST may still be processed by the backend. Define backend deduplication independently of nonce lifetime.
+
+For a contact form after playback, use `at: "after"`, provide privacy text/link and the product identifier, and choose `remember: false` or an explicit `rememberDays` retention period. These settings do not replace the application's privacy notice or server-side retention policy.
