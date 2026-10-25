@@ -1,4 +1,6 @@
 import {
+  activateOverlay,
+  focusPlayerControl,
   buildSafeCtaUrl,
   sanitizeHtml,
   type PlayerstackPlugin,
@@ -23,6 +25,7 @@ export interface CtaEndConfig {
 
 interface CtaState {
   cleanup: () => void;
+  release?: () => void;
 }
 
 const states = new WeakMap<PlayerstackContext, CtaState>();
@@ -33,6 +36,12 @@ export const ctaEndPlugin: PlayerstackPlugin = {
     const cfg = (ctx.config as { ctaEnd?: CtaEndConfig }).ctaEnd;
     if (!cfg?.enabled) return;
 
+    let interacted = false;
+    const onInteraction = () => {
+      interacted = true;
+    };
+    ctx.container.addEventListener("focusin", onInteraction);
+    ctx.container.addEventListener("pointerdown", onInteraction);
     const onEnded = () => {
       removeOverlay(ctx);
       const overlay = renderOverlay(ctx, cfg);
@@ -40,12 +49,16 @@ export const ctaEndPlugin: PlayerstackPlugin = {
       // aspect-ratio + overflow from core DEFAULT_STYLES. Mounting inside
       // <media-controller> would tangle with Mux's shadow DOM stacking.
       ctx.container.appendChild(overlay);
+      const state = states.get(ctx);
+      if (state) state.release = activateOverlay(ctx.container, overlay, 3, interacted);
     };
     ctx.mediaPlayer.addEventListener("ended", onEnded);
 
     states.set(ctx, {
       cleanup: () => {
         ctx.mediaPlayer.removeEventListener("ended", onEnded);
+        ctx.container.removeEventListener("focusin", onInteraction);
+        ctx.container.removeEventListener("pointerdown", onInteraction);
         removeOverlay(ctx);
       },
     });
@@ -109,7 +122,12 @@ function renderOverlay(ctx: PlayerstackContext, cfg: CtaEndConfig): HTMLElement 
       ctx.events.emit("cta:replay", undefined);
       removeOverlay(ctx);
       const player = ctx.mediaPlayer as HTMLElement & { play?: () => Promise<void> | void };
-      player.play?.();
+      Object.assign(player, { currentTime: 0 });
+      try {
+        const result = player.play?.();
+        if (result instanceof Promise) result.catch(() => {});
+      } catch {}
+      focusPlayerControl(ctx.container);
     });
     overlay.appendChild(replay);
   }
@@ -118,6 +136,9 @@ function renderOverlay(ctx: PlayerstackContext, cfg: CtaEndConfig): HTMLElement 
 }
 
 function removeOverlay(ctx: PlayerstackContext): void {
+  const state = states.get(ctx);
+  state?.release?.();
+  if (state) state.release = undefined;
   const overlay = ctx.container.querySelector(".playerstack-cta");
   overlay?.remove();
 }

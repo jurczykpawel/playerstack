@@ -88,3 +88,7 @@ The overlay uses CSS variables you can override globally:
 ## License
 
 Apache-2.0.
+
+## Keyboard access
+
+After ended, covered controls are inert and hidden from assistive technology. Focus enters the CTA only if the player owned focus (including body focus after player interaction). Tab and Shift+Tab can leave the player. Replay seeks to zero, restores the controls, starts playback and focuses play, falling back to the controller.

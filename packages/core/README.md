@@ -104,6 +104,39 @@ browser default. `preload="none"` disables automatic preview; playback remains
 available through the player controls. Reduced-motion preferences also suppress
 preview from initial connection.
 
+### Overlay layers
+
+`activateOverlay(container, overlay, priority = 3, focusFromBody = false)` returns an
+idempotent release function. Append the overlay first; call release **before** removing
+it, including in plugin `destroy`. Higher priority wins; equal priorities use activation
+order. Keep CSS stacking order consistent with these priorities.
+
+The highest layer makes sibling branches below it `inert` and `aria-hidden="true"`,
+including nodes mounted later. Release restores each original attribute value and
+supports overlays closing in either order. Existing `inert` (for example a branded
+thumbnail's controller lock) is preserved. Layer state belongs to the player container
+and is shared by independently loaded plugin bundles.
+
+Focus moves to the first overlay action only when the player owned focus. Set
+`focusFromBody` only after a player interaction to include focus lost to `body`;
+an external focused element is always left alone. There is no Tab trap: the page's
+controls before and after the player remain reachable. Releasing an overlay that owns
+focus restores its previous target or the thumbnail/play/controller fallback.
+`focusPlayerControl(container)` explicitly focuses that fallback after replay.
+
+```ts
+import { activateOverlay } from "@playerstack/core";
+ctx.container.append(overlay);
+const release = activateOverlay(ctx.container, overlay, 4);
+// In every dismiss/submit/destroy path:
+release();
+overlay.remove();
+```
+
+For an email gate, activate after mounting its form with priority 4 (above CTA/intro
+at 3), retain the release callback in its per-context state, and invoke it before every
+removal. This adds no lead-capture knowledge to core and changes no plugin hooks/events.
+
 ## License
 
 Apache-2.0. Engine: Mux [media-chrome](https://github.com/muxinc/media-chrome) + [media-elements](https://github.com/muxinc/media-elements) (all MIT).

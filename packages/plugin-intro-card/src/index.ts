@@ -1,4 +1,5 @@
 import {
+  activateOverlay,
   buildSafeCtaUrl,
   isSafeHttpUrl,
   sanitizeHtml,
@@ -51,6 +52,7 @@ export const introCardPlugin: PlayerstackPlugin = {
     // + overflow from core DEFAULT_STYLES. Mounting inside <media-controller>
     // would tangle with Mux's shadow DOM stacking.
     ctx.container.appendChild(overlay);
+    const release = activateOverlay(ctx.container, overlay);
 
     const playBtn = overlay.querySelector(
       ".playerstack-intro-card-play",
@@ -88,6 +90,7 @@ export const introCardPlugin: PlayerstackPlugin = {
     closeBtn?.addEventListener("click", onClose);
 
     const removeOverlay = () => {
+      release();
       overlay.remove();
     };
 
@@ -97,7 +100,7 @@ export const introCardPlugin: PlayerstackPlugin = {
         playBtn?.removeEventListener("click", onPlay);
         ctaLink?.removeEventListener("click", onCta);
         closeBtn?.removeEventListener("click", onClose);
-        overlay.remove();
+        removeOverlay();
       },
     });
   },

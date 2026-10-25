@@ -17,3 +17,5 @@ export { createScriptProviderImporter, resolveScriptBase } from "./script-loader
 if (typeof window !== "undefined" && !customElements.get("player-stack")) {
   definePlayerstackElement();
 }
+
+export { activateOverlay, focusPlayerControl } from "./overlay";
