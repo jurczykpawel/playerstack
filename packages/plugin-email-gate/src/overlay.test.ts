@@ -70,6 +70,107 @@ describe("email overlay layers", () => {
       playCalls: vi.mocked((ctx.mediaPlayer as HTMLVideoElement).play).mock.calls.length,
     }).toEqual({ statusPresent: false, playCalls: 0 });
   });
+  for (const method of ["click", "Escape"]) {
+    it(`destroy in the dismiss listener prevents later effects (${method})`, async () => {
+      const { ctx, container } = setup({ at: "before", dismissible: true });
+      const storage = { setItem: vi.fn(), getItem: vi.fn() };
+      vi.stubGlobal("localStorage", storage);
+      Object.assign(ctx.config, { emailGate: { enabled: true, at: "before", dismissible: true } });
+      const submit = vi.fn();
+      const dismiss = vi.fn(() => emailGatePlugin.destroy?.(ctx));
+      ctx.events.on("email-gate:submit", submit);
+      ctx.events.on("email-gate:dismiss", dismiss);
+      await emailGatePlugin.init(ctx);
+      const oldForm = container.querySelector("form")!;
+      const oldOverlay = container.querySelector(".playerstack-email-gate")!;
+      if (method === "click") close(container);
+      else
+        input(container).dispatchEvent(
+          new KeyboardEvent("keydown", { key: "Escape", bubbles: true }),
+        );
+      await Promise.resolve();
+      expect({
+        playCalls: vi.mocked((ctx.mediaPlayer as HTMLVideoElement).play).mock.calls.length,
+        elements: container.querySelectorAll(
+          ".playerstack-email-gate,.playerstack-email-gate-status",
+        ).length,
+        memoWrites: storage.setItem.mock.calls.length,
+        submissions: submit.mock.calls.length,
+        dismissals: dismiss.mock.calls.length,
+      }).toEqual({ playCalls: 0, elements: 0, memoWrites: 0, submissions: 0, dismissals: 1 });
+      ctx.mediaPlayer.dispatchEvent(new Event("timeupdate"));
+      ctx.mediaPlayer.dispatchEvent(new Event("ended"));
+      expect(container.querySelector(".playerstack-email-gate")).toBeNull();
+      oldForm.dispatchEvent(new Event("submit", { cancelable: true }));
+      oldOverlay.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
+      expect(dismiss).toHaveBeenCalledOnce();
+      expect(submit).not.toHaveBeenCalled();
+    });
+  }
+  it("does not update a destroyed form after a request rejection", async () => {
+    let reject!: (reason: Error) => void;
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(
+        () =>
+          new Promise((_resolve, r) => {
+            reject = r;
+          }),
+      ),
+    );
+    const { ctx, container } = setup({
+      at: "before",
+      webhookUrl: "https://api.example/lead",
+      challengeUrl: "https://api.example/challenge",
+    });
+    await emailGatePlugin.init(ctx);
+    input(container).value = "viewer@example.com";
+    const form = container.querySelector("form")!;
+    const submit = container.querySelector<HTMLButtonElement>('button[type="submit"]')!;
+    form.dispatchEvent(new Event("submit", { cancelable: true }));
+    emailGatePlugin.destroy?.(ctx);
+    reject(new Error("network"));
+    await Promise.resolve();
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(submit.disabled).toBe(true);
+  });
+  it("does not solve or send after destruction while challenge JSON is pending", async () => {
+    let resolveJson!: (value: unknown) => void;
+    const json = vi.fn(
+      () =>
+        new Promise((resolve) => {
+          resolveJson = resolve;
+        }),
+    );
+    const fetcher = vi.fn(async () => ({ ok: true, json }));
+    vi.stubGlobal("fetch", fetcher);
+    const { ctx, container } = setup({
+      at: "before",
+      webhookUrl: "https://api.example/lead",
+      challengeUrl: "https://api.example/challenge",
+    });
+    await emailGatePlugin.init(ctx);
+    input(container).value = "viewer@example.com";
+    const status = container.querySelector(".playerstack-email-gate-status")!;
+    container.querySelector("form")!.dispatchEvent(new Event("submit", { cancelable: true }));
+    await vi.waitFor(() => expect(json).toHaveBeenCalledOnce());
+    emailGatePlugin.destroy?.(ctx);
+    resolveJson({
+      altcha: {
+        algorithm: "SHA-256",
+        challenge: "c",
+        salt: "s",
+        signature: "signature",
+        maxnumber: 0,
+      },
+      nonce: "n",
+    });
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(status.textContent).toBe("Verifying…");
+    expect(fetcher).toHaveBeenCalledOnce();
+  });
   it("focuses email after player interaction and releases covered controls on Escape", async () => {
     const { ctx, container, play } = setup();
     await emailGatePlugin.init(ctx);

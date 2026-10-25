@@ -158,6 +158,8 @@ export const emailGatePlugin: PlayerstackPlugin = {
 
     const at = cfg.at ?? (cfg.atPercent === undefined ? "before" : undefined);
     let shown = false;
+    let destroyed = false;
+    const isActive = () => !destroyed;
     let release: (() => void) | undefined;
     let interacted = false;
     const onInteraction = () => {
@@ -172,14 +174,14 @@ export const emailGatePlugin: PlayerstackPlugin = {
     let removeTimeListener: (() => void) | null = null;
 
     const show = () => {
-      if (shown) return;
+      if (shown || destroyed) return;
       shown = true;
       removeTimeListener?.();
       removeTimeListener = null;
 
       const player = ctx.mediaPlayer as HTMLElement & { pause?: () => void };
       player.pause?.();
-      const overlay = renderOverlay(cfg, ctx, memoKey, releaseOverlay);
+      const overlay = renderOverlay(cfg, ctx, memoKey, releaseOverlay, isActive);
       ctx.container.appendChild(overlay);
       release = activateOverlay(ctx.container, overlay, 4, interacted);
     };
@@ -209,6 +211,7 @@ export const emailGatePlugin: PlayerstackPlugin = {
 
     states.set(ctx, {
       cleanup: () => {
+        destroyed = true;
         removeTimeListener?.();
         ctx.container.removeEventListener("focusin", onInteraction);
         ctx.container.removeEventListener("pointerdown", onInteraction);
@@ -229,6 +232,7 @@ function renderOverlay(
   ctx: PlayerstackContext,
   memoKey: string,
   release: () => void,
+  isActive: () => boolean,
 ): HTMLElement {
   const messages = messagesFor(cfg);
   const overlay = document.createElement("div");
@@ -310,10 +314,11 @@ function renderOverlay(
   const dismissible = cfg.dismissible ?? cfg.at === "after";
   if (dismissible) {
     const dismiss = () => {
+      if (!isActive() || !overlay.isConnected) return;
       release();
       overlay.remove();
       ctx.events.emit("email-gate:dismiss", {});
-      if (cfg.at !== "after") resumePlayback(ctx);
+      if (isActive() && cfg.at !== "after") resumePlayback(ctx);
     };
     const button = document.createElement("button");
     button.type = "button";
@@ -330,7 +335,7 @@ function renderOverlay(
 
   form.addEventListener("submit", (e) => {
     e.preventDefault();
-    if (submit.disabled) return;
+    if (!isActive() || !overlay.isConnected || submit.disabled) return;
     if (honey.value) {
       // Bot tripped the honeypot. Pretend success silently — no signal back.
       release();
@@ -346,9 +351,20 @@ function renderOverlay(
     submit.disabled = true;
     status.textContent = messages.verifying;
 
-    void handleSubmit({ cfg, ctx, memoKey, email, overlay, status, submit, release }).catch(() => {
+    void handleSubmit({
+      cfg,
+      ctx,
+      memoKey,
+      email,
+      overlay,
+      status,
+      submit,
+      release,
+      isActive,
+    }).catch(() => {
+      if (!isActive() || !overlay.isConnected) return;
       submit.disabled = false;
-      if (overlay.isConnected) status.textContent = messages.networkError;
+      status.textContent = messages.networkError;
     });
   });
 
@@ -365,20 +381,22 @@ interface SubmitArgs {
   status: HTMLElement;
   submit: HTMLButtonElement;
   release: () => void;
+  isActive: () => boolean;
 }
 
 async function handleSubmit(args: SubmitArgs): Promise<void> {
-  const { cfg, ctx, memoKey, email, overlay, status, submit, release } = args;
+  const { cfg, ctx, memoKey, email, overlay, status, submit, release, isActive } = args;
 
   const messages = messagesFor(cfg);
+  const active = () => isActive() && overlay.isConnected;
   const success = () => {
-    if (!overlay.isConnected) return;
+    if (!active()) return;
     saveMemo(cfg, memoKey);
     ctx.events.emit("email-gate:submit", {
       email,
       ...(cfg.product === undefined ? {} : { product: cfg.product }),
     });
-    if (!overlay.isConnected) return;
+    if (!active()) return;
     status.textContent = messages.success;
     release();
     ctx.container.append(status);
@@ -386,7 +404,7 @@ async function handleSubmit(args: SubmitArgs): Promise<void> {
     if (cfg.at !== "after") resumePlayback(ctx);
   };
   const fail = (code?: number) => {
-    if (!overlay.isConnected) return;
+    if (!active()) return;
     submit.disabled = false;
     status.textContent =
       code === 429
@@ -407,12 +425,13 @@ async function handleSubmit(args: SubmitArgs): Promise<void> {
     credentials: "include",
     headers: { Accept: "application/json" },
   });
-  if (!overlay.isConnected) return;
+  if (!active()) return;
   if (!challengeRes.ok) {
     fail(challengeRes.status);
     return;
   }
   const challenge: unknown = await challengeRes.json();
+  if (!active()) return;
   if (!isChallenge(challenge)) {
     fail();
     return;
@@ -425,7 +444,7 @@ async function handleSubmit(args: SubmitArgs): Promise<void> {
     challenge.altcha.maxnumber,
   );
   const solution = await promise;
-  if (!overlay.isConnected) return;
+  if (!active()) return;
   if (!solution) {
     fail();
     return;
