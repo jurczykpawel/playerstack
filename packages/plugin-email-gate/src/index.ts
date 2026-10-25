@@ -378,6 +378,7 @@ async function handleSubmit(args: SubmitArgs): Promise<void> {
       email,
       ...(cfg.product === undefined ? {} : { product: cfg.product }),
     });
+    if (!overlay.isConnected) return;
     status.textContent = messages.success;
     release();
     ctx.container.append(status);

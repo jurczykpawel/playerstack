@@ -4,7 +4,13 @@ import { resolve } from "node:path";
 const origin = "http://127.0.0.1:15184";
 const dist = process.env.PLAYERSTACK_DIST || resolve("packages/embed/dist");
 const mp4 = readFileSync(resolve("apps/docs/public/demo.mp4"));
-async function open(page: Page, intro = false, email?: "before" | "after", cta = true) {
+async function open(
+  page: Page,
+  intro = false,
+  email?: "before" | "after",
+  cta = true,
+  localized = false,
+) {
   await page.route("**/*", async (route) => {
     const url = new URL(route.request().url());
     if (url.origin !== origin) throw new Error(`Unexpected external request: ${url}`);
@@ -39,7 +45,7 @@ async function open(page: Page, intro = false, email?: "before" | "after", cta =
       });
     return route.fulfill({
       contentType: "text/html",
-      body: `<!doctype html><html lang="en"><style>body{margin:16px}player-stack{display:block;width:min(100%,720px);aspect-ratio:16/9}</style><button id="before">Before</button><player-stack src="${origin}/demo.mp4" data-config='${JSON.stringify({ preload: "none", brandedThumb: { enabled: true, clickToLoad: true, playLabel: "Watch demo" }, ctaEnd: { enabled: cta, button: { label: "Offer", url: "https://example.com" }, showReplay: true }, ...(email ? { emailGate: { enabled: true, at: email, dismissible: true, remember: false, product: "Demo", webhookUrl: `${origin}/lead`, challengeUrl: `${origin}/challenge` } } : {}), ...(intro ? { introCard: { enabled: true, dismissible: true, title: "Welcome" } } : {}) })}'></player-stack><button id="after">After</button><script src="/assets/playerstack.min.js"></script></html>`,
+      body: `<!doctype html><html lang="en"><style>body{margin:16px}player-stack{display:block;width:min(100%,720px);aspect-ratio:16/9}</style><button id="before">Before</button><player-stack src="${origin}/demo.mp4" data-config='${JSON.stringify({ preload: "none", brandedThumb: { enabled: true, clickToLoad: true, playLabel: "Watch demo" }, ctaEnd: { enabled: cta, button: { label: "Offer", url: "https://example.com" }, showReplay: true }, ...(email ? { emailGate: { enabled: true, at: email, dismissible: true, remember: false, product: "Demo", webhookUrl: `${origin}/lead`, challengeUrl: `${origin}/challenge`, ...(localized ? { privacy: { text: "Zostaw maila, a odezwę się w sprawie podobnego rozwiązania.", linkText: "Polityka prywatności", href: "/privacy" }, messages: { title: "Chcesz coś takiego u siebie? Zostaw maila", emailLabel: "Adres e-mail", submit: "Wyślij zgłoszenie", dismiss: "Pomiń" } } : {}) } } : {}), ...(intro ? { introCard: { enabled: true, dismissible: true, title: "Welcome" } } : {}) })}'></player-stack><button id="after">After</button><script src="/assets/playerstack.min.js"></script></html>`,
     });
   });
   await page.goto(origin);
@@ -144,6 +150,27 @@ for (const width of [390, 1440]) {
       await page.keyboard.press("Tab");
       await page.keyboard.press("Escape");
       await expect(page.locator(".playerstack-email-gate")).toHaveCount(0);
+      await visibleFocus(page.locator("media-play-button"));
+    });
+    test("Polish contact form keeps privacy and actions visible to keyboard users", async ({
+      page,
+    }) => {
+      await open(page, false, "after", false, true);
+      await page.locator(".playerstack-thumb-play").focus();
+      await page.keyboard.press("Enter");
+      await end(page);
+      await visibleFocus(page.getByRole("textbox", { name: "Adres e-mail" }));
+      for (const target of [
+        page.getByRole("link", { name: "Polityka prywatności" }),
+        page.getByRole("button", { name: "Wyślij zgłoszenie" }),
+        page.getByRole("button", { name: "Pomiń" }),
+        page.locator("#after"),
+      ]) {
+        await page.keyboard.press("Tab");
+        await visibleFocus(target);
+      }
+      await page.keyboard.press("Shift+Tab");
+      await page.keyboard.press("Escape");
       await visibleFocus(page.locator("media-play-button"));
     });
     test("email after submission exposes the remaining CTA and Enter replays", async ({ page }) => {

@@ -18,4 +18,4 @@ if (typeof window !== "undefined" && !customElements.get("player-stack")) {
   definePlayerstackElement();
 }
 
-export { activateOverlay, focusPlayerControl } from "./overlay";
+export { activateOverlay, focusPlayerControl, holdInert } from "./overlay";

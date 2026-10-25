@@ -8,7 +8,7 @@ interface Layer {
 }
 interface Layers {
   active: Layer[];
-  saved: Map<HTMLElement, Snapshot>;
+  saved: Map<HTMLElement, () => void>;
   observer: MutationObserver;
 }
 const layerKey = Symbol.for("playerstack.overlayLayers");
@@ -22,6 +22,33 @@ function restore(element: HTMLElement, state: Snapshot): void {
     if (value === null) element.removeAttribute(name!);
     else element.setAttribute(name!, value!);
   }
+}
+
+const inertKey = Symbol.for("playerstack.inertOwners");
+interface InertOwners {
+  count: number;
+  snapshot: Snapshot;
+}
+type InertElement = HTMLElement & { [inertKey]?: InertOwners };
+
+export function holdInert(element: HTMLElement): () => void {
+  const target = element as InertElement;
+  const owners = (target[inertKey] ??= {
+    count: 0,
+    snapshot: { inert: element.getAttribute("inert"), hidden: element.getAttribute("aria-hidden") },
+  });
+  owners.count++;
+  element.setAttribute("inert", "");
+  element.setAttribute("aria-hidden", "true");
+  let released = false;
+  return () => {
+    if (released) return;
+    released = true;
+    if (--owners.count === 0) {
+      restore(element, owners.snapshot);
+      delete target[inertKey];
+    }
+  };
 }
 
 function topLayer(state: Layers): Layer | undefined {
@@ -41,7 +68,6 @@ function focusOverlay(overlay: HTMLElement): void {
 }
 
 function update(root: HTMLElement, state: Layers): void {
-  for (const [element, snapshot] of state.saved) restore(element, snapshot);
   const top = topLayer(state);
   const covered = new Set<HTMLElement>();
   if (top) {
@@ -53,16 +79,15 @@ function update(root: HTMLElement, state: Layers): void {
       branch = branch.parentElement;
     }
   }
-  for (const element of covered) {
-    if (!state.saved.has(element))
-      state.saved.set(element, {
-        inert: element.getAttribute("inert"),
-        hidden: element.getAttribute("aria-hidden"),
-      });
-    element.setAttribute("inert", "");
-    element.setAttribute("aria-hidden", "true");
+  for (const [element, release] of state.saved) {
+    if (!covered.has(element)) {
+      release();
+      state.saved.delete(element);
+    }
   }
-  for (const element of state.saved.keys()) if (!covered.has(element)) state.saved.delete(element);
+  for (const element of covered) {
+    if (!state.saved.has(element)) state.saved.set(element, holdInert(element));
+  }
 }
 
 export function focusPlayerControl(container: HTMLElement): void {

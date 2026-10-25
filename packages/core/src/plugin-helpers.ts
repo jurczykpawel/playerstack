@@ -1,2 +1,2 @@
 export { sanitizeHtml, isSafeHttpUrl, buildSafeCtaUrl } from "./safe-html";
-export { activateOverlay, focusPlayerControl } from "./overlay";
+export { activateOverlay, focusPlayerControl, holdInert } from "./overlay";

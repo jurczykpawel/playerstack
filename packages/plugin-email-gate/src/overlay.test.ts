@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { activateOverlay, createEventBus, type PlayerstackContext } from "@playerstack/core";
 import { emailGatePlugin } from "./index";
+import { brandedThumbPlugin } from "../../plugin-branded-thumb/src/index";
 
 function setup(options: Record<string, unknown> = {}) {
   const container = document.createElement("div");
@@ -33,6 +34,42 @@ afterEach(() => {
 });
 
 describe("email overlay layers", () => {
+  it("a late real thumbnail retains its controller lock when the gate closes", async () => {
+    const { ctx, container } = setup({ at: "before", dismissible: true });
+    Object.assign(ctx.config, { brandedThumb: { enabled: true } });
+    await emailGatePlugin.init(ctx);
+    await brandedThumbPlugin.init(ctx);
+    await Promise.resolve();
+    close(container);
+    expect(container.querySelector(".playerstack-thumb")).not.toBeNull();
+    expect(container.querySelector("media-controller")!.hasAttribute("inert")).toBe(true);
+    container.querySelector<HTMLButtonElement>(".playerstack-thumb-play")!.click();
+    expect(container.querySelector("media-controller")!.hasAttribute("inert")).toBe(false);
+    emailGatePlugin.destroy?.(ctx);
+  });
+  it("destroying a real thumbnail under a gate releases only the thumbnail lock", async () => {
+    const { ctx, container } = setup({ at: "before", dismissible: true });
+    Object.assign(ctx.config, { brandedThumb: { enabled: true } });
+    await brandedThumbPlugin.init(ctx);
+    await emailGatePlugin.init(ctx);
+    brandedThumbPlugin.destroy?.(ctx);
+    await Promise.resolve();
+    expect(container.querySelector("media-controller")!.hasAttribute("inert")).toBe(true);
+    emailGatePlugin.destroy?.(ctx);
+    expect(container.querySelector("media-controller")!.hasAttribute("inert")).toBe(false);
+  });
+  it("destroy in the submit listener prevents later status and playback effects", async () => {
+    const { ctx, container } = setup({ at: "before" });
+    await emailGatePlugin.init(ctx);
+    ctx.events.on("email-gate:submit", () => emailGatePlugin.destroy?.(ctx));
+    input(container).value = "viewer@example.com";
+    container.querySelector("form")!.dispatchEvent(new Event("submit", { cancelable: true }));
+    await Promise.resolve();
+    expect({
+      statusPresent: !!container.querySelector(".playerstack-email-gate-status"),
+      playCalls: vi.mocked((ctx.mediaPlayer as HTMLVideoElement).play).mock.calls.length,
+    }).toEqual({ statusPresent: false, playCalls: 0 });
+  });
   it("focuses email after player interaction and releases covered controls on Escape", async () => {
     const { ctx, container, play } = setup();
     await emailGatePlugin.init(ctx);

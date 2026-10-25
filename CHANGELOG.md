@@ -11,6 +11,8 @@ All notable changes to Playerstack will be documented in this file.
 
 ### Fixed
 
+- Share controller locks between thumbnails and overlays, including either initialization and closing order.
+- Stop email form completion when its submit listener destroys the plugin.
 - Keep email forms above other player overlays and restore focus when they close.
 - Honor `emailGate.atPercent` without requiring an explicit `at` value.
 - Make CTA and intro overlays disable covered controls and restore keyboard focus; replay starts from zero.
@@ -24,7 +26,9 @@ All notable changes to Playerstack will be documented in this file.
 
 ### Bundle size
 
-- On 2026-10-25, the standalone MP4 configuration with controls-policy, CTA and branded thumbnail measured 45.9 KiB gzip; adding email-gate measured 50.1 KiB (51,260 B), 60 B above the aspirational 50 KiB budget. Bun 1.4.4, zlib gzip level 9, KiB = 1024 B; sum of individually compressed downloaded JS files, excluding maps, notices, HTTP and media.
+- On 2026-10-25 at `d1c216b`, the standalone MP4 configuration with controls-policy, CTA and branded thumbnail measured 45.9 KiB gzip; adding email-gate measured 50.1 KiB (51,260 B), 60 B above the aspirational 50 KiB budget. Bun 1.4.4, zlib gzip level 9, KiB = 1024 B; sum of individually compressed downloaded JS files, excluding maps, notices, HTTP and media.
+
+- Shared controller-lock integration brings the same configurations to 46.1 KiB (47,257 B) and 50.4 KiB (51,573 B, 373 B above budget), using the same date, runtime and compression method.
 
 ### License
 

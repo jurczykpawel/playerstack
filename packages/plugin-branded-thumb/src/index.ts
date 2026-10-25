@@ -1,4 +1,9 @@
-import { isSafeHttpUrl, type PlayerstackPlugin, type PlayerstackContext } from "@playerstack/core";
+import {
+  holdInert,
+  isSafeHttpUrl,
+  type PlayerstackPlugin,
+  type PlayerstackContext,
+} from "@playerstack/core";
 
 export type PlayButtonStyle = "minimal" | "box" | "circle";
 
@@ -79,7 +84,7 @@ export const brandedThumbPlugin: PlayerstackPlugin = {
     }
 
     const controller = ctx.mediaPlayer.closest<HTMLElement>("media-controller");
-    controller?.setAttribute("inert", "");
+    const releaseController = controller ? holdInert(controller) : () => {};
 
     const onClick = (event: MouseEvent) => {
       const state = states.get(ctx);
@@ -137,7 +142,7 @@ export const brandedThumbPlugin: PlayerstackPlugin = {
     const cleanup = () => {
       overlay.removeEventListener("click", onClick);
       overlay.remove();
-      controller?.removeAttribute("inert");
+      releaseController();
       states.delete(ctx);
     };
     states.set(ctx, { overlay, heldSrc, cleanup });

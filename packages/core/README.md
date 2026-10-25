@@ -117,6 +117,13 @@ supports overlays closing in either order. Existing `inert` (for example a brand
 thumbnail's controller lock) is preserved. Layer state belongs to the player container
 and is shared by independently loaded plugin bundles.
 
+`holdInert(element)` acquires an independently owned `inert`/`aria-hidden` lock and
+returns an idempotent release function. Overlay layers and branded thumbnails use
+the same owner count: attributes are restored only after the last owner releases.
+Plugins that temporarily cover the same controls should use this helper instead of
+setting or removing `inert` directly. Original attributes present before the first
+owner are preserved.
+
 Focus moves to the first overlay action only when the player owned focus. Set
 `focusFromBody` only after a player interaction to include focus lost to `body`;
 an external focused element is always left alone. There is no Tab trap: the page's
