@@ -1,2 +1,2 @@
-name = "playerstack-docs"
+name = "playerstack"
 pages_build_output_dir = "apps/docs/dist"
