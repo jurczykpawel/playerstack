@@ -66,6 +66,8 @@ Ship the complete output with `scripts/copy-standalone.sh`. The standalone email
 - `playerstack-email-gate-fields.js`: loaded during initialization only when `privacy`, `marketingConsent`, or `product` is configured. It contains optional field rendering and validation, without the ALTCHA solver.
 - `playerstack-email-gate-hardened.js`: loaded on the first valid hardened submission, alongside the challenge GET. It contains challenge validation, the ALTCHA solver, and POST serialization. Open mode never downloads this file, including open forms with optional fields.
 
+Triggers remain active while optional fields download. If their initial download fails, showing the gate retries with a fresh module URL. A repeated failure shows `messages.networkError` and a retry button using `messages.submit`, without an email field or submission; dismissal follows `dismissible`. Retrying restores the complete form only after the fields load.
+
 Both filenames remain stable across releases; the plugin adds a content-version query. Successful downloads are reused. A failed hardened module download displays `messages.networkError` and re-enables submission. Retrying requests a fresh challenge and a fresh module URL. Destroying the player during a download prevents subsequent UI updates and POSTs.
 
 Serve these files with a JavaScript MIME type. For a cross-origin script CDN, allow the embedding page's origin through CORS for the ES modules. The page's script CSP must also permit their URLs. ESM/CJS package consumers continue to use their bundler's module handling.

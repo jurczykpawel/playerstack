@@ -84,15 +84,6 @@ const defaultMessages: FormMessages = {
   dismiss: "Skip",
 };
 
-function messagesFor(cfg: EmailGateConfig): FormMessages {
-  return {
-    ...defaultMessages,
-    title: cfg.title ?? defaultMessages.title,
-    submit: cfg.buttonLabel ?? defaultMessages.submit,
-    ...cfg.messages,
-  };
-}
-
 function hasMemo(cfg: EmailGateConfig, key: string): boolean {
   if (cfg.remember === false) return false;
   try {
@@ -121,15 +112,15 @@ function saveMemo(cfg: EmailGateConfig, key: string): void {
 }
 
 interface GateState {
-  destroyed: boolean;
+  dead: boolean;
   shown: boolean;
-  submitting: boolean;
-  interacted: boolean;
+  busy: boolean;
+  touched: boolean;
   overlay?: HTMLElement;
   status?: HTMLElement;
   release?: () => void;
-  removeTimeListener?: () => void;
-  cleanup: () => void;
+  unlisten?: () => void;
+  stop: () => void;
 }
 
 const states = new WeakMap<PlayerstackContext, GateState>();
@@ -142,9 +133,7 @@ export const emailGatePlugin: PlayerstackPlugin = {
 
     // Both URLs are required together. Plugin will not render with just one.
     if (cfg.webhookUrl && !cfg.challengeUrl) {
-      console.error(
-        "[playerstack] email-gate: `webhookUrl` requires `challengeUrl`. Plugin disabled.",
-      );
+      console.error("[playerstack] email-gate: missing `challengeUrl`.");
       return;
     }
 
@@ -166,15 +155,15 @@ export const emailGatePlugin: PlayerstackPlugin = {
 
     const at = cfg.at ?? (cfg.atPercent === undefined ? "before" : undefined);
     const instance: GateState = {
-      destroyed: false,
+      dead: false,
       shown: false,
-      submitting: false,
-      interacted: false,
-      cleanup: () => {
-        if (instance.destroyed) return;
-        instance.destroyed = true;
-        instance.removeTimeListener?.();
-        instance.removeTimeListener = undefined;
+      busy: false,
+      touched: false,
+      stop: () => {
+        if (instance.dead) return;
+        instance.dead = true;
+        instance.unlisten?.();
+        instance.unlisten = undefined;
         ctx.container.removeEventListener("focusin", onInteraction);
         ctx.container.removeEventListener("pointerdown", onInteraction);
         releaseOverlay(instance);
@@ -183,46 +172,56 @@ export const emailGatePlugin: PlayerstackPlugin = {
       },
     };
     const onInteraction = () => {
-      instance.interacted = true;
+      instance.touched = true;
     };
     ctx.container.addEventListener("focusin", onInteraction);
     ctx.container.addEventListener("pointerdown", onInteraction);
     states.set(ctx, instance);
     let optional: OptionalFields | undefined;
-    if (cfg.privacy || cfg.marketingConsent !== undefined || cfg.product !== undefined) {
-      try {
-        optional = await loadOptionalFields();
-      } catch (error) {
-        instance.cleanup();
-        throw error;
-      }
-      if (instance.destroyed) return;
-      if (!optional.validConfig(cfg)) {
-        instance.cleanup();
-        return;
-      }
-    }
+    const fields =
+      cfg.privacy || cfg.marketingConsent !== undefined || cfg.product !== undefined
+        ? loadOptionalFields().catch(() => undefined)
+        : undefined;
 
-    const show = () => {
-      if (instance.shown || instance.destroyed) return;
+    const show = async () => {
+      if (instance.shown || instance.dead) return;
       instance.shown = true;
-      instance.removeTimeListener?.();
-      instance.removeTimeListener = undefined;
+      instance.unlisten?.();
+      instance.unlisten = undefined;
+      if (fields) {
+        optional = await fields;
+        if (instance.dead) return;
+        if (!optional) optional = await loadOptionalFields().catch(() => undefined);
+        if (instance.dead) return;
+        if (optional && !optional.validConfig(cfg)) {
+          instance.stop();
+          return;
+        }
+      }
 
       const player = ctx.mediaPlayer as HTMLElement & { pause?: () => void };
       player.pause?.();
-      if (instance.destroyed) return;
-      const overlay = renderOverlay(cfg, ctx, memoKey, instance, optional);
+      releaseOverlay(instance);
+      if (instance.dead) return;
+      instance.overlay?.remove();
+      const overlay = renderOverlay(
+        cfg,
+        ctx,
+        memoKey,
+        instance,
+        optional,
+        fields && !optional ? show : undefined,
+      );
       ctx.container.appendChild(overlay);
-      instance.release = activateOverlay(ctx.container, overlay, 4, instance.interacted);
-      if (instance.destroyed) releaseOverlay(instance);
+      instance.release = activateOverlay(ctx.container, overlay, 4, instance.touched);
+      if (instance.dead) releaseOverlay(instance);
     };
 
     if (at === "before") {
-      show();
+      await show();
     } else if (at === "after") {
       ctx.mediaPlayer.addEventListener("ended", show);
-      instance.removeTimeListener = () => ctx.mediaPlayer.removeEventListener("ended", show);
+      instance.unlisten = () => ctx.mediaPlayer.removeEventListener("ended", show);
     } else {
       const seconds = typeof at === "number" ? at : undefined;
       const atPercent = cfg.atPercent;
@@ -238,14 +237,14 @@ export const emailGatePlugin: PlayerstackPlugin = {
         if (triggerSeconds || triggerPercent) show();
       };
       ctx.mediaPlayer.addEventListener("timeupdate", onTime);
-      instance.removeTimeListener = () => ctx.mediaPlayer.removeEventListener("timeupdate", onTime);
+      instance.unlisten = () => ctx.mediaPlayer.removeEventListener("timeupdate", onTime);
     }
   },
   destroy(ctx: PlayerstackContext): void {
     const instance = states.get(ctx);
     if (!instance) return;
     if (states.get(ctx) === instance) states.delete(ctx);
-    instance.cleanup();
+    instance.stop();
   },
 };
 
@@ -261,12 +260,19 @@ function renderOverlay(
   memoKey: string,
   instance: GateState,
   optional?: OptionalFields,
+  retry?: () => void,
 ): HTMLElement {
-  const isActive = () => !instance.destroyed;
+  const isActive = () => !instance.dead;
   const release = () => releaseOverlay(instance);
-  const messages = messagesFor(cfg);
+  const messages: FormMessages = {
+    ...defaultMessages,
+    title: cfg.title ?? defaultMessages.title,
+    submit: cfg.buttonLabel ?? defaultMessages.submit,
+    ...cfg.messages,
+  };
   const overlay = document.createElement("div");
   instance.overlay = overlay;
+  const active = () => isActive() && overlay.isConnected;
   overlay.className = "playerstack-email-gate";
   overlay.style.cssText =
     "position:absolute;inset:0;display:flex;align-items:flex-start;justify-content:center;" +
@@ -293,7 +299,7 @@ function renderOverlay(
   input.style.cssText =
     "padding:10px 12px;border-radius:6px;border:1px solid rgba(255,255,255,0.2);" +
     "background:rgba(255,255,255,0.05);color:#fff;font-size:15px;";
-  form.appendChild(input);
+  if (!retry) form.appendChild(input);
 
   const consentInput = optional?.renderFields(cfg, form, input, isActive);
 
@@ -305,7 +311,7 @@ function renderOverlay(
   honey.autocomplete = "off";
   honey.setAttribute("aria-hidden", "true");
   honey.style.cssText = "position:absolute;left:-10000px;opacity:0;pointer-events:none;";
-  form.appendChild(honey);
+  if (!retry) form.appendChild(honey);
 
   const submit = document.createElement("button");
   submit.type = "submit";
@@ -322,11 +328,12 @@ function renderOverlay(
   status.className = "playerstack-email-gate-status";
   status.style.cssText = "margin:0;font-size:13px;min-height:1.2em;opacity:0.85;";
   form.appendChild(status);
+  if (retry) status.textContent = messages.networkError;
 
   const dismissible = cfg.dismissible ?? cfg.at === "after";
   if (dismissible) {
     const dismiss = () => {
-      if (!isActive() || !overlay.isConnected) return;
+      if (!active()) return;
       release();
       if (!isActive()) return;
       overlay.remove();
@@ -347,7 +354,6 @@ function renderOverlay(
   }
 
   async function handleSubmit(email: string, consent: ConsentFields): Promise<void> {
-    const active = () => !instance.destroyed && overlay.isConnected;
     const success = () => {
       if (!active()) return;
       saveMemo(cfg, memoKey);
@@ -367,7 +373,7 @@ function renderOverlay(
     };
     const fail = () => {
       if (!active()) return;
-      instance.submitting = false;
+      instance.busy = false;
       submit.disabled = false;
     };
 
@@ -404,7 +410,12 @@ function renderOverlay(
 
   form.addEventListener("submit", (e) => {
     e.preventDefault();
-    if (!isActive() || !overlay.isConnected || instance.submitting || submit.disabled) return;
+    if (!active() || instance.busy || submit.disabled) return;
+    if (retry) {
+      instance.shown = false;
+      void retry();
+      return;
+    }
     if (honey.value) {
       // Bot tripped the honeypot. Pretend success silently — no signal back.
       release();
@@ -418,21 +429,20 @@ function renderOverlay(
       return;
     }
 
-    const consent =
-      optional?.readConsent(cfg, consentInput, status) ?? (cfg.marketingConsent ? undefined : {});
+    const consent = optional ? optional.readConsent(cfg, consentInput, status) : {};
     if (!consent) return;
 
-    instance.submitting = true;
+    instance.busy = true;
     if (overlay.ownerDocument.activeElement === submit) {
       input.focus();
-      if (!isActive() || !overlay.isConnected) return;
+      if (!active()) return;
     }
     submit.disabled = true;
     status.textContent = messages.verifying;
 
     void handleSubmit(email, consent).catch(() => {
-      if (!isActive() || !overlay.isConnected) return;
-      instance.submitting = false;
+      if (!active()) return;
+      instance.busy = false;
       submit.disabled = false;
       status.textContent = messages.networkError;
     });

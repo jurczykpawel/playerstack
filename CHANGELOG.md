@@ -17,6 +17,9 @@ All notable changes to Playerstack will be documented in this file.
 
 ### Fixed
 
+- Keep email-gate triggers active while optional fields download; retry failed field downloads and show the configured network error without an incomplete form.
+- Shorten the missing `challengeUrl` console diagnostic, including removal of its documentation URL.
+
 - Keep long email forms, end cards, and intro cards in their own scroll areas so all content and actions remain reachable without scrolling the player.
 
 - Keep form focus on an enabled field while a submission is pending so completion can restore it to CTA or player controls.
