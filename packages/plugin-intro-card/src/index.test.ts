@@ -269,3 +269,19 @@ describe("introCardPlugin", () => {
     expect(overlay?.parentElement).toBe(ctx.container);
   });
 });
+
+it("covers a thumbnail inserted after init and restores focus on dismissal", async () => {
+  const ctx = makeContext({ introCard: { enabled: true, dismissible: true } });
+  await introCardPlugin.init(ctx);
+  const thumb = document.createElement("div");
+  thumb.className = "playerstack-thumb";
+  thumb.innerHTML = '<button class="playerstack-thumb-play">Watch</button>';
+  ctx.container.append(thumb);
+  await new Promise((resolve) => setTimeout(resolve, 0));
+  expect(thumb.hasAttribute("inert")).toBe(true);
+  const close = ctx.container.querySelector<HTMLElement>(".playerstack-intro-card-close")!;
+  close.focus();
+  close.click();
+  expect(thumb.hasAttribute("inert")).toBe(false);
+  expect(document.activeElement).toBe(thumb.firstChild);
+});

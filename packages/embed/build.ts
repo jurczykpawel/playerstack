@@ -116,7 +116,7 @@ const pluginEntries: Plugin = {
       namespace: "plugin",
     }));
     b.onResolve({ filter: /^@playerstack\/core$/ }, () => ({
-      path: join(coreDir, "src/safe-html.ts"),
+      path: join(coreDir, "src/plugin-helpers.ts"),
     }));
     b.onLoad({ filter: /.*/, namespace: "plugin" }, (args) => {
       const entry = LAZY_PLUGINS.find((entry) => entry.name === args.path)!;
@@ -144,7 +144,8 @@ writeLegalNotices(pluginResult.metafile, process.cwd());
 const engineCopies = Object.keys(pluginResult.metafile.inputs).filter(
   (input) =>
     input.includes("media-chrome") ||
-    (input.includes("core/src/") && !input.endsWith("safe-html.ts")),
+    (input.includes("core/src/") &&
+      !["safe-html.ts", "overlay.ts", "plugin-helpers.ts"].some((file) => input.endsWith(file))),
 );
 if (engineCopies.length)
   throw new Error(`plugin files must not duplicate the engine: ${engineCopies.join(", ")}`);

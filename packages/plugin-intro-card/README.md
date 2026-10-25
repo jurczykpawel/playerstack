@@ -89,3 +89,7 @@ Playerstack.use(introCardPlugin).define();
 ## License
 
 Apache-2.0.
+
+## Keyboard access
+
+While the card is visible, lower player layers (including branded thumbnails mounted later) are inert and hidden from assistive technology. Dismissal restores their original state and returns owned focus to the previous control or the thumbnail/play/controller fallback. External page focus is preserved.

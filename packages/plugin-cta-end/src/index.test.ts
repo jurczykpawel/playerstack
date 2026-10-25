@@ -169,3 +169,32 @@ describe("ctaEndPlugin", () => {
     expect(title.style.color).toBe("inherit");
   });
 });
+
+it("covers controls, focuses CTA, restarts at zero and returns focus to play", async () => {
+  const ctx = makeContext({
+    ctaEnd: {
+      enabled: true,
+      showReplay: true,
+      button: { label: "CTA", url: "https://example.com" },
+    },
+  });
+  document.body.append(ctx.container);
+  const controller = document.createElement("media-controller");
+  controller.tabIndex = 0;
+  const play = document.createElement("media-play-button");
+  play.tabIndex = 0;
+  ctx.container.append(controller);
+  controller.append(ctx.mediaPlayer, play);
+  Object.assign(ctx.mediaPlayer, { currentTime: 12 });
+  play.focus();
+  await ctaEndPlugin.init(ctx);
+  fireEnded(ctx.mediaPlayer);
+  expect(controller.hasAttribute("inert")).toBe(true);
+  expect(document.activeElement).toBe(ctx.container.querySelector("a"));
+  (ctx.container.querySelector(".playerstack-cta-replay") as HTMLElement).click();
+  expect(controller.hasAttribute("inert")).toBe(false);
+  expect((ctx.mediaPlayer as HTMLVideoElement).currentTime).toBe(0);
+  expect(document.activeElement).toBe(play);
+  ctaEndPlugin.destroy?.(ctx);
+  ctx.container.remove();
+});
