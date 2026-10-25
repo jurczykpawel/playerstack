@@ -72,7 +72,7 @@ test("submits across origins with exact Allow-Origin and no Allow-Credentials", 
     };
     res.setHeader("Content-Type", "text/html");
     res.end(
-      `<!doctype html><player-stack src="movie.mp4" data-config='${JSON.stringify(config)}'></player-stack><script src="/assets/playerstack.min.js"></script>`,
+      `<!doctype html><player-stack src="${origin}/movie.mp4" style="display:block;width:640px;height:360px" data-config='${JSON.stringify(config)}'></player-stack><script src="/assets/playerstack.min.js"></script>`,
     );
   });
   try {
@@ -80,9 +80,14 @@ test("submits across origins with exact Allow-Origin and no Allow-Credentials", 
     await context.addCookies([{ name: "session", value: "fixture", url: apiOrigin }]);
     await page.goto(origin);
     const gate = page.locator(".playerstack-email-gate");
-    await expect(gate).toBeVisible();
+    await expect(gate, "source resolution must mount the gate before testing CORS").toBeVisible();
     await gate.locator("input[type=email]").fill("viewer@example.com");
     await gate.locator("button[type=submit]").click();
+    await expect
+      .poll(() => received.filter((request) => request.method === "POST").length, {
+        message: "CORS must permit the POST without Allow-Credentials (credentials: omit)",
+      })
+      .toBe(1);
     await expect(gate).toHaveCount(0);
     expect(received.map((r) => r.method)).toEqual(["GET", "POST"]);
     for (const request of received) {
