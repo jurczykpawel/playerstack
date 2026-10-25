@@ -121,6 +121,7 @@ function saveMemo(cfg: EmailGateConfig, key: string): void {
 interface GateState {
   destroyed: boolean;
   shown: boolean;
+  submitting: boolean;
   interacted: boolean;
   overlay?: HTMLElement;
   status?: HTMLElement;
@@ -193,6 +194,7 @@ export const emailGatePlugin: PlayerstackPlugin = {
     const instance: GateState = {
       destroyed: false,
       shown: false,
+      submitting: false,
       interacted: false,
       cleanup: () => {
         if (instance.destroyed) return;
@@ -383,7 +385,7 @@ function renderOverlay(
 
   form.addEventListener("submit", (e) => {
     e.preventDefault();
-    if (!isActive() || !overlay.isConnected || submit.disabled) return;
+    if (!isActive() || !overlay.isConnected || instance.submitting || submit.disabled) return;
     if (honey.value) {
       // Bot tripped the honeypot. Pretend success silently — no signal back.
       release();
@@ -413,6 +415,11 @@ function renderOverlay(
           }
         : { marketingConsent: false };
 
+    instance.submitting = true;
+    if (overlay.ownerDocument.activeElement === submit) {
+      input.focus();
+      if (!isActive() || !overlay.isConnected) return;
+    }
     submit.disabled = true;
     status.textContent = messages.verifying;
 
@@ -428,6 +435,7 @@ function renderOverlay(
       consent,
     }).catch(() => {
       if (!isActive() || !overlay.isConnected) return;
+      instance.submitting = false;
       submit.disabled = false;
       status.textContent = messages.networkError;
     });
@@ -476,6 +484,7 @@ async function handleSubmit(args: SubmitArgs): Promise<void> {
   };
   const fail = (code?: number) => {
     if (!active()) return;
+    instance.submitting = false;
     submit.disabled = false;
     status.textContent =
       code === 429
