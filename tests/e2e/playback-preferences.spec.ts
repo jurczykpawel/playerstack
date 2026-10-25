@@ -139,6 +139,7 @@ for (const key of ["Enter", "Space"]) {
     await expect(overlay).toHaveCount(0);
     await playing(page);
     await expect(page.locator("media-play-button")).toBeFocused();
+    await expect(page.locator("media-controller")).not.toHaveAttribute("mediapaused", "");
     await page.keyboard.press("Space");
     await expect(page.locator("video")).toHaveJSProperty("paused", true);
   });
@@ -159,6 +160,7 @@ for (const key of ["Enter", "Space"]) {
     await page.keyboard.press(key);
     await playing(page);
     await expect(page.locator("media-controller")).toBeFocused();
+    await expect(page.locator("media-controller")).not.toHaveAttribute("mediapaused", "");
     await page.keyboard.press("Space");
     await expect(page.locator("video")).toHaveJSProperty("paused", true);
   });
