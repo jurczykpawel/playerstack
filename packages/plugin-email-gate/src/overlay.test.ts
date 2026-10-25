@@ -171,6 +171,85 @@ describe("email overlay layers", () => {
     expect(status.textContent).toBe("Verifying…");
     expect(fetcher).toHaveBeenCalledOnce();
   });
+  for (const mode of ["before", "after", "seconds", "percent"] as const) {
+    for (const action of ["submit", "dismiss"] as const) {
+      it(`destroy on focus restoration stops later ${action} effects (${mode})`, async () => {
+        const options =
+          mode === "seconds"
+            ? { at: 5 }
+            : mode === "percent"
+              ? { at: undefined, atPercent: 50 }
+              : { at: mode };
+        const { ctx, container, play } = setup({ ...options, dismissible: true });
+        play.focus();
+        await emailGatePlugin.init(ctx);
+        if (mode === "after") ctx.mediaPlayer.dispatchEvent(new Event("ended"));
+        else if (mode !== "before") {
+          Object.assign(ctx.mediaPlayer, { currentTime: 6 });
+          Object.defineProperty(ctx.mediaPlayer, "duration", { value: 10, configurable: true });
+          ctx.mediaPlayer.dispatchEvent(new Event("timeupdate"));
+        }
+        expect(document.activeElement).toBe(input(container));
+        let destroyed = false;
+        const eventsAfterDestroy: string[] = [];
+        ctx.events.on("email-gate:submit", () => {
+          if (destroyed) eventsAfterDestroy.push("submit");
+        });
+        ctx.events.on("email-gate:dismiss", () => {
+          if (destroyed) eventsAfterDestroy.push("dismiss");
+        });
+        play.addEventListener(
+          "focus",
+          () => {
+            destroyed = true;
+            emailGatePlugin.destroy?.(ctx);
+          },
+          { once: true },
+        );
+        if (action === "dismiss") close(container);
+        else {
+          input(container).value = "viewer@example.com";
+          container.querySelector("form")!.dispatchEvent(new Event("submit", { cancelable: true }));
+        }
+        await Promise.resolve();
+        expect(destroyed).toBe(true);
+        expect({
+          statusPresent: !!container.querySelector(".playerstack-email-gate-status"),
+          gatePresent: !!container.querySelector(".playerstack-email-gate"),
+          playCalls: vi.mocked((ctx.mediaPlayer as HTMLVideoElement).play).mock.calls.length,
+          eventsAfterDestroy,
+        }).toEqual({
+          statusPresent: false,
+          gatePresent: false,
+          playCalls: 0,
+          eventsAfterDestroy: [],
+        });
+      });
+    }
+  }
+  for (const at of ["before", "after"] as const) {
+    for (const callback of ["focus", "pause"] as const) {
+      it(`destroy during initial ${callback} leaves no gate or lock (${at})`, async () => {
+        const { ctx, container, play } = setup({ at });
+        play.focus();
+        if (callback === "focus")
+          container.addEventListener("focusin", (event) => {
+            if ((event.target as HTMLElement).matches('input[type="email"]'))
+              emailGatePlugin.destroy?.(ctx);
+          });
+        else
+          vi.mocked((ctx.mediaPlayer as HTMLVideoElement).pause).mockImplementation(() => {
+            emailGatePlugin.destroy?.(ctx);
+          });
+        await emailGatePlugin.init(ctx);
+        if (at === "after") ctx.mediaPlayer.dispatchEvent(new Event("ended"));
+        expect(container.querySelector(".playerstack-email-gate")).toBeNull();
+        expect(play.closest("[inert]")).toBeNull();
+        ctx.mediaPlayer.dispatchEvent(new Event("ended"));
+        expect(container.querySelector(".playerstack-email-gate")).toBeNull();
+      });
+    }
+  }
   it("focuses email after player interaction and releases covered controls on Escape", async () => {
     const { ctx, container, play } = setup();
     await emailGatePlugin.init(ctx);

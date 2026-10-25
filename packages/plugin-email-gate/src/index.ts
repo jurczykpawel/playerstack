@@ -168,8 +168,9 @@ export const emailGatePlugin: PlayerstackPlugin = {
     ctx.container.addEventListener("focusin", onInteraction);
     ctx.container.addEventListener("pointerdown", onInteraction);
     const releaseOverlay = () => {
-      release?.();
+      const currentRelease = release;
       release = undefined;
+      currentRelease?.();
     };
     let removeTimeListener: (() => void) | null = null;
 
@@ -181,10 +182,24 @@ export const emailGatePlugin: PlayerstackPlugin = {
 
       const player = ctx.mediaPlayer as HTMLElement & { pause?: () => void };
       player.pause?.();
+      if (!isActive()) return;
       const overlay = renderOverlay(cfg, ctx, memoKey, releaseOverlay, isActive);
       ctx.container.appendChild(overlay);
       release = activateOverlay(ctx.container, overlay, 4, interacted);
+      if (!isActive()) releaseOverlay();
     };
+
+    states.set(ctx, {
+      cleanup: () => {
+        destroyed = true;
+        removeTimeListener?.();
+        ctx.container.removeEventListener("focusin", onInteraction);
+        ctx.container.removeEventListener("pointerdown", onInteraction);
+        releaseOverlay();
+        ctx.container.querySelector(".playerstack-email-gate")?.remove();
+        ctx.container.querySelector(".playerstack-email-gate-status")?.remove();
+      },
+    });
 
     if (at === "before") {
       show();
@@ -208,18 +223,6 @@ export const emailGatePlugin: PlayerstackPlugin = {
       ctx.mediaPlayer.addEventListener("timeupdate", onTime);
       removeTimeListener = () => ctx.mediaPlayer.removeEventListener("timeupdate", onTime);
     }
-
-    states.set(ctx, {
-      cleanup: () => {
-        destroyed = true;
-        removeTimeListener?.();
-        ctx.container.removeEventListener("focusin", onInteraction);
-        ctx.container.removeEventListener("pointerdown", onInteraction);
-        releaseOverlay();
-        ctx.container.querySelector(".playerstack-email-gate")?.remove();
-        ctx.container.querySelector(".playerstack-email-gate-status")?.remove();
-      },
-    });
   },
   destroy(ctx: PlayerstackContext): void {
     states.get(ctx)?.cleanup();
@@ -316,6 +319,7 @@ function renderOverlay(
     const dismiss = () => {
       if (!isActive() || !overlay.isConnected) return;
       release();
+      if (!isActive()) return;
       overlay.remove();
       ctx.events.emit("email-gate:dismiss", {});
       if (isActive() && cfg.at !== "after") resumePlayback(ctx);
@@ -339,6 +343,7 @@ function renderOverlay(
     if (honey.value) {
       // Bot tripped the honeypot. Pretend success silently — no signal back.
       release();
+      if (!isActive()) return;
       overlay.remove();
       return;
     }
@@ -392,6 +397,7 @@ async function handleSubmit(args: SubmitArgs): Promise<void> {
   const success = () => {
     if (!active()) return;
     saveMemo(cfg, memoKey);
+    if (!active()) return;
     ctx.events.emit("email-gate:submit", {
       email,
       ...(cfg.product === undefined ? {} : { product: cfg.product }),
@@ -399,6 +405,7 @@ async function handleSubmit(args: SubmitArgs): Promise<void> {
     if (!active()) return;
     status.textContent = messages.success;
     release();
+    if (!active()) return;
     ctx.container.append(status);
     overlay.remove();
     if (cfg.at !== "after") resumePlayback(ctx);
