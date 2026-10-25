@@ -24,6 +24,30 @@ afterEach(() => {
 });
 
 describe("introCardPlugin", () => {
+  for (const position of ["fullscreen", "center", "bottom"] as const) {
+    it(`keeps long ${position} intro content in a height-bounded scroll area`, async () => {
+      const ctx = makeContext({
+        introCard: {
+          enabled: true,
+          position,
+          title: "Welcome ".repeat(30),
+          subtitle: "Details ".repeat(60),
+          dismissible: true,
+        },
+      });
+      await introCardPlugin.init(ctx);
+      const overlay = ctx.container.querySelector<HTMLElement>(".playerstack-intro-card")!;
+      expect(overlay.style.overflowY).toBe("auto");
+      expect(overlay.style.getPropertyValue("overscroll-behavior")).toBe("contain");
+      expect(overlay.style.boxSizing).toBe("border-box");
+      expect(overlay.style.maxHeight).toBe("100%");
+      expect(overlay.style.alignItems).toBe("flex-start");
+      const content = overlay.querySelector<HTMLElement>(".playerstack-intro-card-content")!;
+      expect(content.style.margin).toBe("auto");
+      expect(content.style.flexShrink).toBe("0");
+      introCardPlugin.destroy?.(ctx);
+    });
+  }
   it("has a stable name", () => {
     expect(introCardPlugin.name).toBe("intro-card");
   });

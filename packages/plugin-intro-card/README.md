@@ -92,4 +92,6 @@ Apache-2.0.
 
 ## Keyboard access
 
+Intro cards in fullscreen, center, and bottom positions are bounded by the player height and scroll inside their own overlay when content is too tall. Content stays centered when it fits and begins at the top when it overflows. Keyboard focus and pointer/touch scrolling do not move the player content.
+
 While the card is visible, lower player layers (including branded thumbnails mounted later) are inert and hidden from assistive technology. Dismissal restores their original state and returns owned focus to the previous control or the thumbnail/play/controller fallback. External page focus is preserved.

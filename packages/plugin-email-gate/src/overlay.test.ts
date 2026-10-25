@@ -295,6 +295,21 @@ describe("email overlay layers", () => {
       ).toBeUndefined();
     });
   }
+  it("contains overflowing form content in its own scroll area without clipping its start", async () => {
+    const { ctx, container } = setup({
+      at: "before",
+      privacy: { text: "Privacy ".repeat(30) },
+      marketingConsent: { text: "Updates ".repeat(30), version: "v1" },
+    });
+    await emailGatePlugin.init(ctx);
+    const overlay = container.querySelector<HTMLElement>(".playerstack-email-gate")!;
+    expect(overlay.style.overflowY).toBe("auto");
+    expect(overlay.style.getPropertyValue("overscroll-behavior")).toBe("contain");
+    expect(overlay.style.boxSizing).toBe("border-box");
+    expect(overlay.style.alignItems).toBe("flex-start");
+    expect(overlay.querySelector("form")!.style.margin).toBe("auto");
+    emailGatePlugin.destroy?.(ctx);
+  });
   it("focuses email after player interaction and releases covered controls on Escape", async () => {
     const { ctx, container, play } = setup();
     await emailGatePlugin.init(ctx);

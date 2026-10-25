@@ -133,7 +133,7 @@ function buildOverlay(cfg: IntroCardConfig): HTMLElement {
   content.className = "playerstack-intro-card-content";
   content.style.cssText =
     "position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;" +
-    "gap:14px;padding:32px;text-align:center;max-width:640px;";
+    "gap:14px;padding:32px;text-align:center;max-width:640px;width:100%;min-width:0;margin:auto;flex-shrink:0;box-sizing:border-box;overflow-wrap:anywhere;";
 
   if (cfg.badge) {
     const badge = document.createElement("span");
@@ -246,7 +246,7 @@ function baseOverlayCss(position: IntroCardPosition, theme: IntroCardTheme): str
   return (
     positionCss +
     themeCss +
-    "z-index:3;display:flex;align-items:center;justify-content:center;" +
-    "overflow:hidden;cursor:default;font-family:inherit;"
+    "z-index:3;display:flex;align-items:flex-start;justify-content:center;max-height:100%;box-sizing:border-box;" +
+    "overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;cursor:default;font-family:inherit;"
   );
 }

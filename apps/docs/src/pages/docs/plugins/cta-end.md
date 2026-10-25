@@ -77,3 +77,7 @@ Use [controls-policy](/docs/plugins/controls-policy) to set these per-player, or
 ## HTML safety
 
 `config.ctaEnd.html` is rendered via `innerHTML`. **Sanitize user-provided content before passing it in.** For server-rendered, trusted content, this is fine. For dynamic user input, use `title` + `button` instead.
+
+## Scrolling content
+
+End cards are bounded by the player height and scroll inside their own overlay when content is too tall. Content stays centered when it fits and begins at the top when it overflows. Keyboard focus and pointer/touch scrolling do not move the player content.

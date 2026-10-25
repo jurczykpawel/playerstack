@@ -11,6 +11,7 @@ async function open(
   cta = true,
   localized = false,
   consentMode?: "optional" | "required",
+  longCard?: "cta" | "intro:fullscreen" | "intro:center" | "intro:bottom",
 ) {
   await page.route("**/*", async (route) => {
     const url = new URL(route.request().url());
@@ -78,7 +79,7 @@ async function open(
       });
     return route.fulfill({
       contentType: "text/html; charset=utf-8",
-      body: `<!doctype html><html lang="en"><meta charset="utf-8"><style>body{margin:16px}player-stack{display:block;width:min(100%,720px);aspect-ratio:16/9}</style><button id="before">Before</button><player-stack src="${origin}/demo.mp4" data-config='${JSON.stringify({ preload: "none", brandedThumb: { enabled: true, clickToLoad: true, playLabel: "Watch demo" }, ctaEnd: { enabled: cta, button: { label: "Offer", url: "https://example.com" }, showReplay: true }, ...(email ? { emailGate: { enabled: true, at: email, dismissible: true, remember: false, product: "Demo", webhookUrl: `${origin}/lead`, challengeUrl: `${origin}/challenge`, ...(consentMode ? { marketingConsent: { text: "Chcę otrzymywać wiadomości o nowych materiałach.", version: "2026-10", required: consentMode === "required" }, privacy: { text: "Kontakt w sprawie podobnego rozwiązania." } } : {}), ...(localized ? { privacy: { text: "Zostaw maila, a odezwę się w sprawie podobnego rozwiązania.", linkText: "Polityka prywatności", href: "/privacy" }, messages: { title: "Chcesz coś takiego u siebie? Zostaw maila", emailLabel: "Adres e-mail", submit: "Wyślij zgłoszenie", dismiss: "Pomiń" } } : {}) } } : {}), ...(intro ? { introCard: { enabled: true, dismissible: true, title: "Welcome" } } : {}) })}'></player-stack><button id="after">After</button><script src="/assets/playerstack.min.js"></script></html>`,
+      body: `<!doctype html><html lang="en"><meta charset="utf-8"><style>body{margin:16px}player-stack{display:block;width:min(100%,720px);aspect-ratio:16/9}</style><button id="before">Before</button><player-stack src="${origin}/demo.mp4" data-config='${JSON.stringify({ preload: "none", brandedThumb: { enabled: true, clickToLoad: true, playLabel: "Watch demo" }, ctaEnd: { enabled: cta, button: { label: "Offer", url: "https://example.com" }, showReplay: true, ...(longCard === "cta" ? { title: "End card details ".repeat(30), html: `<p>${"More information about this video. ".repeat(40)}</p>` } : {}) }, ...(email ? { emailGate: { enabled: true, at: email, dismissible: true, remember: false, product: "Demo", webhookUrl: `${origin}/lead`, challengeUrl: `${origin}/challenge`, ...(consentMode ? { marketingConsent: { text: "Chcę otrzymywać wiadomości o nowych materiałach.", version: "2026-10", required: consentMode === "required" }, privacy: { text: "Kontakt w sprawie podobnego rozwiązania." } } : {}), ...(localized ? { privacy: { text: "Zostaw maila, a odezwę się w sprawie podobnego rozwiązania.", linkText: "Polityka prywatności", href: "/privacy" }, messages: { title: "Chcesz coś takiego u siebie? Zostaw maila", emailLabel: "Adres e-mail", submit: "Wyślij zgłoszenie", dismiss: "Pomiń" } } : {}) } } : {}), ...(intro ? { introCard: { enabled: true, dismissible: true, title: longCard?.startsWith("intro:") ? "Welcome to this introduction ".repeat(25) : "Welcome", ...(longCard?.startsWith("intro:") ? { subtitle: "Read these details before watching. ".repeat(40), position: longCard.slice(6) } : {}) } } : {}) })}'></player-stack><button id="after">After</button><script src="/assets/playerstack.min.js"></script></html>`,
     });
   });
   await page.goto(origin);
@@ -93,16 +94,68 @@ async function press(page: Page, key: string) {
     webkit && key === "Tab" ? "Alt+Tab" : webkit && key === "Shift+Tab" ? "Alt+Shift+Tab" : key,
   );
 }
+async function visibleHit(target: Locator) {
+  let geometry: unknown;
+  try {
+    await expect
+      .poll(
+        async () => {
+          const result = await target.evaluate((el) => {
+            const r = el.getBoundingClientRect();
+            const point = { x: r.x + r.width / 2, y: r.y + r.height / 2 };
+            const hit = document.elementFromPoint(point.x, point.y);
+            const box = (node: Element | null | undefined) => {
+              if (!(node instanceof HTMLElement)) return null;
+              const rect = node.getBoundingClientRect();
+              const css = getComputedStyle(node);
+              return {
+                x: rect.x,
+                y: rect.y,
+                width: rect.width,
+                height: rect.height,
+                clientHeight: node.clientHeight,
+                scrollHeight: node.scrollHeight,
+                scrollTop: node.scrollTop,
+                overflowY: css.overflowY,
+                alignItems: css.alignItems,
+                justifyContent: css.justifyContent,
+              };
+            };
+            const overlay = el.closest(
+              ".playerstack-email-gate,.playerstack-cta,.playerstack-intro-card",
+            );
+            return {
+              visible: !!hit && (hit === el || el.contains(hit)),
+              point,
+              hit: hit ? { tag: hit.tagName, id: hit.id, class: hit.getAttribute("class") } : null,
+              target: box(el),
+              player: box(el.closest("player-stack")),
+              overlay: box(overlay),
+              content: box(
+                el.closest("form") || overlay?.querySelector(".playerstack-intro-card-content"),
+              ),
+            };
+          });
+          geometry = result;
+          return result.visible;
+        },
+        { timeout: 1000 },
+      )
+      .toBe(true);
+  } catch (error) {
+    await test.info().attach("focus-geometry", {
+      body: JSON.stringify(geometry ?? null, null, 2),
+      contentType: "application/json",
+    });
+    throw error;
+  }
+}
 async function visibleFocus(target: Locator) {
   await expect(target).toBeFocused();
-  expect(
-    await target.evaluate((el) => {
-      const r = el.getBoundingClientRect();
-      const hit = document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2);
-      return !!hit && (hit === el || el.contains(hit));
-    }),
-  ).toBe(true);
+  await visibleHit(target);
+  expect(await target.evaluate((el) => el.closest("player-stack")?.scrollTop ?? 0)).toBe(0);
 }
+
 async function end(page: Page) {
   await expect
     .poll(() =>
@@ -153,6 +206,67 @@ for (const width of [390, 1440]) {
         )
         .toBe(true);
     });
+    for (const card of ["cta", "intro:fullscreen", "intro:center", "intro:bottom"] as const) {
+      test(`long ${card} is scrollable by pointer and keyboard without moving the player`, async ({
+        page,
+      }) => {
+        const intro = card !== "cta";
+        await open(page, intro, undefined, !intro, false, undefined, card);
+        if (!intro) {
+          await page.locator(".playerstack-thumb-play").focus();
+          await press(page, "Enter");
+          await end(page);
+        }
+        const player = page.locator("player-stack");
+        const overlay = page.locator(intro ? ".playerstack-intro-card" : ".playerstack-cta");
+        await expect(overlay).toHaveCSS("overflow-y", "auto");
+        await expect
+          .poll(() => overlay.evaluate((el) => el.scrollHeight > el.clientHeight))
+          .toBe(true);
+        await player.evaluate((el) => {
+          const root = el as HTMLElement & { nonzeroScrolls: number[] };
+          root.nonzeroScrolls = [];
+          root.addEventListener("scroll", () => {
+            if (root.scrollTop !== 0) root.nonzeroScrolls.push(root.scrollTop);
+          });
+        });
+        expect(await player.evaluate((el) => el.scrollTop)).toBe(0);
+        const actions = intro
+          ? [
+              page.locator(".playerstack-intro-card-close"),
+              page.locator(".playerstack-intro-card-play"),
+            ]
+          : [page.locator(".playerstack-cta-button"), page.locator(".playerstack-cta-replay")];
+        await page.locator("#before").focus();
+        await overlay.evaluate((el) => {
+          el.scrollTop = 0;
+        });
+        if (intro) await visibleHit(actions[0]!);
+        await overlay.hover();
+        await page.mouse.wheel(0, await overlay.evaluate((el) => el.scrollHeight));
+        await expect.poll(() => overlay.evaluate((el) => el.scrollTop)).toBeGreaterThan(0);
+        if (!intro) await visibleHit(actions[0]!);
+        await visibleHit(actions[1]!);
+        expect(await player.evaluate((el) => el.scrollTop)).toBe(0);
+        await page.locator("#before").focus();
+        for (const target of [...actions, page.locator("#after")]) {
+          await press(page, "Tab");
+          await visibleFocus(target);
+        }
+        for (const target of [...actions].reverse().concat(page.locator("#before"))) {
+          await press(page, "Shift+Tab");
+          await visibleFocus(target);
+        }
+        expect(
+          await player.evaluate(
+            (el) => (el as HTMLElement & { nonzeroScrolls: number[] }).nonzeroScrolls,
+          ),
+        ).toEqual([]);
+        await actions[intro ? 0 : 1]!.click();
+        await expect(overlay).toHaveCount(0);
+        expect(await player.evaluate((el) => el.scrollTop)).toBe(0);
+      });
+    }
     test("ending leaves external focus alone", async ({ page }) => {
       await open(page);
       await page.locator(".playerstack-thumb-play").click();
@@ -221,6 +335,27 @@ for (const width of [390, 1440]) {
       await page.locator(".playerstack-thumb-play").focus();
       await press(page, "Enter");
       await end(page);
+      const player = page.locator("player-stack");
+      const overlay = page.locator(".playerstack-email-gate");
+      await player.evaluate((el) => {
+        const root = el as HTMLElement & { nonzeroScrolls: number[] };
+        root.nonzeroScrolls = [];
+        root.addEventListener("scroll", () => {
+          if (root.scrollTop !== 0) root.nonzeroScrolls.push(root.scrollTop);
+        });
+      });
+      expect(await player.evaluate((el) => el.scrollTop)).toBe(0);
+      await expect(overlay).toHaveCSS("overflow-y", "auto");
+      const overflows = await overlay.evaluate((el) => el.scrollHeight > el.clientHeight);
+      await page.locator("#before").focus();
+      if (overflows) {
+        await overlay.hover();
+        await page.mouse.wheel(0, await overlay.evaluate((el) => el.scrollHeight));
+        await expect.poll(() => overlay.evaluate((el) => el.scrollTop)).toBeGreaterThan(0);
+      }
+      await visibleHit(page.locator('button[type="submit"]'));
+      await visibleHit(page.getByRole("button", { name: "Skip", exact: true }));
+      expect(await player.evaluate((el) => el.scrollTop)).toBe(0);
       const consent = page.getByRole("checkbox");
       await expect(consent).not.toBeChecked();
       await page.locator("#before").focus();
@@ -248,6 +383,17 @@ for (const width of [390, 1440]) {
         await press(page, "Shift+Tab");
         await visibleFocus(target);
       }
+      expect(
+        await player.evaluate(
+          (el) => (el as HTMLElement & { nonzeroScrolls: number[] }).nonzeroScrolls,
+        ),
+      ).toEqual([]);
+      await overlay.hover();
+      if (overflows) await page.mouse.wheel(0, await overlay.evaluate((el) => el.scrollHeight));
+      await visibleHit(page.getByRole("button", { name: "Skip", exact: true }));
+      await page.getByRole("button", { name: "Skip", exact: true }).click();
+      await expect(overlay).toHaveCount(0);
+      expect(await player.evaluate((el) => el.scrollTop)).toBe(0);
     });
     test("required consent blocks requests and focuses checkbox until Space accepts it", async ({
       page,

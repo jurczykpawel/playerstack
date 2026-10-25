@@ -74,8 +74,8 @@ function renderOverlay(ctx: PlayerstackContext, cfg: CtaEndConfig): HTMLElement 
   overlay.className = "playerstack-cta";
   overlay.style.cssText =
     "position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;" +
-    "justify-content:center;gap:16px;background:rgba(0,0,0,0.7);color:#fff;" +
-    "padding:24px;text-align:center;z-index:3;";
+    "justify-content:flex-start;gap:16px;background:rgba(0,0,0,0.7);color:#fff;" +
+    "padding:24px;text-align:center;z-index:3;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;box-sizing:border-box;";
 
   if (cfg.title) {
     const h = document.createElement("h3");
@@ -131,6 +131,18 @@ function renderOverlay(ctx: PlayerstackContext, cfg: CtaEndConfig): HTMLElement 
     });
     overlay.appendChild(replay);
   }
+
+  for (const child of overlay.children) {
+    const element = child as HTMLElement;
+    element.style.flexShrink = "0";
+    element.style.maxWidth = "100%";
+    element.style.overflowWrap = "anywhere";
+    element.style.boxSizing = "border-box";
+  }
+  if (overlay.firstElementChild)
+    (overlay.firstElementChild as HTMLElement).style.marginTop = "auto";
+  if (overlay.lastElementChild)
+    (overlay.lastElementChild as HTMLElement).style.marginBottom = "auto";
 
   return overlay;
 }

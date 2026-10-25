@@ -91,4 +91,6 @@ Apache-2.0.
 
 ## Keyboard access
 
+End cards are bounded by the player height and scroll inside their own overlay when content is too tall. Content stays centered when it fits and begins at the top when it overflows. Keyboard focus and pointer/touch scrolling do not move the player content.
+
 After ended, covered controls are inert and hidden from assistive technology. Focus enters the CTA only if the player owned focus (including body focus after player interaction). Tab and Shift+Tab can leave the player. Replay seeks to zero, restores the controls, starts playback and focuses play, falling back to the controller.

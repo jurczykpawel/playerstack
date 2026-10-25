@@ -69,3 +69,7 @@ Pre-roll splash overlay with marketing content — title, subtitle, badge, optio
 - **Lead magnet preview** — "WATCH THE INTRO" + CTA "Get the full course"
 - **Course module gate** — title, summary, and play button
 - **Brand splash** — logo + tagline + image background, dismissible
+
+## Scrolling content
+
+Intro cards in fullscreen, center, and bottom positions are bounded by the player height and scroll inside their own overlay when content is too tall. Content stays centered when it fits and begins at the top when it overflows. Keyboard focus and pointer/touch scrolling do not move the player content.

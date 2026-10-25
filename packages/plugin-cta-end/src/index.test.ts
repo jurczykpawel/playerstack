@@ -23,6 +23,27 @@ function fireEnded(mediaPlayer: HTMLElement): void {
 }
 
 describe("ctaEndPlugin", () => {
+  it("keeps long end cards in their own scroll area with reachable first and last actions", async () => {
+    const ctx = makeContext({
+      ctaEnd: {
+        enabled: true,
+        title: "Long title ".repeat(30),
+        button: { label: "Offer", url: "https://example.com" },
+        showReplay: true,
+      },
+    });
+    await ctaEndPlugin.init(ctx);
+    fireEnded(ctx.mediaPlayer);
+    const overlay = ctx.container.querySelector<HTMLElement>(".playerstack-cta")!;
+    expect(overlay.style.overflowY).toBe("auto");
+    expect(overlay.style.getPropertyValue("overscroll-behavior")).toBe("contain");
+    expect(overlay.style.boxSizing).toBe("border-box");
+    expect(overlay.style.justifyContent).toBe("flex-start");
+    expect((overlay.firstElementChild as HTMLElement).style.marginTop).toBe("auto");
+    expect((overlay.lastElementChild as HTMLElement).style.marginBottom).toBe("auto");
+    expect((overlay.lastElementChild as HTMLElement).style.flexShrink).toBe("0");
+    ctaEndPlugin.destroy?.(ctx);
+  });
   it("has a stable name", () => {
     expect(ctaEndPlugin.name).toBe("cta-end");
   });

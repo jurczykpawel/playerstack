@@ -227,6 +227,8 @@ Every failure keeps the form available for retry with a fresh challenge and nonc
 
 ## Keyboard and overlay layers
 
+The form scrolls inside its own player-sized overlay when privacy text, consent, or translations make it taller than the video. Content starts at the top when it overflows; smaller forms remain centered. Pointer, touch scrolling, and keyboard focus scroll the overlay, keeping the player itself in place.
+
 When a focused submit button starts a request, focus moves to the email field before the button is disabled. Focus moved outside the player during a request remains outside when it completes.
 
 The email form uses overlay priority 4, above CTA and intro cards (3) and branded thumbnails (2). Covered player controls and lower overlays are `inert` and excluded from Tab until the form closes. Tab and Shift+Tab can continue to the surrounding page.

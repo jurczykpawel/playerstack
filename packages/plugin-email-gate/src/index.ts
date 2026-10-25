@@ -280,12 +280,14 @@ function renderOverlay(
   instance.overlay = overlay;
   overlay.className = "playerstack-email-gate";
   overlay.style.cssText =
-    "position:absolute;inset:0;display:flex;align-items:center;justify-content:center;" +
+    "position:absolute;inset:0;display:flex;align-items:flex-start;justify-content:center;" +
+    "overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;box-sizing:border-box;" +
     "background:rgba(0,0,0,0.85);color:#fff;padding:24px;z-index:4;";
 
   const form = document.createElement("form");
   form.noValidate = true;
-  form.style.cssText = "display:grid;gap:12px;max-width:420px;width:100%;text-align:center;";
+  form.style.cssText =
+    "display:grid;gap:12px;max-width:420px;width:100%;text-align:center;margin:auto;flex-shrink:0;";
 
   const heading = document.createElement("h3");
   heading.textContent = messages.title;
