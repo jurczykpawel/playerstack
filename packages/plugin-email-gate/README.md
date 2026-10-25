@@ -170,6 +170,12 @@ The server must support the selected format. These example values illustrate sha
 
 Every failure keeps the form available for retry with a fresh challenge and nonce. Closing or destroying the form while a request is pending prevents later client success or further POSTs; an already-sent POST may still be processed by the server.
 
+## Keyboard and overlay layers
+
+The email form uses overlay priority 4, above CTA and intro cards (3) and branded thumbnails (2). Covered player controls and lower overlays are `inert` and excluded from Tab until the form closes. Tab and Shift+Tab can continue to the surrounding page.
+
+An after-video form moves player focus into the email field, including body focus after prior player interaction. Focus outside the player remains unchanged. On dismissal, success, or destroy, focus moves to a remaining overlay or returns to the previous player control, with play/controller or thumbnail fallback. Escape closes the form when `dismissible` is enabled. Closing a before/threshold form resumes playback; closing an after form does not restart the video.
+
 ## Events
 
 | Name                 | Payload                               | When                                                                             |

@@ -4,10 +4,33 @@ import { resolve } from "node:path";
 const origin = "http://127.0.0.1:15184";
 const dist = process.env.PLAYERSTACK_DIST || resolve("packages/embed/dist");
 const mp4 = readFileSync(resolve("apps/docs/public/demo.mp4"));
-async function open(page: Page, intro = false) {
+async function open(page: Page, intro = false, email?: "before" | "after", cta = true) {
   await page.route("**/*", async (route) => {
     const url = new URL(route.request().url());
     if (url.origin !== origin) throw new Error(`Unexpected external request: ${url}`);
+    if (url.pathname === "/challenge")
+      return route.fulfill({
+        json: {
+          altcha: {
+            algorithm: "SHA-256",
+            challenge: "590c9f8430c7435807df8ba9a476e3f1295d46ef210f6efae2043a4c085a569e",
+            salt: "test",
+            signature: "test",
+            maxnumber: 0,
+          },
+          nonce: "test-nonce",
+        },
+      });
+    if (url.pathname === "/lead") {
+      const payload = route.request().postDataJSON();
+      expect(payload).toMatchObject({
+        email: "viewer@example.com",
+        product: "Demo",
+        nonce: "test-nonce",
+        altcha: { number: 0 },
+      });
+      return route.fulfill({ status: 204 });
+    }
     if (url.pathname === "/demo.mp4") return route.fulfill({ body: mp4, contentType: "video/mp4" });
     if (url.pathname.startsWith("/assets/"))
       return route.fulfill({
@@ -16,11 +39,12 @@ async function open(page: Page, intro = false) {
       });
     return route.fulfill({
       contentType: "text/html",
-      body: `<!doctype html><html lang="en"><style>body{margin:16px}player-stack{display:block;width:min(100%,720px);aspect-ratio:16/9}</style><button id="before">Before</button><player-stack src="${origin}/demo.mp4" data-config='${JSON.stringify({ preload: "none", brandedThumb: { enabled: true, clickToLoad: true, playLabel: "Watch demo" }, ctaEnd: { enabled: true, button: { label: "Offer", url: "https://example.com" }, showReplay: true }, ...(intro ? { introCard: { enabled: true, dismissible: true, title: "Welcome" } } : {}) })}'></player-stack><button id="after">After</button><script src="/assets/playerstack.min.js"></script></html>`,
+      body: `<!doctype html><html lang="en"><style>body{margin:16px}player-stack{display:block;width:min(100%,720px);aspect-ratio:16/9}</style><button id="before">Before</button><player-stack src="${origin}/demo.mp4" data-config='${JSON.stringify({ preload: "none", brandedThumb: { enabled: true, clickToLoad: true, playLabel: "Watch demo" }, ctaEnd: { enabled: cta, button: { label: "Offer", url: "https://example.com" }, showReplay: true }, ...(email ? { emailGate: { enabled: true, at: email, dismissible: true, remember: false, product: "Demo", webhookUrl: `${origin}/lead`, challengeUrl: `${origin}/challenge` } } : {}), ...(intro ? { introCard: { enabled: true, dismissible: true, title: "Welcome" } } : {}) })}'></player-stack><button id="after">After</button><script src="/assets/playerstack.min.js"></script></html>`,
     });
   });
   await page.goto(origin);
   await expect(page.locator(".playerstack-thumb-play")).toBeAttached();
+  if (email === "before") await expect(page.locator(".playerstack-email-gate")).toBeVisible();
   if (intro) await expect(page.locator(".playerstack-intro-card")).toBeVisible();
 }
 async function visibleFocus(target: Locator) {
@@ -42,7 +66,7 @@ async function end(page: Page) {
   await page.locator("video").evaluate((v: HTMLVideoElement) => {
     v.currentTime = v.duration - 0.15;
   });
-  await expect(page.locator(".playerstack-cta")).toBeVisible();
+  await expect(page.locator(".playerstack-cta,.playerstack-email-gate").first()).toBeVisible();
 }
 for (const width of [390, 1440]) {
   test.describe(`${width}px`, () => {
@@ -88,6 +112,86 @@ for (const width of [390, 1440]) {
       await page.locator("#after").focus();
       await end(page);
       await expect(page.locator("#after")).toBeFocused();
+    });
+    test("email after has only visible forward and reverse Tab stops and Escape restores play", async ({
+      page,
+    }) => {
+      await open(page, false, "after", false);
+      await page.locator(".playerstack-thumb-play").focus();
+      await page.keyboard.press("Enter");
+      await end(page);
+      const email = page.locator('input[type="email"]');
+      await visibleFocus(email);
+      await page.locator("#before").focus();
+      for (const target of [
+        email,
+        page.locator('button[type="submit"]'),
+        page.getByRole("button", { name: "Skip" }),
+        page.locator("#after"),
+      ]) {
+        await page.keyboard.press("Tab");
+        await visibleFocus(target);
+      }
+      for (const target of [
+        page.getByRole("button", { name: "Skip" }),
+        page.locator('button[type="submit"]'),
+        email,
+        page.locator("#before"),
+      ]) {
+        await page.keyboard.press("Shift+Tab");
+        await visibleFocus(target);
+      }
+      await page.keyboard.press("Tab");
+      await page.keyboard.press("Escape");
+      await expect(page.locator(".playerstack-email-gate")).toHaveCount(0);
+      await visibleFocus(page.locator("media-play-button"));
+    });
+    test("email after submission exposes the remaining CTA and Enter replays", async ({ page }) => {
+      await open(page, false, "after");
+      await page.locator(".playerstack-thumb-play").focus();
+      await page.keyboard.press("Enter");
+      await end(page);
+      await visibleFocus(page.locator('input[type="email"]'));
+      await page.locator('input[type="email"]').fill("viewer@example.com");
+      await page.keyboard.press("Tab");
+      await page.keyboard.press("Enter");
+      await expect(page.locator(".playerstack-email-gate")).toHaveCount(0);
+      await visibleFocus(page.locator(".playerstack-cta-button"));
+      await page.keyboard.press("Tab");
+      await visibleFocus(page.locator(".playerstack-cta-replay"));
+      await page.keyboard.press("Enter");
+      await visibleFocus(page.locator("media-play-button"));
+    });
+    test("email after skip exposes CTA and preserves external focus on ending", async ({
+      page,
+    }) => {
+      await open(page, false, "after");
+      await page.locator(".playerstack-thumb-play").click();
+      await page.locator("#after").focus();
+      await end(page);
+      await visibleFocus(page.locator("#after"));
+      await page.keyboard.press("Shift+Tab");
+      await visibleFocus(page.getByRole("button", { name: "Skip" }));
+      await page.keyboard.press("Enter");
+      await visibleFocus(page.locator(".playerstack-cta-button"));
+    });
+    test("email before covers thumbnail and dismissal restores its focus", async ({ page }) => {
+      await open(page, false, "before", false);
+      await page.locator("#before").focus();
+      for (const target of [
+        page.locator('input[type="email"]'),
+        page.locator('button[type="submit"]'),
+        page.getByRole("button", { name: "Skip" }),
+        page.locator("#after"),
+      ]) {
+        await page.keyboard.press("Tab");
+        await visibleFocus(target);
+      }
+      await page.keyboard.press("Shift+Tab");
+      await page.keyboard.press("Enter");
+      await visibleFocus(page.locator(".playerstack-thumb-play"));
+      await page.keyboard.press("Tab");
+      await visibleFocus(page.locator("#after"));
     });
     test("intro card covers thumbnail and dismissal restores it", async ({ page }) => {
       await open(page, true);

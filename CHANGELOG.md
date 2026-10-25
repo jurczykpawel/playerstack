@@ -11,6 +11,7 @@ All notable changes to Playerstack will be documented in this file.
 
 ### Fixed
 
+- Keep email forms above other player overlays and restore focus when they close.
 - Honor `emailGate.atPercent` without requiring an explicit `at` value.
 - Make CTA and intro overlays disable covered controls and restore keyboard focus; replay starts from zero.
 - Export shared overlay layer helpers for plugins.

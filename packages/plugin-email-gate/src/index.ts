@@ -1,4 +1,9 @@
-import { isSafeHttpUrl, type PlayerstackPlugin, type PlayerstackContext } from "@playerstack/core";
+import {
+  activateOverlay,
+  isSafeHttpUrl,
+  type PlayerstackPlugin,
+  type PlayerstackContext,
+} from "@playerstack/core";
 import { solveChallenge } from "altcha-lib";
 import type { LeadsChallenge, LeadsSubmission } from "./types";
 
@@ -153,6 +158,17 @@ export const emailGatePlugin: PlayerstackPlugin = {
 
     const at = cfg.at ?? (cfg.atPercent === undefined ? "before" : undefined);
     let shown = false;
+    let release: (() => void) | undefined;
+    let interacted = false;
+    const onInteraction = () => {
+      interacted = true;
+    };
+    ctx.container.addEventListener("focusin", onInteraction);
+    ctx.container.addEventListener("pointerdown", onInteraction);
+    const releaseOverlay = () => {
+      release?.();
+      release = undefined;
+    };
     let removeTimeListener: (() => void) | null = null;
 
     const show = () => {
@@ -163,8 +179,9 @@ export const emailGatePlugin: PlayerstackPlugin = {
 
       const player = ctx.mediaPlayer as HTMLElement & { pause?: () => void };
       player.pause?.();
-      const overlay = renderOverlay(cfg, ctx, memoKey);
+      const overlay = renderOverlay(cfg, ctx, memoKey, releaseOverlay);
       ctx.container.appendChild(overlay);
+      release = activateOverlay(ctx.container, overlay, 4, interacted);
     };
 
     if (at === "before") {
@@ -193,6 +210,9 @@ export const emailGatePlugin: PlayerstackPlugin = {
     states.set(ctx, {
       cleanup: () => {
         removeTimeListener?.();
+        ctx.container.removeEventListener("focusin", onInteraction);
+        ctx.container.removeEventListener("pointerdown", onInteraction);
+        releaseOverlay();
         ctx.container.querySelector(".playerstack-email-gate")?.remove();
         ctx.container.querySelector(".playerstack-email-gate-status")?.remove();
       },
@@ -208,13 +228,14 @@ function renderOverlay(
   cfg: EmailGateConfig,
   ctx: PlayerstackContext,
   memoKey: string,
+  release: () => void,
 ): HTMLElement {
   const messages = messagesFor(cfg);
   const overlay = document.createElement("div");
   overlay.className = "playerstack-email-gate";
   overlay.style.cssText =
     "position:absolute;inset:0;display:flex;align-items:center;justify-content:center;" +
-    "background:rgba(0,0,0,0.85);color:#fff;padding:24px;z-index:3;";
+    "background:rgba(0,0,0,0.85);color:#fff;padding:24px;z-index:4;";
 
   const form = document.createElement("form");
   form.noValidate = true;
@@ -289,6 +310,7 @@ function renderOverlay(
   const dismissible = cfg.dismissible ?? cfg.at === "after";
   if (dismissible) {
     const dismiss = () => {
+      release();
       overlay.remove();
       ctx.events.emit("email-gate:dismiss", {});
       if (cfg.at !== "after") resumePlayback(ctx);
@@ -311,6 +333,7 @@ function renderOverlay(
     if (submit.disabled) return;
     if (honey.value) {
       // Bot tripped the honeypot. Pretend success silently — no signal back.
+      release();
       overlay.remove();
       return;
     }
@@ -323,7 +346,7 @@ function renderOverlay(
     submit.disabled = true;
     status.textContent = messages.verifying;
 
-    void handleSubmit({ cfg, ctx, memoKey, email, overlay, status, submit }).catch(() => {
+    void handleSubmit({ cfg, ctx, memoKey, email, overlay, status, submit, release }).catch(() => {
       submit.disabled = false;
       if (overlay.isConnected) status.textContent = messages.networkError;
     });
@@ -341,10 +364,11 @@ interface SubmitArgs {
   overlay: HTMLElement;
   status: HTMLElement;
   submit: HTMLButtonElement;
+  release: () => void;
 }
 
 async function handleSubmit(args: SubmitArgs): Promise<void> {
-  const { cfg, ctx, memoKey, email, overlay, status, submit } = args;
+  const { cfg, ctx, memoKey, email, overlay, status, submit, release } = args;
 
   const messages = messagesFor(cfg);
   const success = () => {
@@ -355,6 +379,7 @@ async function handleSubmit(args: SubmitArgs): Promise<void> {
       ...(cfg.product === undefined ? {} : { product: cfg.product }),
     });
     status.textContent = messages.success;
+    release();
     ctx.container.append(status);
     overlay.remove();
     if (cfg.at !== "after") resumePlayback(ctx);
