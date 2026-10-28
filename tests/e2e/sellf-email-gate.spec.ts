@@ -22,7 +22,8 @@ test.beforeAll(async () => {
       (async () => {
         const container = document.querySelector("#player");
         const config = await createSellfConfigProvider({ baseUrl: location.origin,
-          endpoints: { emailGate: { webhook: location.origin + "/lead", challenge: location.origin + "/challenge" } }
+          ...(location.pathname === "/trusted" ? { trustedOrigins: [location.origin] } : {
+          endpoints: { emailGate: { webhook: location.origin + "/lead", challenge: location.origin + "/challenge" } } })
         }).load(container);
         const mediaPlayer = document.createElement("video");
         container.append(mediaPlayer);
@@ -54,8 +55,8 @@ test.beforeAll(async () => {
             altchaFormat: "base64",
             marketingConsent: { text: "Send updates", version: "v1", required: true },
             messages: { title: "Get the guide", submit: "Send", success: "Check email" },
-            webhookUrl: "https://remote.example/lead",
-            challengeUrl: "https://remote.example/challenge",
+            webhookUrl: origin + "/lead",
+            challengeUrl: origin + "/challenge",
           },
         }),
       );
@@ -96,34 +97,38 @@ test.afterAll(async () => {
   );
 });
 
-test("submits the product and required consent from Sellf after playback", async ({ page }) => {
-  received = [];
-  challenges = [];
-  await page.goto(origin);
-  await expect(page.locator("#player video")).toHaveCount(1);
-  await expect(page.locator("form")).toHaveCount(0);
-  await page.getByRole("button", { name: "Finish video" }).click();
-  await expect(page.getByText("Get the guide")).toBeVisible();
-  await page.getByRole("textbox", { name: "Email address" }).fill("viewer@example.com");
-  const checkbox = page.getByRole("checkbox", { name: "Send updates" });
-  await expect(checkbox).not.toBeChecked();
-  await expect(checkbox).toHaveAttribute("required", "");
-  await page.getByRole("button", { name: "Send", exact: true }).click();
-  expect(challenges).toEqual([]);
-  await checkbox.check();
-  await page.getByRole("button", { name: "Send", exact: true }).click();
-  await expect(page.getByRole("status")).toHaveText("Check email");
-  expect(challenges).toEqual(["/challenge?product=guide"]);
-  expect(received).toHaveLength(1);
-  expect(received[0]).toMatchObject({
-    product: "guide",
-    marketingConsent: true,
-    consentVersion: "v1",
-    consentText: "Send updates",
-    nonce: "nonce",
+for (const path of ["/", "/trusted"]) {
+  test(`submits the product and required consent from Sellf after playback (${path})`, async ({
+    page,
+  }) => {
+    received = [];
+    challenges = [];
+    await page.goto(origin + path);
+    await expect(page.locator("#player video")).toHaveCount(1);
+    await expect(page.locator("form")).toHaveCount(0);
+    await page.getByRole("button", { name: "Finish video" }).click();
+    await expect(page.getByText("Get the guide")).toBeVisible();
+    await page.getByRole("textbox", { name: "Email address" }).fill("viewer@example.com");
+    const checkbox = page.getByRole("checkbox", { name: "Send updates" });
+    await expect(checkbox).not.toBeChecked();
+    await expect(checkbox).toHaveAttribute("required", "");
+    await page.getByRole("button", { name: "Send", exact: true }).click();
+    expect(challenges).toEqual([]);
+    await checkbox.check();
+    await page.getByRole("button", { name: "Send", exact: true }).click();
+    await expect(page.getByRole("status")).toHaveText("Check email");
+    expect(challenges).toEqual(["/challenge?product=guide"]);
+    expect(received).toHaveLength(1);
+    expect(received[0]).toMatchObject({
+      product: "guide",
+      marketingConsent: true,
+      consentVersion: "v1",
+      consentText: "Send updates",
+      nonce: "nonce",
+    });
+    expect(typeof received[0]!.altcha).toBe("string");
+    expect(
+      JSON.parse(Buffer.from(received[0]!.altcha as string, "base64").toString()),
+    ).toMatchObject({ number: 0 });
   });
-  expect(typeof received[0]!.altcha).toBe("string");
-  expect(JSON.parse(Buffer.from(received[0]!.altcha as string, "base64").toString())).toMatchObject(
-    { number: 0 },
-  );
-});
+}

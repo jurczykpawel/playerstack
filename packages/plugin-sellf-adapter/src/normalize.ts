@@ -9,10 +9,13 @@ import type { PlayerstackConfig } from "@playerstack/core";
  *
  * The contract: Sellf API may control which player to render and how it looks
  * via tokens + typed config. It must NOT supply executable strings, raw HTML
- * blobs, or fetch endpoints — those are the integrator's responsibility, set
- * via `SellfAdapterOptions.endpoints` and inline developer-authored config.
+ * blobs. Fetch endpoints require explicitly trusted origins or integrator-supplied
+ * `SellfAdapterOptions.endpoints`.
  */
-export function normalizeRemoteConfig(input: unknown): Partial<PlayerstackConfig> {
+export function normalizeRemoteConfig(
+  input: unknown,
+  trustedOrigins: ReadonlySet<string> = new Set(),
+): Partial<PlayerstackConfig> {
   if (!isObject(input)) return {};
   const out: Record<string, unknown> = {};
 
@@ -30,8 +33,10 @@ export function normalizeRemoteConfig(input: unknown): Partial<PlayerstackConfig
   if (isObject(input.brandedThumb)) out.brandedThumb = normalizeBrandedThumb(input.brandedThumb);
   if (isObject(input.customCss)) out.customCss = normalizeCustomCss(input.customCss);
   if (isObject(input.watermark)) out.watermark = normalizeWatermark(input.watermark);
-  if (isObject(input.analytics)) out.analytics = normalizeAnalytics(input.analytics);
-  if (isObject(input.emailGate)) out.emailGate = normalizeEmailGate(input.emailGate);
+  if (isObject(input.analytics))
+    out.analytics = normalizeAnalytics(input.analytics, trustedOrigins);
+  if (isObject(input.emailGate))
+    out.emailGate = normalizeEmailGate(input.emailGate, trustedOrigins);
   if (isObject(input.preview)) out.preview = normalizePreview(input.preview);
   if (isObject(input.autopreview)) out.autopreview = normalizeAutopreview(input.autopreview);
   if (isObject(input.savedPosition))
@@ -178,13 +183,15 @@ function normalizeWatermark(c: Record<string, unknown>): Record<string, unknown>
   return out;
 }
 
-function normalizeAnalytics(c: Record<string, unknown>): Record<string, unknown> {
-  // `endpoint` deliberately omitted — must come from
-  // `SellfAdapterOptions.endpoints.analytics`. `provider` is also kept under
-  // the integrator's control to avoid surprise gtag/console swaps.
+function normalizeAnalytics(
+  c: Record<string, unknown>,
+  trustedOrigins: ReadonlySet<string>,
+): Record<string, unknown> {
+  // The provider remains under the integrator's control.
   const out: Record<string, unknown> = {};
   pickBool(c, "enabled", out);
   pickBool(c, "debug", out);
+  pickEndpoint(c, "endpoint", out, trustedOrigins);
   pickStringArray(c, "forwardBusEvents", out);
   pickStringArray(c, "forwardMediaEvents", out);
   if (typeof c.quartiles === "boolean") {
@@ -209,11 +216,14 @@ function normalizeAnalytics(c: Record<string, unknown>): Record<string, unknown>
   return out;
 }
 
-function normalizeEmailGate(c: Record<string, unknown>): Record<string, unknown> {
-  // `webhookUrl` and `challengeUrl` deliberately omitted — must come from
-  // `SellfAdapterOptions.endpoints.emailGate`.
+function normalizeEmailGate(
+  c: Record<string, unknown>,
+  trustedOrigins: ReadonlySet<string>,
+): Record<string, unknown> {
   const out: Record<string, unknown> = {};
   pickBool(c, "enabled", out);
+  pickEndpoint(c, "webhookUrl", out, trustedOrigins);
+  pickEndpoint(c, "challengeUrl", out, trustedOrigins);
   pickBoundedString(c, "title", out, 500);
   pickBoundedString(c, "buttonLabel", out, 500);
   pickBoundedString(c, "storageKey", out, 200);
@@ -376,4 +386,28 @@ function normalizeTwitch(c: Record<string, unknown>): Record<string, unknown> {
     out.parent = c.parent;
   }
   return out;
+}
+
+function pickEndpoint(
+  src: Record<string, unknown>,
+  key: string,
+  out: Record<string, unknown>,
+  trustedOrigins: ReadonlySet<string>,
+): void {
+  const value = src[key];
+  if (typeof value !== "string") return;
+  try {
+    const url = new URL(value);
+    if (
+      ["http:", "https:"].includes(url.protocol) &&
+      !url.username &&
+      !url.password &&
+      !value.split(/[/?#]/)[2]?.includes("@") &&
+      trustedOrigins.has(url.origin)
+    ) {
+      out[key] = value;
+    }
+  } catch {
+    // Invalid endpoints are omitted.
+  }
 }

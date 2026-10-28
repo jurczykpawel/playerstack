@@ -22,7 +22,10 @@ export interface SellfAdapterOptions {
    * lead data to a URL it didn't pick.
    */
   endpoints?: SellfAdapterEndpoints;
+  /** Exact HTTP(S) origins allowed for remote lead and analytics endpoints. */
+  trustedOrigins?: string[];
   /**
+   * @deprecated Use trustedOrigins. Retained for tests and internal dashboards.
    * Disable the remote-config allowlist and pass the API response through
    * unchanged. Only use when the API and adapter run inside the same trust
    * boundary (internal dashboard, integration tests). Default: `false`.
@@ -31,6 +34,7 @@ export interface SellfAdapterOptions {
 }
 
 export function createSellfConfigProvider(opts: SellfAdapterOptions): ConfigProvider {
+  const trustedOrigins = validateTrustedOrigins(opts.trustedOrigins);
   return {
     name: "sellf",
     async load(element: HTMLElement): Promise<PlayerstackConfig> {
@@ -53,7 +57,7 @@ export function createSellfConfigProvider(opts: SellfAdapterOptions): ConfigProv
       const raw = (await response.json()) as unknown;
       const remote: Partial<PlayerstackConfig> = opts.trustRemote
         ? (raw as Partial<PlayerstackConfig>)
-        : normalizeRemoteConfig(raw);
+        : normalizeRemoteConfig(raw, trustedOrigins);
 
       // Adapter-supplied endpoints always win over anything remote sent.
       const withEndpoints = applyEndpoints(remote, opts.endpoints);
@@ -110,4 +114,37 @@ function applyEndpoints(
   }
 
   return out as Partial<PlayerstackConfig>;
+}
+
+function validateTrustedOrigins(values: string[] | undefined): ReadonlySet<string> {
+  const origins = new Set<string>();
+  if (values === undefined) return origins;
+  if (!Array.isArray(values)) {
+    throw new Error("[playerstack:sellf] trustedOrigins must be an array of HTTP(S) origins");
+  }
+  for (const value of values) {
+    try {
+      if (typeof value !== "string" || !/^https?:\/\/[^/?#]+\/?$/i.test(value)) throw new Error();
+      const url = new URL(value);
+      if (
+        !["http:", "https:"].includes(url.protocol) ||
+        url.username ||
+        url.password ||
+        value.includes("@") ||
+        url.hostname.includes("*") ||
+        url.pathname !== "/" ||
+        url.search ||
+        url.hash ||
+        value.includes("\\") ||
+        /\s/.test(value)
+      )
+        throw new Error();
+      origins.add(url.origin);
+    } catch {
+      throw new Error(
+        "[playerstack:sellf] trustedOrigins entries must be exact HTTP(S) origins without paths, queries, fragments, credentials or wildcards",
+      );
+    }
+  }
+  return origins;
 }
