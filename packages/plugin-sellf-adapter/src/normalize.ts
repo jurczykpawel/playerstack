@@ -308,21 +308,30 @@ function normalizeGateText(c: Record<string, unknown>): Record<string, unknown> 
   const out: Record<string, unknown> = {};
   pickBoundedString(c, "text", out, 500, true);
   pickBoundedString(c, "linkText", out, 200);
-  if (typeof c.href === "string" && c.href.length <= 2048) {
-    try {
-      if (["http:", "https:"].includes(new URL(c.href, document.baseURI).protocol))
-        out.href = c.href;
-    } catch {
-      /* Invalid links are omitted. */
-    }
-  }
+  if (isHttpUrl(c.href)) out.href = c.href;
   return out;
+}
+
+function isHttpUrl(v: unknown): v is string {
+  if (typeof v !== "string" || !v || v.length > 2048) return false;
+  try {
+    return ["http:", "https:"].includes(new URL(v, document.baseURI).protocol);
+  } catch {
+    return false; // Invalid links are omitted.
+  }
 }
 
 function normalizePreview(c: Record<string, unknown>): Record<string, unknown> {
   const out: Record<string, unknown> = {};
   pickBool(c, "enabled", out);
   pickBool(c, "loopUntilInteraction", out);
+  if (isHttpUrl(c.src)) out.src = c.src;
+  if (
+    typeof c.type === "string" &&
+    c.type.length <= 128 &&
+    /^video\/[\w.+-]+(;[^\r\n]*)?$/.test(c.type)
+  )
+    out.type = c.type;
   return out;
 }
 
