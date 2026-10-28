@@ -138,4 +138,147 @@ describe("autopreviewPlugin", () => {
     autopreviewPlugin.destroy?.(ctx);
     expect(observers[0]?.disconnect).toHaveBeenCalled();
   });
+
+  describe("with preview.src", () => {
+    const src = "https://example.com/preview.mp4";
+    const thumbConfig = { brandedThumb: { enabled: true, clickToLoad: true } };
+    const previewOf = (ctx: PlayerstackContext) =>
+      ctx.container.querySelector<HTMLVideoElement>("video.playerstack-preview");
+    const withThumb = (ctx: PlayerstackContext) => {
+      const overlay = document.createElement("div");
+      overlay.className = "playerstack-thumb";
+      overlay.innerHTML = '<img alt=""><button class="playerstack-thumb-play"></button>';
+      ctx.container.appendChild(overlay);
+      return overlay;
+    };
+    let play: ReturnType<typeof vi.spyOn>;
+    let pause: ReturnType<typeof vi.spyOn>;
+    let load: ReturnType<typeof vi.spyOn>;
+    beforeEach(() => {
+      play = vi.spyOn(HTMLVideoElement.prototype, "play").mockResolvedValue();
+      pause = vi.spyOn(HTMLVideoElement.prototype, "pause").mockImplementation(() => {});
+      load = vi.spyOn(HTMLVideoElement.prototype, "load").mockImplementation(() => {});
+    });
+    afterEach(() => vi.restoreAllMocks());
+
+    it("mounts nothing and fetches nothing until the player is in view", async () => {
+      const ctx = makeContext({ ...thumbConfig, preview: { enabled: true, src } });
+      await autopreviewPlugin.init(ctx);
+      expect(previewOf(ctx)).toBeNull();
+      expect(observers[0]?.observe).toHaveBeenCalledWith(ctx.container);
+    });
+
+    it("mounts a muted, looping, hidden preview between poster and play button", async () => {
+      const ctx = makeContext({
+        ...thumbConfig,
+        poster: "https://example.com/p.jpg",
+        preview: { enabled: true, src },
+      });
+      await autopreviewPlugin.init(ctx);
+      const overlay = withThumb(ctx);
+      observers[0]?.trigger(true);
+      const video = previewOf(ctx)!;
+      expect([...overlay.children].map((el) => el.tagName)).toEqual(["IMG", "VIDEO", "BUTTON"]);
+      expect(video.muted).toBe(true);
+      expect(video.hasAttribute("muted")).toBe(true);
+      expect(video.hasAttribute("playsinline")).toBe(true);
+      expect(video.loop).toBe(true);
+      expect(video.controls).toBe(false);
+      expect(video.getAttribute("aria-hidden")).toBe("true");
+      expect(video.tabIndex).toBe(-1);
+      expect(video.getAttribute("poster")).toBe("https://example.com/p.jpg");
+      expect(video.getAttribute("src")).toBe(src);
+      expect(ctx.playSpy).not.toHaveBeenCalled();
+    });
+
+    it("plays the preview in view and pauses it out of view", async () => {
+      const ctx = makeContext({ preview: { enabled: true, src } });
+      await autopreviewPlugin.init(ctx);
+      observers[0]?.trigger(true);
+      // Without a thumbnail the preview falls back to the container.
+      expect(ctx.container.lastElementChild).toBe(previewOf(ctx));
+      expect(play).toHaveBeenCalledTimes(1);
+      observers[0]?.trigger(false);
+      expect(pause).toHaveBeenCalledTimes(1);
+      observers[0]?.trigger(true);
+      expect(play).toHaveBeenCalledTimes(2);
+      expect(ctx.container.querySelectorAll("video.playerstack-preview")).toHaveLength(1);
+      expect(ctx.playSpy).not.toHaveBeenCalled();
+      expect(ctx.pauseSpy).not.toHaveBeenCalled();
+    });
+
+    it("does not loop when loopUntilInteraction is false", async () => {
+      const ctx = makeContext({ preview: { enabled: true, src, loopUntilInteraction: false } });
+      await autopreviewPlugin.init(ctx);
+      observers[0]?.trigger(true);
+      expect(previewOf(ctx)!.loop).toBe(false);
+    });
+
+    it.each(["thumb:click", "main play"])(
+      "stops downloading and removes the preview on %s",
+      async (trigger) => {
+        const ctx = makeContext({ preview: { enabled: true, src } });
+        await autopreviewPlugin.init(ctx);
+        observers[0]?.trigger(true);
+        const video = previewOf(ctx)!;
+        if (trigger === "thumb:click") ctx.events.emit("thumb:click", undefined);
+        else {
+          ctx.mediaPlayer.setAttribute("src", "https://example.com/v.mp4");
+          ctx.mediaPlayer.dispatchEvent(new Event("play"));
+        }
+        expect(video.hasAttribute("src")).toBe(false);
+        expect(load).toHaveBeenCalled();
+        expect(previewOf(ctx)).toBeNull();
+        expect(observers[0]?.disconnect).toHaveBeenCalled();
+      },
+    );
+
+    it("keeps the preview when play() is called before the full source is loaded", async () => {
+      // e.g. email-gate "before" resumes playback while the thumbnail still holds src.
+      const ctx = makeContext({ preview: { enabled: true, src } });
+      await autopreviewPlugin.init(ctx);
+      observers[0]?.trigger(true);
+      ctx.mediaPlayer.dispatchEvent(new Event("play"));
+      expect(previewOf(ctx)).not.toBeNull();
+    });
+
+    it("warns when no click-to-load thumbnail keeps the full source unloaded", async () => {
+      const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+      await autopreviewPlugin.init(makeContext({ preview: { enabled: true, src } }));
+      await autopreviewPlugin.init(
+        makeContext({ ...thumbConfig, preview: { enabled: true, src } }),
+      );
+      expect(warn).toHaveBeenCalledTimes(1);
+    });
+
+    it("renders nothing under reduced motion or preload none", async () => {
+      prefersReducedMotion = true;
+      await autopreviewPlugin.init(makeContext({ preview: { enabled: true, src } }));
+      prefersReducedMotion = false;
+      await autopreviewPlugin.init(
+        makeContext({ preload: "none", preview: { enabled: true, src } }),
+      );
+      expect(observers).toHaveLength(0);
+    });
+
+    it("skips unsafe sources and unsupported types", async () => {
+      await autopreviewPlugin.init(
+        makeContext({ preview: { enabled: true, src: "javascript:alert(1)" } }),
+      );
+      vi.spyOn(HTMLVideoElement.prototype, "canPlayType").mockReturnValue("");
+      await autopreviewPlugin.init(
+        makeContext({ preview: { enabled: true, src, type: "video/webm" } }),
+      );
+      expect(observers).toHaveLength(0);
+    });
+
+    it("destroy removes the preview", async () => {
+      const ctx = makeContext({ preview: { enabled: true, src } });
+      await autopreviewPlugin.init(ctx);
+      observers[0]?.trigger(true);
+      autopreviewPlugin.destroy?.(ctx);
+      expect(previewOf(ctx)).toBeNull();
+      expect(observers[0]?.disconnect).toHaveBeenCalled();
+    });
+  });
 });

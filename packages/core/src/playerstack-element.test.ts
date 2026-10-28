@@ -60,4 +60,13 @@ describe("initial playback preferences", () => {
     expect(media.autoplay).toBe(true);
     expect(media.loop).toBe(true);
   });
+  it("does not autoplay, mute or loop the main media when preview.src is set", async () => {
+    vi.stubGlobal("matchMedia", () => ({ matches: false }));
+    const media = await mount(
+      `data-config='{"preview":{"enabled":true,"src":"https://example.com/p.mp4"}}'`,
+    );
+    expect(media.autoplay).toBe(false);
+    expect(media.loop).toBe(false);
+    expect(media.hasAttribute("muted")).toBe(false);
+  });
 });

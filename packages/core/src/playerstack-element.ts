@@ -46,6 +46,12 @@ function detectElementTag(src: string): MediaElementTag {
   return "video";
 }
 
+interface PreviewConfig {
+  enabled?: boolean;
+  loopUntilInteraction?: boolean;
+  src?: string;
+}
+
 export class PlayerstackElement extends HTMLElement {
   static get observedAttributes(): readonly string[] {
     return OBSERVED_ATTRS;
@@ -248,11 +254,12 @@ export class PlayerstackElement extends HTMLElement {
 
     // Preview-mode initial attributes — must be set BEFORE the element connects
     // for the browser autoplay policy to honor them.
-    const preview = (config as { preview?: { enabled?: boolean; loopUntilInteraction?: boolean } })
-      .preview;
+    // With `preview.src` the autopreview plugin plays a separate light file and
+    // the main media stays unmuted and idle until the branded-thumb click.
+    const preview = (config as { preview?: PreviewConfig }).preview;
     const reducedMotion =
       typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (preview?.enabled && config.preload !== "none" && !reducedMotion) {
+    if (preview?.enabled && !preview.src && config.preload !== "none" && !reducedMotion) {
       mediaEl.setAttribute("muted", "");
       mediaEl.setAttribute("autoplay", "");
       if (preview.loopUntilInteraction !== false) {
@@ -282,33 +289,12 @@ export class PlayerstackElement extends HTMLElement {
   }
 }
 
-const DEFAULT_STYLES = `
-player-stack {
-  display: block;
-  position: relative;
-  width: 100%;
-  aspect-ratio: 16 / 9;
-  background: #000;
-  overflow: hidden;
-}
-player-stack media-controller {
-  display: block;
-  width: 100%;
-  height: 100%;
-  --media-primary-color: var(--ps-accent, #008aff);
-}
-player-stack video,
-player-stack youtube-video,
-player-stack vimeo-video,
-player-stack hls-video,
-player-stack wistia-video,
-player-stack twitch-video {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  background: #000;
-}
-`;
+const DEFAULT_STYLES =
+  "player-stack{display:block;position:relative;width:100%;aspect-ratio:16/9;background:#000;" +
+  "overflow:hidden}player-stack media-controller{display:block;width:100%;height:100%;" +
+  "--media-primary-color:var(--ps-accent,#008aff)}player-stack video,player-stack youtube-video," +
+  "player-stack vimeo-video,player-stack hls-video,player-stack wistia-video," +
+  "player-stack twitch-video{width:100%;height:100%;object-fit:contain;background:#000}";
 
 function injectDefaultStyles(): void {
   if (typeof document === "undefined") return;
