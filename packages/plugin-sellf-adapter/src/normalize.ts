@@ -395,7 +395,7 @@ function pickEndpoint(
   trustedOrigins: ReadonlySet<string>,
 ): void {
   const value = src[key];
-  if (typeof value !== "string") return;
+  if (typeof value !== "string" || !/^https?:\/\//i.test(value.trim())) return;
   try {
     const url = new URL(value);
     if (
@@ -405,7 +405,7 @@ function pickEndpoint(
       !value.split(/[/?#]/)[2]?.includes("@") &&
       trustedOrigins.has(url.origin)
     ) {
-      out[key] = value;
+      out[key] = url.href;
     }
   } catch {
     // Invalid endpoints are omitted.

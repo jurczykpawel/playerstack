@@ -26,13 +26,25 @@ it.each(["https://sellf.app/path?q=1", "https://SELLF.APP:443/path", "http://loc
     const cfg = await load(value, {
       trustedOrigins: ["https://SELLF.APP:443/", "http://localhost:8080"],
     });
-    expect(cfg.emailGate).toEqual({ enabled: true, webhookUrl: value, challengeUrl: value });
-    expect(cfg.analytics).toEqual({ enabled: true, endpoint: value });
+    expect(cfg.emailGate).toEqual({
+      enabled: true,
+      webhookUrl: new URL(value).href,
+      challengeUrl: new URL(value).href,
+    });
+    expect(cfg.analytics).toEqual({ enabled: true, endpoint: new URL(value).href });
     expect(cfg.customCss).toEqual({});
   },
 );
 
 it.each([
+  "https:sellf.app/lead",
+  "https:/sellf.app/lead",
+  "https:\\sellf.app/lead",
+  "https://sellf.app\\@evil.com/lead",
+  "https://sellf.app./lead",
+  "https://[::1]/lead",
+  "https://séllf.app/lead",
+  "https://xn--sllf-bpa.app/lead",
   "https://other.app/lead",
   "javascript:alert(1)",
   "data:text/plain,x",
@@ -147,4 +159,21 @@ it.each([null, "https://sellf.app", {}])("requires an array of origins (%j)", (t
       trustedOrigins: trustedOrigins as unknown as string[],
     }),
   ).toThrow(/trustedOrigins/);
+});
+
+it.each([
+  "HTTPS://SELLF.APP/lead",
+  " https://sellf.app/lead ",
+  "https://ｓｅｌｌｆ.app/lead",
+  "https://sellf%2eapp/lead",
+  "https://sellf。app/lead",
+  "\thttps://sel\nlf.app/lead",
+])("stores normalized absolute endpoints (%j)", async (value) => {
+  const cfg = await load(value, { trustedOrigins: ["https://sellf.app"] });
+  expect(cfg.emailGate).toEqual({
+    enabled: true,
+    webhookUrl: "https://sellf.app/lead",
+    challengeUrl: "https://sellf.app/lead",
+  });
+  expect(cfg.analytics).toEqual({ enabled: true, endpoint: "https://sellf.app/lead" });
 });
