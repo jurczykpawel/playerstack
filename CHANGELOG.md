@@ -6,6 +6,8 @@ All notable changes to Playerstack will be documented in this file.
 
 ### Added
 
+- `preview.src` (with optional `preview.type`) plays a separate light, muted, looping clip under the branded-thumb play button while the player is in view; the click aborts the preview download and starts the full video from 0:00 with sound and controls. Requires `brandedThumb` `enabled` and `clickToLoad`; reduced motion and `preload: "none"` skip the preview entirely.
+
 - Load email-gate optional fields and hardened submission code as separate versioned standalone modules; open forms never download the ALTCHA solver.
 
 - Demonstrate uninterrupted after-video email collection on the landing page with a typed configuration example.

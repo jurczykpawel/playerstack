@@ -83,3 +83,5 @@ Overlay plugins use core `activateOverlay(container, overlay, priority = 3, focu
 Sellf email-gate regression: `bunx playwright test -c playwright.sellf.config.ts` (Chromium/WebKit), after building standalone.
 
 On 2026-10-25, the U25 standalone build with MP4 + CTA + branded thumbnail measured 45,879 bytes (44.8 KiB) gzip versus 45,000 bytes (43.9 KiB) at c67eb4d. Measured each downloaded JS artifact separately using Bun 1.4.4 zlib gzip level 9; maps, notices, headers and media excluded.
+
+On 2026-10-28 (`preview.src`), MP4 + controls + CTA + branded thumbnail measured 47,413 B gzip (47,414 B at c765c73); adding `preview.src` loads the autopreview chunk, for 48,608 B (autopreview 1,195 B vs 579 B). The preview clip is media and excluded. Same method: Bun 1.4.4 zlib gzip level 9, each downloaded JS compressed separately.

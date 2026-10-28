@@ -24,11 +24,33 @@ Plays muted when the player scrolls into view, pauses when it scrolls out. Great
 
 `config.preview`:
 
-| Field                  | Type            | Default    | Description                                                 |
-| ---------------------- | --------------- | ---------- | ----------------------------------------------------------- |
-| `enabled`              | boolean         | `false`    | Plugin is a no-op unless `true`                             |
-| `threshold`            | number `[0..1]` | `0.5`      | How much of the player must be in view before play triggers |
-| `loopUntilInteraction` | boolean         | (reserved) | Reserved; current build always loops while in view          |
+| Field                  | Type            | Default | Description                                                 |
+| ---------------------- | --------------- | ------- | ----------------------------------------------------------- |
+| `enabled`              | boolean         | `false` | Plugin is a no-op unless `true`                             |
+| `threshold`            | number `[0..1]` | `0.5`   | How much of the player must be in view before play triggers |
+| `loopUntilInteraction` | boolean         | `true`  | Loop the preview; `false` plays it once                     |
+| `src`                  | string          | —       | Separate light preview clip shown under the play button     |
+| `type`                 | string          | —       | MIME type of `src`; skipped if the browser cannot play it   |
+
+## Light preview clip
+
+Set `preview.src` to a short, small clip (for example 3 s, 320 px, no audio, ~15-30 KB). It plays muted in a loop under the thumbnail's play button while the player is in view and pauses out of view. The click (mouse, Enter or Space) removes the preview and starts the full video from 0:00 with sound and controls. Before the click only the preview file is downloaded.
+
+`preview.src` requires `brandedThumb` with `enabled: true` and `clickToLoad: true`; without it the full source would load early, and the plugin logs a console warning.
+
+```html
+<player-stack
+  src="https://example.com/full-video.mp4"
+  data-config='{
+    "poster": "https://example.com/poster.jpg",
+    "preview": { "enabled": true, "src": "https://example.com/preview-3s.mp4", "type": "video/mp4" },
+    "brandedThumb": { "enabled": true, "clickToLoad": true, "playLabel": "Watch the video" }
+  }'
+>
+</player-stack>
+```
+
+The play button stays the only Tab stop in the player. With `prefers-reduced-motion: reduce` or `preload: "none"` no preview is created or downloaded and the thumbnail shows the static poster.
 
 ## Accessibility
 
@@ -42,4 +64,5 @@ None.
 
 - Pair with `branded-thumb` + `clickToLoad` if you're using YouTube — autoplaying YouTube embeds is rate-limited and often blocked
 - Use a short looping MP4 (5-15 seconds) for the smoothest experience
-- Mute is always on; the user can unmute via the controls
+- Mute is always on for the preview; with `preview.src` the full video starts unmuted after the click
+- Email gate works with the light preview: `at: "before"` stays on top of the thumbnail; `at: "after"` appears after the full video ends
