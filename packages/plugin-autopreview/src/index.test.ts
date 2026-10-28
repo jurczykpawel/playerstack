@@ -233,6 +233,45 @@ describe("autopreviewPlugin", () => {
       },
     );
 
+    describe("click starts from 0:00 with sound", () => {
+      const clicked = async () => {
+        const ctx = makeContext({ preview: { enabled: true, src } });
+        const player = ctx.mediaPlayer as HTMLElement & { muted: boolean; currentTime: number };
+        // Remembered mute restored by media-chrome, and a stale position.
+        player.muted = true;
+        player.currentTime = 7;
+        await autopreviewPlugin.init(ctx);
+        observers[0]?.trigger(true);
+        ctx.events.emit("thumb:click", undefined);
+        return player;
+      };
+
+      it("unmutes and rewinds the main media inside the click", async () => {
+        const player = await clicked();
+        expect(player.muted).toBe(false);
+        expect(player.currentTime).toBe(0);
+      });
+
+      it("undoes a mute restored after src is set, until playback starts", async () => {
+        const player = await clicked();
+        player.muted = true;
+        player.dispatchEvent(new Event("loadedmetadata"));
+        expect(player.muted).toBe(false);
+        player.muted = true;
+        player.dispatchEvent(new Event("playing"));
+        expect(player.muted).toBe(false);
+      });
+
+      it("leaves a mute the viewer chooses after playback started", async () => {
+        const player = await clicked();
+        player.dispatchEvent(new Event("playing"));
+        player.muted = true;
+        player.dispatchEvent(new Event("playing"));
+        player.dispatchEvent(new Event("loadedmetadata"));
+        expect(player.muted).toBe(true);
+      });
+    });
+
     it("keeps the preview when play() is called before the full source is loaded", async () => {
       // e.g. email-gate "before" resumes playback while the thumbnail still holds src.
       const ctx = makeContext({ preview: { enabled: true, src } });

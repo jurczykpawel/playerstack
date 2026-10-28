@@ -105,7 +105,26 @@ function mountPreview(ctx: PlayerstackContext, preview: AutopreviewConfig): void
   const onPlay = () => {
     if (ctx.mediaPlayer.hasAttribute("src")) stop();
   };
-  const unsubscribe = ctx.events.on("thumb:click", stop);
+  // The click always means "play with sound from 0:00", even when media-chrome
+  // restored a remembered mute (possibly again after src is set). Re-assert
+  // only until playback starts so a later viewer mute is left alone.
+  const onClick = () => {
+    const player = ctx.mediaPlayer as HTMLElement & { muted: boolean; currentTime: number };
+    const unmute = () => (player.muted = false);
+    unmute();
+    player.currentTime = 0;
+    player.addEventListener("loadedmetadata", unmute);
+    player.addEventListener(
+      "playing",
+      () => {
+        unmute();
+        player.removeEventListener("loadedmetadata", unmute);
+      },
+      { once: true },
+    );
+    stop();
+  };
+  const unsubscribe = ctx.events.on("thumb:click", onClick);
   ctx.mediaPlayer.addEventListener("play", onPlay);
   stops.set(ctx, stop);
 }

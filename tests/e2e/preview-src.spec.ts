@@ -144,6 +144,34 @@ for (const how of ["mouse", "Enter", "Space"]) {
   });
 }
 
+for (const how of ["mouse", "Enter"]) {
+  test(`play via ${how} unmutes and starts at 0:00 despite a remembered mute`, async ({ page }) => {
+    await page.addInitScript(() => localStorage.setItem("media-chrome-pref-muted", "true"));
+    await open(page);
+    await previewPlaying(page);
+    const button = page.getByRole("button", { name: "Watch demo", exact: true });
+    if (how === "mouse") await button.click();
+    else {
+      await button.focus();
+      await page.keyboard.press(how);
+    }
+    await expect(page.locator(".playerstack-thumb")).toHaveCount(0);
+    await expect(main(page)).toHaveJSProperty("paused", false);
+    await expect
+      .poll(() => main(page).evaluate((v: HTMLVideoElement) => v.currentTime > 0))
+      .toBe(true);
+    const state = await main(page).evaluate((v: HTMLVideoElement) => ({
+      muted: v.muted,
+      time: v.currentTime,
+    }));
+    expect(state.muted).toBe(false);
+    expect(state.time).toBeLessThan(0.5);
+    // Still unmuted once media-chrome has had time to restore its preference.
+    await page.waitForTimeout(750);
+    await expect(main(page)).toHaveJSProperty("muted", false);
+  });
+}
+
 test("reduced motion shows the static poster and fetches no video", async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
   const requests = await open(page);
