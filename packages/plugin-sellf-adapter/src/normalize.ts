@@ -214,13 +214,91 @@ function normalizeEmailGate(c: Record<string, unknown>): Record<string, unknown>
   // `SellfAdapterOptions.endpoints.emailGate`.
   const out: Record<string, unknown> = {};
   pickBool(c, "enabled", out);
-  pickString(c, "title", out);
-  pickString(c, "buttonLabel", out);
-  pickString(c, "storageKey", out);
-  pickNumber(c, "atPercent", out);
+  pickBoundedString(c, "title", out, 500);
+  pickBoundedString(c, "buttonLabel", out, 500);
+  pickBoundedString(c, "storageKey", out, 200);
+  pickBool(c, "dismissible", out);
+  pickBool(c, "remember", out);
+  pickEnum(c, "altchaFormat", ["object", "base64"], out);
+  for (const key of ["atPercent", "rememberDays"]) {
+    const value = c[key];
+    if (
+      typeof value === "number" &&
+      Number.isFinite(value) &&
+      value >= 0 &&
+      (key !== "atPercent" || value <= 100)
+    )
+      out[key] = value;
+  }
   const at = c.at;
-  if (at === "before" || (typeof at === "number" && Number.isFinite(at))) {
+  if (
+    at === "before" ||
+    at === "after" ||
+    (typeof at === "number" && Number.isFinite(at) && at >= 0)
+  )
     out.at = at;
+  if (typeof c.product === "string") {
+    const product = c.product.trim();
+    if (product.length > 0 && product.length <= 100) out.product = product;
+  }
+  if (isObject(c.privacy)) {
+    const privacy = normalizeGateText(c.privacy);
+    if (privacy.text !== undefined) out.privacy = privacy;
+  }
+  if (isObject(c.marketingConsent)) {
+    const consent = normalizeGateText(c.marketingConsent);
+    pickBoundedString(c.marketingConsent, "version", consent, 64, true);
+    pickBool(c.marketingConsent, "required", consent);
+    if (consent.text !== undefined && consent.version !== undefined) out.marketingConsent = consent;
+  }
+  if (isObject(c.messages)) {
+    const messages: Record<string, unknown> = {};
+    for (const key of [
+      "title",
+      "emailLabel",
+      "placeholder",
+      "submit",
+      "verifying",
+      "solving",
+      "submitting",
+      "success",
+      "invalidEmail",
+      "rejected",
+      "rateLimit",
+      "networkError",
+      "dismiss",
+      "consentRequired",
+    ])
+      pickBoundedString(c.messages, key, messages, 500);
+    out.messages = messages;
+  }
+  return out;
+}
+
+function pickBoundedString(
+  src: Record<string, unknown>,
+  key: string,
+  out: Record<string, unknown>,
+  max: number,
+  nonblank = false,
+): void {
+  const value = src[key];
+  if (typeof value === "string" && value.length <= max && (!nonblank || value.trim())) {
+    out[key] = value;
+  }
+}
+
+function normalizeGateText(c: Record<string, unknown>): Record<string, unknown> {
+  const out: Record<string, unknown> = {};
+  pickBoundedString(c, "text", out, 500, true);
+  pickBoundedString(c, "linkText", out, 200);
+  if (typeof c.href === "string" && c.href.length <= 2048) {
+    try {
+      if (["http:", "https:"].includes(new URL(c.href, document.baseURI).protocol))
+        out.href = c.href;
+    } catch {
+      /* Invalid links are omitted. */
+    }
   }
   return out;
 }
