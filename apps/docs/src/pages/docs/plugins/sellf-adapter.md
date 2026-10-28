@@ -80,6 +80,63 @@ Inline attributes always win on merge. Useful for per-page CTAs without changing
 
 This loads everything from Sellf, but `title` is taken from the attribute.
 
+## Remote email-gate fields
+
+With the default `trustRemote: false`, unknown fields and values of the wrong type are dropped. Invalid values are omitted rather than truncated. Nested objects are copied. Text is rendered literally by email-gate.
+
+| Field                                | Accepted remote values                                                                                                                                                                                                                                                 |
+| ------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `enabled`, `dismissible`, `remember` | Booleans only.                                                                                                                                                                                                                                                         |
+| `at`                                 | `"before"`, `"after"`, or finite non-negative seconds.                                                                                                                                                                                                                 |
+| `atPercent`                          | Finite number from 0 to 100.                                                                                                                                                                                                                                           |
+| `product`                            | String trimmed to 1–100 characters.                                                                                                                                                                                                                                    |
+| `marketingConsent`                   | Requires nonblank `text` (up to 500 characters) and `version` (up to 64); optional boolean `required`, `linkText` (up to 200), and `href` (up to 2048). Other keys are dropped. Wording and version retain whitespace. Invalid required fields omit the entire object. |
+| `privacy`                            | Requires nonblank `text` (up to 500); optional `linkText` (up to 200) and `href` (up to 2048). Other keys are dropped.                                                                                                                                                 |
+| `messages`                           | Strings up to 500 characters, only for `title`, `emailLabel`, `placeholder`, `submit`, `verifying`, `solving`, `submitting`, `success`, `invalidEmail`, `rejected`, `rateLimit`, `networkError`, `dismiss`, `consentRequired`.                                         |
+| `altchaFormat`                       | `"object"` or `"base64"`.                                                                                                                                                                                                                                              |
+| `rememberDays`                       | Finite non-negative number; fractional days are supported.                                                                                                                                                                                                             |
+| `title`, `buttonLabel`               | Legacy string overrides, up to 500 characters.                                                                                                                                                                                                                         |
+| `storageKey`                         | String up to 200 characters.                                                                                                                                                                                                                                           |
+
+Links use the same HTTP(S) protocol check as email-gate, resolving relative URLs against `document.baseURI`. Both `href` and `linkText` are needed to render a link. The product and consent limits come from email-gate; the remaining text/URL limits are adapter limits for remote configuration. Empty message strings are allowed, as in email-gate. Lengths use JavaScript string length.
+
+`webhookUrl` and `challengeUrl` from the API are always omitted under the default allowlist. Supply them through `SellfAdapterOptions.endpoints.emailGate` as `webhook` and `challenge`. Without these options the gate runs in open mode and emits an event without a network submission. `trustRemote: true` explicitly disables normalization; integrator endpoint options still take precedence.
+
+Example response from `GET /api/products/guide/playerstack`:
+
+```json
+{
+  "src": "https://files.example.com/guide.mp4",
+  "emailGate": {
+    "enabled": true,
+    "at": "after",
+    "product": "guide",
+    "altchaFormat": "base64",
+    "remember": false,
+    "marketingConsent": {
+      "text": "Send me updates about new materials.",
+      "version": "2026-10",
+      "required": true
+    },
+    "messages": { "success": "Check your email to confirm." }
+  }
+}
+```
+
+The integrator supplies the endpoints separately:
+
+```ts
+createSellfConfigProvider({
+  baseUrl: "https://sellf.example",
+  endpoints: {
+    emailGate: {
+      webhook: "https://sellf.example/api/leads/submit",
+      challenge: "https://sellf.example/api/leads/challenge",
+    },
+  },
+});
+```
+
 ## Errors
 
 - HTTP non-200 → throws with status and URL
