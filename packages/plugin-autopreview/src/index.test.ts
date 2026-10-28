@@ -289,6 +289,34 @@ describe("autopreviewPlugin", () => {
       );
     });
 
+    it.each(["reduced motion", "preload none"])(
+      "click still unmutes and rewinds with %s (no preview mounted)",
+      async (mode) => {
+        const ctx = makeContext({
+          ...(mode === "preload none" ? { preload: "none" as const } : {}),
+          preview: { enabled: true, src },
+        });
+        prefersReducedMotion = mode === "reduced motion";
+        const player = ctx.mediaPlayer as HTMLElement & { muted: boolean; currentTime: number };
+        player.muted = true;
+        player.currentTime = 7;
+        await autopreviewPlugin.init(ctx);
+        expect(observers).toHaveLength(0);
+        ctx.events.emit("thumb:click", undefined);
+        expect(player.muted).toBe(false);
+        expect(player.currentTime).toBe(0);
+        player.muted = true;
+        player.dispatchEvent(new Event("loadedmetadata"));
+        expect(player.muted).toBe(false);
+        player.dispatchEvent(new Event("playing"));
+        player.muted = true;
+        player.dispatchEvent(new Event("loadedmetadata"));
+        expect(player.muted).toBe(true);
+        autopreviewPlugin.destroy?.(ctx);
+        prefersReducedMotion = false;
+      },
+    );
+
     it("keeps the preview when play() is called before the full source is loaded", async () => {
       // e.g. email-gate "before" resumes playback while the thumbnail still holds src.
       const ctx = makeContext({ preview: { enabled: true, src } });

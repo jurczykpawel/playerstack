@@ -188,6 +188,30 @@ test("reduced motion shows the static poster and fetches no video", async ({ pag
   await expect(page.locator(".playerstack-thumb img")).toBeVisible();
 });
 
+test("reduced motion plus a remembered mute: mouse click still plays from 0:00 with sound", async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.addInitScript(() => localStorage.setItem("media-chrome-pref-muted", "true"));
+  const requests = await open(page);
+  await page.getByRole("button", { name: "Watch demo", exact: true }).click();
+  await expect(page.locator(".playerstack-thumb")).toHaveCount(0);
+  await expect(main(page)).toHaveJSProperty("paused", false);
+  await expect
+    .poll(() => main(page).evaluate((v: HTMLVideoElement) => v.currentTime > 0))
+    .toBe(true);
+  const state = await main(page).evaluate((v: HTMLVideoElement) => ({
+    muted: v.muted,
+    time: v.currentTime,
+  }));
+  expect(state.muted).toBe(false);
+  expect(state.time).toBeLessThan(0.5);
+  await page.waitForTimeout(750);
+  await expect(main(page)).toHaveJSProperty("muted", false);
+  expect(requests.preview).toBe(0);
+  expect(requests.full).toBeGreaterThan(0);
+});
+
 test("the play button is the only Tab stop across the player", async ({ page }) => {
   await open(page);
   await previewPlaying(page);

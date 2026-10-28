@@ -15,6 +15,7 @@ export interface AutopreviewConfig {
 
 const observers = new WeakMap<PlayerstackContext, IntersectionObserver>();
 const stops = new WeakMap<PlayerstackContext, () => void>();
+const clicks = new WeakMap<PlayerstackContext, () => void>();
 
 function prefersReducedMotion(): boolean {
   if (typeof matchMedia !== "function") return false;
@@ -91,7 +92,6 @@ function mountPreview(ctx: PlayerstackContext, preview: AutopreviewConfig): void
 
   const stop = () => {
     observer.disconnect();
-    unsubscribe();
     ctx.mediaPlayer.removeEventListener("play", onPlay);
     video.pause();
     // Removing src and reloading aborts the remaining preview download.
@@ -105,41 +105,48 @@ function mountPreview(ctx: PlayerstackContext, preview: AutopreviewConfig): void
   const onPlay = () => {
     if (ctx.mediaPlayer.hasAttribute("src")) stop();
   };
-  // The click always means "play with sound from 0:00", even when media-chrome
-  // restored a remembered mute (possibly again after src is set). Re-assert
-  // only until playback starts so a later viewer mute is left alone.
-  const onClick = () => {
+  ctx.mediaPlayer.addEventListener("play", onPlay);
+  stops.set(ctx, stop);
+}
+
+// The click always means "play with sound from 0:00", even when media-chrome
+// restored a remembered mute (possibly again after src is set) and even when no
+// preview was mounted (reduced motion, preload none). Re-assert only until
+// playback starts so a later viewer mute is left alone.
+function bindClick(ctx: PlayerstackContext): void {
+  let ended: AbortController | undefined;
+  const unsubscribe = ctx.events.on("thumb:click", () => {
     const player = ctx.mediaPlayer as HTMLElement & { muted: boolean; currentTime: number };
     const unmute = () => (player.muted = false);
     unmute();
     player.currentTime = 0;
-    const ended = new AbortController();
-    const { signal } = ended;
+    const { signal } = (ended = new AbortController());
+    const end = () => ended!.abort();
     player.addEventListener("loadedmetadata", unmute, { signal });
-    player.addEventListener("error", () => ended.abort(), { signal });
+    player.addEventListener("error", end, { signal });
     player.addEventListener(
       "playing",
       () => {
         unmute();
-        ended.abort();
+        end();
       },
       { signal },
     );
-    stop();
-    // stop() dropped its entry; destroy still has to end the re-assertion.
-    stops.set(ctx, () => ended.abort());
-  };
-  const unsubscribe = ctx.events.on("thumb:click", onClick);
-  ctx.mediaPlayer.addEventListener("play", onPlay);
-  stops.set(ctx, stop);
+    stops.get(ctx)?.();
+  });
+  clicks.set(ctx, () => {
+    unsubscribe();
+    ended?.abort();
+  });
 }
 
 export const autopreviewPlugin: PlayerstackPlugin = {
   name: "autopreview",
   async init(ctx: PlayerstackContext): Promise<void> {
     const preview = (ctx.config as { preview?: AutopreviewConfig }).preview;
-    if (!preview?.enabled || ctx.config.preload === "none") return;
-    if (prefersReducedMotion()) return;
+    if (!preview?.enabled) return;
+    if (preview.src) bindClick(ctx);
+    if (ctx.config.preload === "none" || prefersReducedMotion()) return;
     if (preview.src) return mountPreview(ctx, preview);
 
     const player = ctx.mediaPlayer as HTMLElement & {
@@ -169,6 +176,7 @@ export const autopreviewPlugin: PlayerstackPlugin = {
   },
   destroy(ctx: PlayerstackContext): void {
     stops.get(ctx)?.();
+    clicks.get(ctx)?.();
     observers.get(ctx)?.disconnect();
     observers.delete(ctx);
   },
