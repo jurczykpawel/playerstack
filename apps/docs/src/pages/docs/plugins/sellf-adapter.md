@@ -80,6 +80,23 @@ Inline attributes always win on merge. Useful for per-page CTAs without changing
 
 This loads everything from Sellf, but `title` is taken from the attribute.
 
+## Trusted origins
+
+`trustedOrigins?: string[]` lets the API supply `emailGate.webhookUrl`, `emailGate.challengeUrl`, and `analytics.endpoint` while keeping all other normalization rules. The list is copied and validated when the provider is created, even with `trustRemote: true`. Invalid options throw immediately.
+
+```ts
+createSellfConfigProvider({
+  baseUrl: "https://sellf.app",
+  trustedOrigins: ["https://sellf.app", "https://leads.example.com:8443"],
+});
+```
+
+Each entry must be a full HTTP(S) origin with an optional trailing slash, without a path, query, fragment, credentials, or wildcard. Origins are normalized using `new URL(value).origin`, including hostname case and default ports. Scheme and non-default port must match exactly. HTTP is accepted only when explicitly listed, for local development or an intentionally HTTP integration; prefer HTTPS in production. `baseUrl` does not implicitly trust an origin.
+
+Remote endpoints must be absolute HTTP(S) URLs without credentials, with an origin in that list. Accepted endpoint strings retain their paths and queries. Other endpoints are omitted. An absent or empty list keeps the default behavior. Integrator `endpoints` always override remote endpoints, including those from a listed origin. Media/image URLs, CTA and watermark links, privacy/consent links, and preview settings retain their existing normalization rules.
+
+`trustRemote` is **deprecated**, retained only for tests and internal dashboards. Prefer `trustedOrigins`. For compatibility, `trustRemote: true` still passes the entire response through unchanged, including when `trustedOrigins` is present; it does not apply the list to remote endpoints. Integrator `endpoints` still win.
+
 ## Remote email-gate fields
 
 With the default `trustRemote: false`, unknown fields and values of the wrong type are dropped. Invalid values are omitted rather than truncated. Nested objects are copied. Text is rendered literally by email-gate.
@@ -100,7 +117,7 @@ With the default `trustRemote: false`, unknown fields and values of the wrong ty
 
 Links use the same HTTP(S) protocol check as email-gate, resolving relative URLs against `document.baseURI`. Both `href` and `linkText` are needed to render a link. The product and consent limits come from email-gate; the remaining text/URL limits are adapter limits for remote configuration. Empty strings are allowed for the other message keys; blank `title`, `emailLabel`, `submit`, and `dismiss` values fall back to plugin defaults. Lengths use JavaScript string length.
 
-`webhookUrl` and `challengeUrl` from the API are always omitted under the default allowlist. Supply them through `SellfAdapterOptions.endpoints.emailGate` as `webhook` and `challenge`. Without these options the gate runs in open mode and emits an event without a network submission. `trustRemote: true` explicitly disables normalization; integrator endpoint options still take precedence.
+`webhookUrl` and `challengeUrl` from the API are omitted unless their origins are listed in `trustedOrigins`. Alternatively, supply them through `SellfAdapterOptions.endpoints.emailGate` as `webhook` and `challenge`. Without configured endpoints the gate runs in open mode and emits an event without a network submission.
 
 Example response from `GET /api/products/guide/playerstack`:
 
@@ -139,6 +156,7 @@ createSellfConfigProvider({
 
 ## Errors
 
+- Invalid `trustedOrigins` → throws during provider creation
 - HTTP non-200 → throws with status and URL
 - Missing `data-sellf-product` AND no `src` attribute → throws
 - Response missing `src` → throws
