@@ -269,7 +269,13 @@ function normalizeEmailGate(c: Record<string, unknown>): Record<string, unknown>
       "dismiss",
       "consentRequired",
     ])
-      pickBoundedString(c.messages, key, messages, 500);
+      pickBoundedString(
+        c.messages,
+        key,
+        messages,
+        500,
+        ["title", "emailLabel", "submit", "dismiss"].includes(key),
+      );
     out.messages = messages;
   }
   return out;

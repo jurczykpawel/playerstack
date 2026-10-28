@@ -80,5 +80,6 @@ Core accepts `preload` (`none`, `metadata`, `auto`) from attributes or JSON, wit
 After changing these paths, build the standalone script and run `bunx playwright test -c playwright.preferences.config.ts` to check MP4 requests and real keyboard playback in Chromium and WebKit. The tests intercept all network requests locally and use the repository demo video. Public ready/media/tracks APIs are not implemented; plugins can use `ctx.mediaPlayer`.
 
 Overlay plugins use core `activateOverlay(container, overlay, priority = 3, focusFromBody = false)` after mounting and release before removal/destroy. Match priority to CSS z-index (CTA/intro 3, higher gates 4). It preserves prior inert/aria-hidden state across nested layers and newly mounted siblings. Do not implement independent inert toggles for new overlay plugins. Keyboard overlay regression: `bunx playwright test -c playwright.overlays.config.ts` (Chromium/WebKit, 390/1440), after building standalone.
+Sellf email-gate regression: `bunx playwright test -c playwright.sellf.config.ts` (Chromium/WebKit), after building standalone.
 
 On 2026-10-25, the U25 standalone build with MP4 + CTA + branded thumbnail measured 45,879 bytes (44.8 KiB) gzip versus 45,000 bytes (43.9 KiB) at c67eb4d. Measured each downloaded JS artifact separately using Bun 1.4.4 zlib gzip level 9; maps, notices, headers and media excluded.

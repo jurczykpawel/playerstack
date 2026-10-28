@@ -1,6 +1,6 @@
 import { afterEach, expect, it, vi } from "vitest";
 import { createEventBus, type PlayerstackContext } from "@playerstack/core";
-import { emailGatePlugin } from "../../plugin-email-gate/src/index";
+import { emailGatePlugin, type EmailGateMessages } from "../../plugin-email-gate/src/index";
 import { createSellfConfigProvider } from "./index";
 import { normalizeRemoteConfig } from "./normalize";
 
@@ -136,24 +136,22 @@ it("keeps bounded known fields and fresh nested objects", () => {
       href: "/privacy",
     },
     privacy: { text: "p".repeat(500), linkText: "Policy", href: "https://example.com/privacy" },
-    messages: Object.fromEntries(
-      [
-        "title",
-        "emailLabel",
-        "placeholder",
-        "submit",
-        "verifying",
-        "solving",
-        "submitting",
-        "success",
-        "invalidEmail",
-        "rejected",
-        "rateLimit",
-        "networkError",
-        "dismiss",
-        "consentRequired",
-      ].map((key) => [key, "m".repeat(500)]),
-    ),
+    messages: {
+      title: "m".repeat(500),
+      emailLabel: "m".repeat(500),
+      placeholder: "m".repeat(500),
+      submit: "m".repeat(500),
+      verifying: "m".repeat(500),
+      solving: "m".repeat(500),
+      submitting: "m".repeat(500),
+      success: "m".repeat(500),
+      invalidEmail: "m".repeat(500),
+      rejected: "m".repeat(500),
+      rateLimit: "m".repeat(500),
+      networkError: "m".repeat(500),
+      dismiss: "m".repeat(500),
+      consentRequired: "m".repeat(500),
+    } satisfies Record<keyof EmailGateMessages, string>,
   };
   const out = normalizeRemoteConfig({ emailGate }).emailGate as typeof emailGate;
   expect(out).toEqual(emailGate);
@@ -217,3 +215,30 @@ it.each(["/privacy", "../privacy", "https://example.com", "http://example.com"])
     ).toEqual({ privacy: { text: "Notice", href } });
   },
 );
+
+it.each(["", " \t\n"])("omits blank control names (%j)", (value) => {
+  expect(
+    normalizeRemoteConfig({
+      emailGate: {
+        messages: {
+          title: value,
+          emailLabel: value,
+          submit: value,
+          dismiss: value,
+          placeholder: value,
+          success: value,
+        },
+      },
+    }).emailGate,
+  ).toEqual({ messages: { placeholder: value, success: value } });
+});
+
+it("preserves nonblank control names as supplied", () => {
+  const messages = {
+    title: " Title ",
+    emailLabel: " Email ",
+    submit: " Send ",
+    dismiss: " Close ",
+  };
+  expect(normalizeRemoteConfig({ emailGate: { messages } }).emailGate).toEqual({ messages });
+});
