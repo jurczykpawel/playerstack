@@ -289,6 +289,22 @@ describe("autopreviewPlugin", () => {
       );
     });
 
+    it("click wins over a position restored at loadedmetadata, until playback starts", async () => {
+      const ctx = makeContext({ preview: { enabled: true, src } });
+      const player = ctx.mediaPlayer as HTMLElement & { currentTime: number };
+      // Registered before the click, like saved-position's own listener.
+      player.addEventListener("loadedmetadata", () => (player.currentTime = 4));
+      await autopreviewPlugin.init(ctx);
+      observers[0]?.trigger(true);
+      ctx.events.emit("thumb:click", undefined);
+      player.dispatchEvent(new Event("loadedmetadata"));
+      expect(player.currentTime).toBe(0);
+      player.dispatchEvent(new Event("playing"));
+      player.currentTime = 9;
+      player.dispatchEvent(new Event("loadedmetadata"));
+      expect(player.currentTime).toBe(4);
+    });
+
     it.each(["reduced motion", "preload none"])(
       "click still unmutes and rewinds with %s (no preview mounted)",
       async (mode) => {

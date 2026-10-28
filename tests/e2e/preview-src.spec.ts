@@ -37,7 +37,21 @@ function fulfillRange(route: Route, { body, type }: { body: Buffer; type: string
   });
 }
 
+// Records the first `playing` of the full video from the page's first moment, so a
+// slow host that plays on before the test measures cannot skew the start state.
 async function open(page: Page, extra: Record<string, unknown> = {}, below = "") {
+  await page.addInitScript(() => {
+    document.addEventListener(
+      "playing",
+      (event) => {
+        const v = event.target as HTMLVideoElement;
+        const w = window as unknown as { __start?: { time: number; muted: boolean } };
+        if (!w.__start && !v.classList.contains("playerstack-preview"))
+          w.__start = { time: v.currentTime, muted: v.muted };
+      },
+      true,
+    );
+  });
   const requests = { full: 0, preview: 0 };
   page.on("request", (request) => {
     const path = new URL(request.url()).pathname;
@@ -74,6 +88,10 @@ async function open(page: Page, extra: Record<string, unknown> = {}, below = "")
   return requests;
 }
 
+const firstStart = (page: Page) =>
+  page
+    .waitForFunction(() => (window as unknown as { __start?: unknown }).__start)
+    .then((handle) => handle.jsonValue() as Promise<{ time: number; muted: boolean }>);
 const preview = (page: Page) => page.locator("video.playerstack-preview");
 const main = (page: Page) => page.locator("media-controller video");
 const previewPlaying = (page: Page) =>
@@ -123,16 +141,7 @@ for (const how of ["mouse", "Enter", "Space"]) {
     }
     await expect(page.locator(".playerstack-thumb")).toHaveCount(0);
     await expect(preview(page)).toHaveCount(0);
-    const start = await main(page).evaluate(
-      (v: HTMLVideoElement) =>
-        new Promise<{ time: number; muted: boolean }>((done) =>
-          v.paused || v.currentTime === 0
-            ? v.addEventListener("playing", () => done({ time: v.currentTime, muted: v.muted }), {
-                once: true,
-              })
-            : done({ time: v.currentTime, muted: v.muted }),
-        ),
-    );
+    const start = await firstStart(page);
     expect(start.time).toBeLessThan(0.5);
     expect(start.muted).toBe(false);
     await expect(main(page)).toHaveJSProperty("paused", false);
@@ -157,13 +166,7 @@ for (const how of ["mouse", "Enter"]) {
     }
     await expect(page.locator(".playerstack-thumb")).toHaveCount(0);
     await expect(main(page)).toHaveJSProperty("paused", false);
-    await expect
-      .poll(() => main(page).evaluate((v: HTMLVideoElement) => v.currentTime > 0))
-      .toBe(true);
-    const state = await main(page).evaluate((v: HTMLVideoElement) => ({
-      muted: v.muted,
-      time: v.currentTime,
-    }));
+    const state = await firstStart(page);
     expect(state.muted).toBe(false);
     expect(state.time).toBeLessThan(0.5);
     // Still unmuted once media-chrome has had time to restore its preference.
@@ -171,6 +174,27 @@ for (const how of ["mouse", "Enter"]) {
     await expect(main(page)).toHaveJSProperty("muted", false);
   });
 }
+
+test("a saved position never beats the click: play starts at 0:00 and progress is still saved", async ({
+  page,
+}) => {
+  await page.addInitScript(
+    (key) => localStorage.setItem(key, "4"),
+    `playerstack:pos:${origin}/demo.mp4`,
+  );
+  await open(page, { savedPosition: { enabled: true, endTolerance: 0, throttleMs: 200 } });
+  await previewPlaying(page);
+  await page.getByRole("button", { name: "Watch demo", exact: true }).click();
+  const start = await firstStart(page);
+  expect(start.time).toBeLessThan(0.5);
+  expect(start.muted).toBe(false);
+  await expect(main(page)).toHaveJSProperty("paused", false);
+  await expect
+    .poll(() =>
+      page.evaluate((k) => Number(localStorage.getItem(k)), `playerstack:pos:${origin}/demo.mp4`),
+    )
+    .toBeLessThan(4);
+});
 
 test("reduced motion shows the static poster and fetches no video", async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
@@ -197,13 +221,7 @@ test("reduced motion plus a remembered mute: mouse click still plays from 0:00 w
   await page.getByRole("button", { name: "Watch demo", exact: true }).click();
   await expect(page.locator(".playerstack-thumb")).toHaveCount(0);
   await expect(main(page)).toHaveJSProperty("paused", false);
-  await expect
-    .poll(() => main(page).evaluate((v: HTMLVideoElement) => v.currentTime > 0))
-    .toBe(true);
-  const state = await main(page).evaluate((v: HTMLVideoElement) => ({
-    muted: v.muted,
-    time: v.currentTime,
-  }));
+  const state = await firstStart(page);
   expect(state.muted).toBe(false);
   expect(state.time).toBeLessThan(0.5);
   await page.waitForTimeout(750);

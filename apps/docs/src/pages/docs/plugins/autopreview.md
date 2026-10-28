@@ -64,5 +64,5 @@ None.
 
 - Pair with `branded-thumb` + `clickToLoad` if you're using YouTube — autoplaying YouTube embeds is rate-limited and often blocked
 - Use a short looping MP4 (5-15 seconds) for the smoothest experience
-- Mute is always on for the preview; with `preview.src` the click always starts the full video unmuted from 0:00, also for a viewer whose earlier mute media-chrome remembers (independent of `unmuteOnPlay` and `restartOnPlay`)
+- Mute is always on for the preview; with `preview.src` the click always starts the full video unmuted from 0:00, also for a viewer whose earlier mute media-chrome remembers (independent of `unmuteOnPlay` and `restartOnPlay`); it also wins over a position restored by `savedPosition`, which keeps saving progress
 - Email gate works with the light preview: `at: "before"` stays on top of the thumbnail; `at: "after"` appears after the full video ends

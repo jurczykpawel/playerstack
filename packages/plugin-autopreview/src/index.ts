@@ -118,11 +118,16 @@ function bindClick(ctx: PlayerstackContext): void {
   const unsubscribe = ctx.events.on("thumb:click", () => {
     const player = ctx.mediaPlayer as HTMLElement & { muted: boolean; currentTime: number };
     const unmute = () => (player.muted = false);
-    unmute();
-    player.currentTime = 0;
+    const restart = () => {
+      unmute();
+      player.currentTime = 0;
+    };
+    restart();
     const { signal } = (ended = new AbortController());
     const end = () => ended!.abort();
-    player.addEventListener("loadedmetadata", unmute, { signal });
+    // Added after saved-position's listener, so it runs after a restored position
+    // is applied and wins: the click means 0:00.
+    player.addEventListener("loadedmetadata", restart, { signal });
     player.addEventListener("error", end, { signal });
     player.addEventListener(
       "playing",

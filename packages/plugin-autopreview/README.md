@@ -72,7 +72,7 @@ A short muted loop plays under the play button until the viewer clicks; the clic
 
 - The preview is a separate `<video class="playerstack-preview">`: muted, `playsinline`, `aria-hidden`, out of the Tab order, no controls. It is mounted on first view inside the thumbnail, above the poster and below the play button, and its `src` is assigned only then. Off-screen players fetch nothing.
 - In view it plays, out of view it pauses.
-- Clicking the thumbnail (mouse, Enter, Space) stops the preview, removes its `src` and calls `load()` to abort the download, then removes it. The full video loads, starts from 0:00 unmuted and the controls appear. The click always unmutes, even when media-chrome remembers an earlier mute from the viewer, regardless of `unmuteOnPlay` and `restartOnPlay`; a mute the viewer picks after playback starts is kept. Focus follows the branded-thumb rules.
+- Clicking the thumbnail (mouse, Enter, Space) stops the preview, removes its `src` and calls `load()` to abort the download, then removes it. The full video loads, starts from 0:00 unmuted and the controls appear. The click always unmutes, even when media-chrome remembers an earlier mute from the viewer, regardless of `unmuteOnPlay` and `restartOnPlay`; it also overrides a position restored by `savedPosition` (which keeps saving progress); a mute the viewer picks after playback starts is kept. Focus follows the branded-thumb rules.
 - `prefers-reduced-motion: reduce` or `preload: "none"`: no preview element and no preview request; the thumbnail shows the static poster.
 - Core does not apply `muted`/`autoplay`/`loop` to the main media when `preview.src` is set.
 - Keep the clip short and small (for example 3 s, 320 px, no audio, H.264 baseline with `+faststart`, ~15-30 KB).
