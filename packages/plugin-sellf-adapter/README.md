@@ -111,7 +111,9 @@ createSellfConfigProvider({
 
 Each entry must be a full HTTP(S) origin with an optional trailing slash, without a path, query, fragment, credentials, or wildcard. Origins are normalized using `new URL(value).origin`, including hostname case and default ports. Scheme and non-default port must match exactly. HTTP is accepted only when explicitly listed, for local development or an intentionally HTTP integration; prefer HTTPS in production. `baseUrl` does not implicitly trust an origin.
 
-Remote endpoints must be absolute HTTP(S) URLs without credentials, with an origin in that list. Accepted endpoint strings retain their paths and queries. Other endpoints are omitted. An absent or empty list keeps the default behavior. Integrator `endpoints` always override remote endpoints, including those from a listed origin. Media/image URLs, CTA and watermark links, privacy/consent links, and preview settings retain their existing normalization rules.
+Remote endpoints must be absolute HTTP(S) URLs without credentials, with an origin in that list. Accepted endpoints are stored as normalized absolute URLs, retaining their paths and queries. Other endpoints are omitted. An absent or empty list keeps the default behavior. Integrator `endpoints` always override remote endpoints, including those from a listed origin. Media/image URLs, CTA and watermark links, privacy/consent links, and preview settings retain their existing normalization rules.
+
+A trusted `analytics.endpoint` from the API selects the `beacon` provider when no provider is explicitly configured; integrators should configure the provider and endpoint themselves.
 
 `trustRemote` is **deprecated**, retained only for tests and internal dashboards. Prefer `trustedOrigins`. For compatibility, `trustRemote: true` still passes the entire response through unchanged, including when `trustedOrigins` is present; it does not apply the list to remote endpoints. Integrator `endpoints` still win.
 

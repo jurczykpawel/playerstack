@@ -11,6 +11,7 @@ let origin: string;
 let bundle: Uint8Array;
 let received: Record<string, unknown>[];
 let challenges: string[];
+let remoteRequests: string[];
 
 test.beforeAll(async () => {
   const result = await build({
@@ -42,7 +43,11 @@ test.beforeAll(async () => {
     if (req.url === "/bundle.js") {
       res.setHeader("Content-Type", "application/javascript");
       res.end(bundle);
+    } else if (req.url?.startsWith("/remote-")) {
+      remoteRequests.push(req.url);
+      res.writeHead(500).end();
     } else if (req.url === "/api/products/guide/playerstack") {
+      const trusted = req.headers.referer === origin + "/trusted";
       res.setHeader("Content-Type", "application/json");
       res.end(
         JSON.stringify({
@@ -55,8 +60,8 @@ test.beforeAll(async () => {
             altchaFormat: "base64",
             marketingConsent: { text: "Send updates", version: "v1", required: true },
             messages: { title: "Get the guide", submit: "Send", success: "Check email" },
-            webhookUrl: origin + "/lead",
-            challengeUrl: origin + "/challenge",
+            webhookUrl: origin + (trusted ? "/lead" : "/remote-lead"),
+            challengeUrl: origin + (trusted ? "/challenge" : "/remote-challenge"),
           },
         }),
       );
@@ -101,6 +106,7 @@ for (const path of ["/", "/trusted"]) {
   test(`submits the product and required consent from Sellf after playback (${path})`, async ({
     page,
   }) => {
+    remoteRequests = [];
     received = [];
     challenges = [];
     await page.goto(origin + path);
@@ -119,6 +125,7 @@ for (const path of ["/", "/trusted"]) {
     await expect(page.getByRole("status")).toHaveText("Check email");
     expect(challenges).toEqual(["/challenge?product=guide"]);
     expect(received).toHaveLength(1);
+    expect(remoteRequests).toEqual([]);
     expect(received[0]).toMatchObject({
       product: "guide",
       marketingConsent: true,
