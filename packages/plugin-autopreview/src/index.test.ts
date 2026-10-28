@@ -270,6 +270,23 @@ describe("autopreviewPlugin", () => {
         player.dispatchEvent(new Event("loadedmetadata"));
         expect(player.muted).toBe(true);
       });
+
+      it.each(["error", "destroy"])(
+        "stops re-asserting the unmute after %s of a failed start",
+        async (ending) => {
+          const ctx = makeContext({ preview: { enabled: true, src } });
+          const player = ctx.mediaPlayer as HTMLElement & { muted: boolean };
+          await autopreviewPlugin.init(ctx);
+          observers[0]?.trigger(true);
+          ctx.events.emit("thumb:click", undefined);
+          if (ending === "error") player.dispatchEvent(new Event("error"));
+          else autopreviewPlugin.destroy?.(ctx);
+          player.muted = true;
+          player.dispatchEvent(new Event("loadedmetadata"));
+          player.dispatchEvent(new Event("playing"));
+          expect(player.muted).toBe(true);
+        },
+      );
     });
 
     it("keeps the preview when play() is called before the full source is loaded", async () => {

@@ -113,16 +113,21 @@ function mountPreview(ctx: PlayerstackContext, preview: AutopreviewConfig): void
     const unmute = () => (player.muted = false);
     unmute();
     player.currentTime = 0;
-    player.addEventListener("loadedmetadata", unmute);
+    const ended = new AbortController();
+    const { signal } = ended;
+    player.addEventListener("loadedmetadata", unmute, { signal });
+    player.addEventListener("error", () => ended.abort(), { signal });
     player.addEventListener(
       "playing",
       () => {
         unmute();
-        player.removeEventListener("loadedmetadata", unmute);
+        ended.abort();
       },
-      { once: true },
+      { signal },
     );
     stop();
+    // stop() dropped its entry; destroy still has to end the re-assertion.
+    stops.set(ctx, () => ended.abort());
   };
   const unsubscribe = ctx.events.on("thumb:click", onClick);
   ctx.mediaPlayer.addEventListener("play", onPlay);
