@@ -28,10 +28,10 @@
     "test:watch": "vitest"
   },
   "dependencies": {
-    "media-chrome": "^4.19.0",
-    "youtube-video-element": "^1.9.0",
-    "vimeo-video-element": "^1.7.1",
-    "hls-video-element": "^1.5.11",
+    "media-chrome": "^4.19.4",
+    "youtube-video-element": "^1.9.1",
+    "vimeo-video-element": "^1.7.4",
+    "hls-video-element": "^1.5.12",
     "wistia-video-element": "^1.4.0",
     "twitch-video-element": "^0.2.0"
   },
