@@ -51,6 +51,29 @@ The browser solves the challenge and sends `POST <webhookUrl>`. The POST omits c
 
 `product` is optional and independent of `src`. The default `altchaFormat: "object"` sends the object above. With `altchaFormat: "base64"`, `altcha` is a string: standard base64 of the UTF-8 JSON for that same object. Configure the backend to accept the chosen format. Example values above describe the shape, not a valid solution.
 
+## Challenge mode `altcha` (opt-in)
+
+`challengeMode: "altcha"` drops the nonce. `GET <challengeUrl>` (with `product` in the query, as above) returns the flat ALTCHA challenge, and the POST is the same as in the default mode, without `nonce`:
+
+```json
+{
+  "algorithm": "SHA-256",
+  "challenge": "challenge-digest",
+  "maxnumber": 100000,
+  "salt": "server-salt",
+  "signature": "server-signature"
+}
+```
+
+The same field checks apply; a wrapped challenge or any other shape produces the network-error message and no POST. In the default mode a flat challenge is still refused.
+
+**Use this mode only with a server that consumes every ALTCHA solution once, atomically** (for example Mailstack, which records each verified solution before sending and answers 403 to any reuse). With any other server keep the default mode: without the nonce, nothing in the plugin stops a captured solution from being replayed.
+
+| Threat                                     | Default mode (`nonce`)                      | Mode `altcha`                                                          |
+| ------------------------------------------ | ------------------------------------------- | ---------------------------------------------------------------------- |
+| Replay of a captured submission            | Server consumes the nonce on the first POST | Server consumes the ALTCHA solution atomically; required, not optional |
+| Product swapped between challenge and POST | Server checks the nonce-bound product       | Server checks `product` against its allowlist only                     |
+
 ## Required server ordering
 
 1. Read the bounded request body to identify the nonce. For a request with a usable nonce, **atomically consume it at the beginning of POST handling, before validation or any error response**. Consumption returns the stored product and expiry and removes the nonce in the same operation. A malformed body without an identifiable nonce cannot consume a record.

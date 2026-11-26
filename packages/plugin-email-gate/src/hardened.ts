@@ -2,20 +2,24 @@ import type { LeadsChallenge, LeadsSubmission } from "./types";
 import { solveChallenge } from "altcha-lib";
 import type { EmailGateConfig } from "./index";
 
-function isChallenge(value: unknown): value is LeadsChallenge {
-  if (!value || typeof value !== "object") return false;
-  const { altcha, nonce } = value as Partial<LeadsChallenge>;
+type Altcha = LeadsChallenge["altcha"];
+function isAltcha(altcha: unknown): altcha is Altcha {
+  if (!altcha || typeof altcha !== "object") return false;
+  const { algorithm, challenge, salt, signature, maxnumber } = altcha as Partial<Altcha>;
   return (
-    typeof nonce === "string" &&
-    nonce.trim().length > 0 &&
-    !!altcha &&
-    ["SHA-1", "SHA-256", "SHA-512"].includes(altcha.algorithm) &&
-    [altcha.challenge, altcha.salt, altcha.signature].every(
-      (field) => typeof field === "string" && field.length > 0,
-    ) &&
-    (altcha.maxnumber === undefined ||
-      (Number.isSafeInteger(altcha.maxnumber) && altcha.maxnumber >= 0))
+    ["SHA-1", "SHA-256", "SHA-512"].includes(algorithm!) &&
+    [challenge, salt, signature].every((field) => typeof field === "string" && field.length > 0) &&
+    (maxnumber === undefined || (Number.isSafeInteger(maxnumber) && maxnumber >= 0))
   );
+}
+
+/** Default mode: `{altcha, nonce}`. Mode "altcha": the flat ALTCHA challenge, no nonce. */
+function readChallenge(value: unknown, mode: EmailGateConfig["challengeMode"]) {
+  if (mode === "altcha") return isAltcha(value) ? { altcha: value } : null;
+  const { altcha, nonce } = (value ?? {}) as Partial<LeadsChallenge>;
+  return typeof nonce === "string" && nonce.trim().length > 0 && isAltcha(altcha)
+    ? { altcha, nonce }
+    : null;
 }
 
 function encodePayload(payload: Exclude<LeadsSubmission["altcha"], string>): string {
@@ -60,9 +64,9 @@ export async function submitChallenge(args: HardenedArgs): Promise<void> {
     fail(challengeRes?.status);
     return;
   }
-  const challenge: unknown = await challengeRes.json();
+  const challenge = readChallenge(await challengeRes.json(), cfg.challengeMode);
   if (!active()) return;
-  if (!isChallenge(challenge)) {
+  if (!challenge) {
     fail();
     return;
   }
@@ -93,7 +97,7 @@ export async function submitChallenge(args: HardenedArgs): Promise<void> {
     src,
     ...consent,
     ...(cfg.product === undefined ? {} : { product: cfg.product }),
-    nonce: challenge.nonce,
+    ...(challenge.nonce === undefined ? {} : { nonce: challenge.nonce }),
     altcha: cfg.altchaFormat === "base64" ? encodePayload(payload) : payload,
   };
   const submitRes = await fetch(cfg.webhookUrl!, {
