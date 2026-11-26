@@ -4,12 +4,12 @@ import { basename, dirname, join, resolve } from "path";
 
 // These exact releases declare MIT but omit LICENSE from their npm archives.
 const mediaElements = new Set([
-  "youtube-video-element@1.9.0",
+  "youtube-video-element@1.9.1",
   "vimeo-video-element@1.7.2",
-  "hls-video-element@1.5.11",
+  "hls-video-element@1.5.12",
   "wistia-video-element@1.4.0",
   "twitch-video-element@0.2.0",
-  "custom-media-element@1.4.6",
+  "custom-media-element@1.4.7",
   "super-media-element@1.4.2",
   "media-tracks@0.3.5",
   "media-played-ranges-mixin@0.1.0",
