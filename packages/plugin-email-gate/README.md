@@ -1,6 +1,6 @@
 # @playerstack/plugin-email-gate
 
-An email form before, during, or after a video. In open mode it emits an event without network requests. Hardened mode obtains an ALTCHA challenge and a server-issued nonce for each submission attempt, then sends the completed form to your endpoint.
+An email form before, during, or after a video. In open mode it emits an event without network requests. Hardened mode obtains an ALTCHA challenge and a server-issued nonce for each submission attempt (or, with the opt-in `challengeMode: "altcha"`, only the ALTCHA challenge), then sends the completed form to your endpoint.
 
 Part of [Playerstack](https://github.com/jurczykpawel/playerstack). The standalone script loads the plugin on demand. The `@playerstack/*` packages are not published to npm yet.
 
