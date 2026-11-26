@@ -27,6 +27,12 @@ export interface EmailGateConfig {
   remember?: boolean;
   rememberDays?: number;
   altchaFormat?: "object" | "base64";
+  /**
+   * "nonce" (default): challenge is `{altcha, nonce}` and the nonce is echoed back.
+   * "altcha": challenge is the flat ALTCHA object and no nonce is sent. Use ONLY with
+   * a server that consumes each ALTCHA solution once, atomically; it alone stops replay.
+   */
+  challengeMode?: "nonce" | "altcha";
   /** "before" shows on init, "after" on ended. Numbers are seconds; use `atPercent` for percentages. */
   at?: "before" | "after" | number;
   /** Optional percent threshold (0-100) of duration. */

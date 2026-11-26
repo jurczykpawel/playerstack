@@ -42,8 +42,11 @@ export interface LeadsSubmission {
   consentVersion?: string;
   /** Exact configured label text, without its optional link; present only when selected. */
   consentText?: string;
-  /** Echoed nonce from the challenge — must be marked consumed on the first POST carrying it, regardless of outcome. */
-  nonce: string;
+  /**
+   * Echoed nonce from the challenge — must be marked consumed on the first POST carrying it, regardless of outcome.
+   * Absent with `challengeMode: "altcha"`, where `GET <challengeUrl>` returns the flat `LeadsChallenge["altcha"]`.
+   */
+  nonce?: string;
   /** ALTCHA object by default, or base64 UTF-8 JSON when `altchaFormat` is "base64". */
   altcha:
     | string
