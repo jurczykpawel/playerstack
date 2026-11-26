@@ -56,11 +56,14 @@ afterEach(() => {
 });
 
 describe("challengeMode", () => {
-  it("default mode refuses a flat challenge without nonce", async () => {
-    const { fetcher, emitted } = await run(flat);
-    expect(fetcher).toHaveBeenCalledOnce();
-    expect(emitted).not.toHaveBeenCalled();
-  });
+  it.each([undefined, "nonce", "ALTCHA", true])(
+    "mode %s refuses a flat challenge",
+    async (mode) => {
+      const { fetcher, emitted } = await run(flat, { challengeMode: mode });
+      expect(fetcher).toHaveBeenCalledOnce();
+      expect(emitted).not.toHaveBeenCalled();
+    },
+  );
 
   it.each(["object", "base64"])("altcha mode submits %s solution without nonce", async (format) => {
     const { fetcher, emitted } = await run(flat, { challengeMode: "altcha", altchaFormat: format });
