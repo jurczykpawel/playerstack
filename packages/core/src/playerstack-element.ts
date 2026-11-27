@@ -217,6 +217,8 @@ export class PlayerstackElement extends HTMLElement {
     const controller = document.createElement("media-controller");
     controller.style.width = "100%";
     controller.style.height = "100%";
+    // Plugin overlays are siblings of the controller: fullscreen the whole player.
+    (controller as HTMLElement & { fullscreenElement: Element }).fullscreenElement = this;
 
     const mediaEl = document.createElement(tag);
     // Must be set before the first source load, when hls.js is constructed.

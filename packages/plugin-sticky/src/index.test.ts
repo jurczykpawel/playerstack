@@ -7,10 +7,12 @@ type TriggerFn = (ratio: number) => void;
 
 let triggers: TriggerFn[] = [];
 let disconnectFns: ReturnType<typeof vi.fn>[] = [];
+let observeFns: ReturnType<typeof vi.fn>[] = [];
 
 beforeEach(() => {
   triggers = [];
   disconnectFns = [];
+  observeFns = [];
   class IO {
     observe = vi.fn();
     unobserve = vi.fn();
@@ -20,6 +22,7 @@ beforeEach(() => {
       this.cb = cb;
       const disconnect = this.disconnect;
       disconnectFns.push(disconnect);
+      observeFns.push(this.observe);
       triggers.push((ratio) =>
         this.cb(
           [{ isIntersecting: ratio > 0, intersectionRatio: ratio } as IntersectionObserverEntry],
@@ -170,5 +173,88 @@ describe("stickyPlugin", () => {
     await stickyPlugin.init(ctx);
     triggers[0]?.(0);
     expect(ctx.container.style.getPropertyValue("--playerstack-sticky-offset")).toBe("");
+  });
+
+  describe("fullscreen", () => {
+    function setFullscreen(element: Element | null) {
+      Object.defineProperty(document, "fullscreenElement", {
+        configurable: true,
+        get: () => element,
+      });
+      document.dispatchEvent(new Event("fullscreenchange"));
+    }
+    afterEach(() => {
+      Reflect.deleteProperty(document, "fullscreenElement");
+      Reflect.deleteProperty(document, "webkitFullscreenElement");
+    });
+
+    it.each(["the player", "an element inside it"])(
+      "does not pin while %s is fullscreen",
+      async (target) => {
+        const ctx = makeContext({ sticky: { enabled: true } });
+        await stickyPlugin.init(ctx);
+        setFullscreen(target === "the player" ? ctx.container : ctx.mediaPlayer);
+        triggers[0]?.(0);
+        expect(ctx.container.classList.contains("playerstack-sticky")).toBe(false);
+      },
+    );
+
+    it("recognises the prefixed WebKit fullscreen element", async () => {
+      const ctx = makeContext({ sticky: { enabled: true } });
+      await stickyPlugin.init(ctx);
+      Object.defineProperty(document, "webkitFullscreenElement", {
+        configurable: true,
+        get: () => ctx.container,
+      });
+      triggers[0]?.(0);
+      expect(ctx.container.classList.contains("playerstack-sticky")).toBe(false);
+    });
+
+    it.each(["fullscreenchange", "webkitfullscreenchange"])(
+      "unpins on %s into fullscreen",
+      async (event) => {
+        const ctx = makeContext({ sticky: { enabled: true } });
+        await stickyPlugin.init(ctx);
+        triggers[0]?.(0);
+        Object.defineProperty(document, "fullscreenElement", {
+          configurable: true,
+          get: () => ctx.container,
+        });
+        document.dispatchEvent(new Event(event));
+        expect(ctx.container.classList.contains("playerstack-sticky")).toBe(false);
+        expect(ctx.container.querySelector(".playerstack-sticky-close")).toBeNull();
+        expect(ctx.container.parentElement?.querySelector("[aria-hidden='true']")).toBeNull();
+        expect(disconnectFns[0]).not.toHaveBeenCalled();
+      },
+    );
+
+    it("observes the player afresh after leaving fullscreen so it can pin again", async () => {
+      const ctx = makeContext({ sticky: { enabled: true } });
+      await stickyPlugin.init(ctx);
+      setFullscreen(ctx.container);
+      observeFns[0]?.mockClear();
+      setFullscreen(null);
+      expect(observeFns[0]).toHaveBeenCalledWith(ctx.container);
+    });
+
+    it("stays dismissed after a fullscreen round trip", async () => {
+      const ctx = makeContext({ sticky: { enabled: true } });
+      await stickyPlugin.init(ctx);
+      triggers[0]?.(0);
+      (ctx.container.querySelector(".playerstack-sticky-close") as HTMLButtonElement).click();
+      observeFns[0]?.mockClear();
+      setFullscreen(ctx.container);
+      setFullscreen(null);
+      expect(observeFns[0]).not.toHaveBeenCalled();
+    });
+
+    it("stops listening after destroy", async () => {
+      const ctx = makeContext({ sticky: { enabled: true } });
+      await stickyPlugin.init(ctx);
+      stickyPlugin.destroy?.(ctx);
+      observeFns[0]?.mockClear();
+      setFullscreen(null);
+      expect(observeFns[0]).not.toHaveBeenCalled();
+    });
   });
 });

@@ -70,3 +70,13 @@ describe("initial playback preferences", () => {
     expect(media.hasAttribute("muted")).toBe(false);
   });
 });
+
+describe("fullscreen", () => {
+  it("makes <player-stack> the fullscreen target so overlays stay inside it", async () => {
+    await mount("");
+    const controller = document.querySelector("media-controller") as HTMLElement & {
+      fullscreenElement?: Element;
+    };
+    expect(controller.fullscreenElement).toBe(document.querySelector("player-stack"));
+  });
+});

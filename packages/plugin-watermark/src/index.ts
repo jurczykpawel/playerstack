@@ -14,7 +14,10 @@ export interface WatermarkConfig {
   position?: WatermarkPosition;
   /** 0–1; out-of-range values clamp, invalid values fall back to default 0.7. */
   opacity?: number;
-  /** Distance from the corner in px; default 16. */
+  /**
+   * Distance from the corner in px; default 16. Bottom corners also keep at least
+   * `--ps-control-bar-clearance` (default 48px) so the control bar stays clickable.
+   */
   margin?: number;
   /** Image width in px; default 80. Ignored for text mode. */
   width?: number;
@@ -72,7 +75,7 @@ function buildOverlay(cfg: WatermarkConfig, safeImageSrc: string | undefined): H
 
   root.style.cssText =
     "position:absolute;display:inline-flex;align-items:center;justify-content:center;" +
-    "pointer-events:auto;z-index:2;color:#fff;font-size:12px;line-height:1;" +
+    `pointer-events:${safeHref ? "auto" : "none"};z-index:2;color:#fff;font-size:12px;line-height:1;` +
     "text-shadow:0 1px 2px rgba(0,0,0,0.6);text-decoration:none;" +
     `opacity:${opacity};`;
   applyPosition(root, position, margin);
@@ -98,7 +101,9 @@ function buildOverlay(cfg: WatermarkConfig, safeImageSrc: string | undefined): H
 
 function applyPosition(el: HTMLElement, position: WatermarkPosition, margin: string): void {
   const [vertical, horizontal] = position.split("-") as ["top" | "bottom", "left" | "right"];
-  el.style[vertical] = margin;
+  // A bottom corner is shared with the control bar, which must stay clickable.
+  el.style[vertical] =
+    vertical === "bottom" ? `calc(max(${margin}, var(--ps-control-bar-clearance, 48px)))` : margin;
   el.style[horizontal] = margin;
 }
 

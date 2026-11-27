@@ -188,4 +188,35 @@ describe("watermarkPlugin", () => {
     expect(wm.style.top).toBe("32px");
     expect(wm.style.right).toBe("32px");
   });
+
+  it.each(["bottom-left", "bottom-right"])(
+    "keeps a %s overlay clear of the control bar, honouring a larger margin",
+    async (position) => {
+      for (const [margin, expected] of [
+        [undefined, "16px"],
+        [80, "80px"],
+      ] as const) {
+        document.body.innerHTML = "";
+        const ctx = makeContext({ watermark: { enabled: true, text: "x", position, margin } });
+        await watermarkPlugin.init(ctx);
+        const wm = ctx.container.querySelector(".playerstack-watermark") as HTMLElement;
+        expect(wm.style.bottom).toBe(
+          `calc(max(${expected}, var(--ps-control-bar-clearance, 48px)))`,
+        );
+      }
+    },
+  );
+
+  it("takes pointer events only when it is a link", async () => {
+    for (const [href, expected] of [
+      [undefined, "none"],
+      ["https://acme.test", "auto"],
+    ] as const) {
+      document.body.innerHTML = "";
+      const ctx = makeContext({ watermark: { enabled: true, text: "x", href } });
+      await watermarkPlugin.init(ctx);
+      const wm = ctx.container.querySelector(".playerstack-watermark") as HTMLElement;
+      expect(wm.style.pointerEvents).toBe(expected);
+    }
+  });
 });

@@ -145,6 +145,12 @@ For an email gate, activate after mounting its form with priority 4 (above CTA/i
 at 3), retain the release callback in its per-context state, and invoke it before every
 removal. This adds no lead-capture knowledge to core and changes no plugin hooks/events.
 
+## Fullscreen
+
+The fullscreen button makes the whole `<player-stack>` fullscreen, so everything mounted inside it (watermark, action bar, end card, email gate, intro card, your own plugin overlays on `ctx.container`) stays visible. Elements placed outside the player, such as the `chapters` list and the `yt-subscribe` bar, are not shown. Page CSS for fullscreen should target `player-stack:fullscreen` (not `media-controller:fullscreen`); decorations set on `player-stack`, such as `border-radius`, also apply there unless you reset them.
+
+On iPhone, Safari offers only the native fullscreen of the video itself, which hides every HTML overlay. Overlays are visible there only while the video plays inline.
+
 ## License
 
 Apache-2.0. Engine: Mux [media-chrome](https://github.com/muxinc/media-chrome) + [media-elements](https://github.com/muxinc/media-elements) (all MIT).

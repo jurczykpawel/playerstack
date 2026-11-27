@@ -137,6 +137,12 @@ Plugin-specific slices live alongside the core fields:
 
 See each plugin's docs for its slice schema.
 
+## Fullscreen
+
+The fullscreen button makes the whole `<player-stack>` fullscreen, so everything mounted inside it (watermark, action bar, end card, email gate, intro card, your own plugin overlays on `ctx.container`) stays visible. Elements placed outside the player, such as the `chapters` list and the `yt-subscribe` bar, are not shown. Page CSS for fullscreen should target `player-stack:fullscreen` (not `media-controller:fullscreen`); decorations set on `player-stack`, such as `border-radius`, also apply there unless you reset them.
+
+On iPhone, Safari offers only the native fullscreen of the video itself, which hides every HTML overlay. Overlays are visible there only while the video plays inline.
+
 ## PluginRegistry
 
 Lower-level — you usually don't need this directly. The Playerstack singleton uses it internally. Exposed in case you're writing tooling.

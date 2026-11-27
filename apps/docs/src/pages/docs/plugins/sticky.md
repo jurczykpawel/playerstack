@@ -36,6 +36,7 @@ When the user scrolls past the player while it's playing, the plugin pins it to 
 - Sticks ONLY when the player has left the viewport AND `mediaPlayer.paused` is false
 - Returns to inline when scrolled back into view
 - Close button disconnects the observer permanently (no further sticky for this page load)
+- Never pins a fullscreen player: entering fullscreen unpins it; after exit it pins again if still out of view and playing
 
 ## Size
 
