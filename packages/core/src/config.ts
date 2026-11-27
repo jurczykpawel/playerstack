@@ -11,6 +11,8 @@ export interface PlayerstackConfig {
    * or Web Audio.
    */
   crossorigin?: "anonymous" | "use-credentials";
+  /** hls.js options for HLS sources, e.g. `abrEwmaDefaultEstimate` to choose the starting quality. */
+  hls?: Record<string, unknown>;
   [key: string]: unknown;
 }
 

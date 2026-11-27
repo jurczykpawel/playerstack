@@ -33,8 +33,10 @@ it("ships hardened separately and keeps the open email configuration within its 
   );
   // 2026-11-26, media-chrome 4.19.5: 51,872 B with email-gate, 48,088 B without it
   // (Bun 1.4.5, each file compressed separately, gzip level 9). See AGENTS.md rule 4.
+  // 2026-11-27, config.hls (+16 B, same method): 51,887 B / 48,103 B; the second limit is
+  // rounded up to the next 100 B.
   expect(sizes.reduce((sum, size) => sum + size, 0)).toBeLessThanOrEqual(51900);
-  expect(sizes.slice(0, -1).reduce((sum, size) => sum + size, 0)).toBeLessThanOrEqual(48100);
+  expect(sizes.slice(0, -1).reduce((sum, size) => sum + size, 0)).toBeLessThanOrEqual(48200);
   const fields = "playerstack-email-gate-fields.js";
   expect(sources(fields).some((source) => source.includes("altcha-lib"))).toBe(false);
   expect(

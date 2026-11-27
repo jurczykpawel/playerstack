@@ -121,6 +121,7 @@ interface PlayerstackConfig {
   poster?: string;
   title?: string;
   preload?: "none" | "metadata" | "auto";
+  hls?: Record<string, unknown>; // hls.js options, see the sources plugin
   [key: string]: unknown; // plugin-specific slices
 }
 ```

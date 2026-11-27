@@ -219,6 +219,8 @@ export class PlayerstackElement extends HTMLElement {
     controller.style.height = "100%";
 
     const mediaEl = document.createElement(tag);
+    // Must be set before the first source load, when hls.js is constructed.
+    if (tag === "hls-video") (mediaEl as HTMLElement & { config?: unknown }).config = config.hls;
     mediaEl.slot = "media";
     mediaEl.setAttribute("playsinline", "");
     // Do NOT default `crossorigin` — when set, the browser refuses to load any
