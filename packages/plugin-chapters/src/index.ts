@@ -1,20 +1,23 @@
 import type { PlayerstackPlugin, PlayerstackContext } from "@playerstack/core";
+import { chapterIndexAt, chapterText, mediaTime, type ChapterPoint } from "./chapters";
+import { mountMarkers } from "./markers";
+import { mountMenu } from "./menu";
 
-export interface ChapterPoint {
-  time: number;
-  label: string;
-}
+export type { ChapterPoint } from "./chapters";
 
 export interface ChaptersConfig {
   points: ChapterPoint[];
   /** Optional CSS selector to mount the chapter list outside the player. */
   containerSelector?: string;
+  /** Show chapter segments and titles on the progress bar (default: false). */
+  markers?: boolean;
+  /** Add a chapters button with a menu to the control bar (default: false). */
+  menu?: boolean;
+  /** Accessible name of the menu button (default: "Chapters"). Set it in the page language. */
+  menuLabel?: string;
 }
 
 interface ChapterState {
-  list: HTMLElement;
-  buttons: HTMLButtonElement[];
-  points: ChapterPoint[];
   cleanup: () => void;
 }
 
@@ -33,35 +36,28 @@ export const chaptersPlugin: PlayerstackPlugin = {
 
     const points = cfg.points.slice().sort((a, b) => a.time - b.time);
     const buttons: HTMLButtonElement[] = [];
+    const jump = (point: ChapterPoint) => {
+      const player = ctx.mediaPlayer as HTMLElement & { currentTime?: number };
+      if ("currentTime" in player) player.currentTime = point.time;
+      ctx.events.emit("chapter:jump", point);
+    };
 
     points.forEach((point) => {
       const li = document.createElement("li");
       const btn = document.createElement("button");
       btn.type = "button";
       btn.className = "playerstack-chapter";
-      btn.textContent = `${formatTime(point.time)}  ${point.label}`;
+      btn.textContent = chapterText(point);
       btn.style.cssText =
         "width:100%;text-align:left;padding:6px 10px;border-radius:6px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);color:inherit;cursor:pointer;font:inherit;";
-      btn.addEventListener("click", () => {
-        const player = ctx.mediaPlayer as HTMLElement & { currentTime?: number };
-        if ("currentTime" in player) player.currentTime = point.time;
-        ctx.events.emit("chapter:jump", point);
-      });
+      btn.addEventListener("click", () => jump(point));
       buttons.push(btn);
       li.appendChild(btn);
       list.appendChild(li);
     });
 
     const onTime = () => {
-      const player = ctx.mediaPlayer as HTMLElement & { currentTime?: number };
-      const t = player.currentTime ?? 0;
-      let activeIdx = 0;
-      for (let i = points.length - 1; i >= 0; i--) {
-        if (t >= (points[i]?.time ?? 0)) {
-          activeIdx = i;
-          break;
-        }
-      }
+      const activeIdx = Math.max(0, chapterIndexAt(points, mediaTime(ctx.mediaPlayer)));
       buttons.forEach((b, i) => b.classList.toggle("active", i === activeIdx));
     };
     ctx.mediaPlayer.addEventListener("timeupdate", onTime);
@@ -80,11 +76,19 @@ export const chaptersPlugin: PlayerstackPlugin = {
       ctx.container.insertAdjacentElement("afterend", list);
     }
 
+    const timed = points.filter((point) => Number.isFinite(point.time) && point.time >= 0);
+    const unmount: (() => void)[] = [];
+    if (cfg.markers && timed.length) {
+      unmount.push(mountMarkers(ctx.container, ctx.mediaPlayer, timed, jump));
+    }
+    if (cfg.menu && timed.length) {
+      const label = cfg.menuLabel || "Chapters";
+      unmount.push(mountMenu(ctx.container, ctx.mediaPlayer, timed, label, jump));
+    }
+
     states.set(ctx, {
-      list,
-      buttons,
-      points,
       cleanup: () => {
+        unmount.forEach((remove) => remove());
         ctx.mediaPlayer.removeEventListener("timeupdate", onTime);
         list.remove();
       },
@@ -95,9 +99,3 @@ export const chaptersPlugin: PlayerstackPlugin = {
     states.delete(ctx);
   },
 };
-
-function formatTime(t: number): string {
-  const m = Math.floor(t / 60);
-  const s = String(Math.floor(t % 60)).padStart(2, "0");
-  return `${m}:${s}`;
-}
