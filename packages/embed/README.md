@@ -27,9 +27,9 @@ The standalone script pre-registers 15 of the 17 first-party plugins. Only `sour
 - `@playerstack/plugin-controls-policy` — theme + show/hide controls
 - `@playerstack/plugin-autopreview` — muted autoplay in viewport
 - `@playerstack/plugin-branded-thumb` — custom poster + click-to-load
-- `@playerstack/plugin-cta-end` — overlay HTML at end of video
+- `@playerstack/plugin-cta-end` — CTA overlay at end, start or a set time
 - `@playerstack/plugin-chapters` — clickable timecoded navigation
-- `@playerstack/plugin-action-bar` — mid-video dismissible CTA banner
+- `@playerstack/plugin-action-bar` — mid-video CTA banner or corner badge with a time window
 - `@playerstack/plugin-email-gate` — pause-and-collect lead capture
 - `@playerstack/plugin-saved-position` — resume watching
 - `@playerstack/plugin-sticky` — corner-pin on scroll
@@ -57,7 +57,7 @@ Run `bun scripts/measure-bundle.ts` or `node scripts/measure-bundle.ts` after bu
 
 ## Conditional plugins and self-hosting
 
-Keep the main script, the five `playerstack-<provider>.js` files and all 14 `playerstack-plugin-<name>.js` files in one directory, each with its adjacent `*.LEGAL.txt` notice, from the same release. Run `bash scripts/copy-standalone.sh <target-dir>` to copy and check the complete set of 20 scripts and 20 notices. Copy `LICENSE` and `NOTICE` as well.
+Keep the main script, the five `playerstack-<provider>.js` files, all 14 `playerstack-plugin-<name>.js` files and the feature files (`playerstack-email-gate-hardened.js`, `playerstack-email-gate-fields.js`, `playerstack-cta-end-timed.js`) in one directory, each with its adjacent `*.LEGAL.txt` notice, from the same release. Run `bash scripts/copy-standalone.sh <target-dir>` to copy and check the complete set of 23 scripts and 23 notices. Copy `LICENSE` and `NOTICE` as well.
 
 | File suffix (`playerstack-plugin-<name>.js`) | Configuration that loads it      |
 | -------------------------------------------- | -------------------------------- |
@@ -80,6 +80,8 @@ Enabled modules download concurrently before `sources.init` sets the media URL. 
 
 A network, CSP, missing-file or 15-second download timeout dispatches a bubbling `playerstack:error` DOM event with `detail: { reason: "plugin-load", plugin: "cta-end", error }`. The failed plugin is skipped for that player; playback and other plugins continue, and a later player retries. If branded-thumb cannot load, click-to-load falls back to normal media controls. A failed email-gate download also leaves playback available; client-side gates do not enforce access to the media URL. Errors thrown by a plugin's own `init` retain their existing behavior.
 
+The feature files are ES modules loaded with `import()`: `playerstack-cta-end-timed.js` only when `ctaEnd.at`, `atPercent` or `frequency` is set. From another origin they need an `Access-Control-Allow-Origin` header.
+
 Plugin filenames remain stable and requests use `?v=<content hash>`. Cached main scripts can therefore load newer plugin files: keep filenames, names, `init(ctx)`, destroy and event contracts compatible across releases. The internal module registry keys each implementation by its full versioned URL. Self-host all files together and allow their directory in CSP `script-src`.
 
 ## Provider files and compatibility
@@ -99,7 +101,7 @@ document.addEventListener("playerstack:error", (e) => {
 
 ## Third-party notices
 
-Every JavaScript build output has an adjacent `*.LEGAL.txt` file containing full dependency license texts and any upstream NOTICE files. Keep these notices with the scripts when redistributing. The build derives dependencies from esbuild output metadata and fails if a bundled package lacks a license text or a reviewed fallback. Chunks containing only project code include the project license and NOTICE. The copy step requires all 20 standalone scripts and all 20 notices before replacing any target files. HLS includes hls.js (Apache-2.0); the wrappers and media-chrome declare MIT. See [license source notes](licenses/README.md).
+Every JavaScript build output has an adjacent `*.LEGAL.txt` file containing full dependency license texts and any upstream NOTICE files. Keep these notices with the scripts when redistributing. The build derives dependencies from esbuild output metadata and fails if a bundled package lacks a license text or a reviewed fallback. Chunks containing only project code include the project license and NOTICE. The copy step requires all 23 standalone scripts and all 23 notices before replacing any target files. HLS includes hls.js (Apache-2.0); the wrappers and media-chrome declare MIT. See [license source notes](licenses/README.md).
 
 ## Custom config
 

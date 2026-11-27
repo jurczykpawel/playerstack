@@ -16,6 +16,8 @@ import { customCssPlugin } from "@playerstack/plugin-custom-css";
 import { introCardPlugin } from "@playerstack/plugin-intro-card";
 
 Playerstack.use(sourcesPlugin)
+  // Before the plugins that report events while starting.
+  .use(analyticsPlugin)
   .use(controlsPolicyPlugin)
   .use(autopreviewPlugin)
   .use(brandedThumbPlugin)
@@ -26,7 +28,6 @@ Playerstack.use(sourcesPlugin)
   .use(ctaEndPlugin)
   .use(stickyPlugin)
   .use(ytSubscribePlugin)
-  .use(analyticsPlugin)
   .use(watermarkPlugin)
   .use(customCssPlugin)
   .use(introCardPlugin)

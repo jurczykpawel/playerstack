@@ -33,6 +33,7 @@ describe("conditional standalone plugins", () => {
     const plugins = createLazyPlugins(sources, importer);
     expect(plugins.map((p) => p.name)).toEqual([
       "sources",
+      "analytics",
       "controls-policy",
       "autopreview",
       "branded-thumb",
@@ -43,7 +44,6 @@ describe("conditional standalone plugins", () => {
       "cta-end",
       "sticky",
       "yt-subscribe",
-      "analytics",
       "watermark",
       "custom-css",
       "intro-card",
@@ -70,6 +70,11 @@ describe("conditional standalone plugins", () => {
     expect(plugin.init.mock.calls[0]![0]).toBe(ctx);
     registry.destroy();
     expect(plugin.destroy).toHaveBeenCalledExactlyOnceWith(ctx);
+  });
+
+  it("starts analytics before any plugin that can report an event while starting", () => {
+    const names = LAZY_PLUGINS.map((plugin) => plugin.name);
+    expect(names[0]).toBe("analytics");
   });
 
   it("does not load disabled flags or empty chapter lists", async () => {
@@ -129,12 +134,12 @@ describe("conditional standalone plugins", () => {
     });
     await initialize(createLazyPlugins(sources, importer), ctx);
     expect(trace).toEqual([
-      "load:cta-end",
       "load:analytics",
+      "load:cta-end",
       "sources",
-      "cta-end",
       "analytics",
       "event",
+      "cta-end",
     ]);
   });
 

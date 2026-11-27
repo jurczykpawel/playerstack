@@ -103,8 +103,16 @@ function normalizeActionBar(c: Record<string, unknown>): Record<string, unknown>
   const out: Record<string, unknown> = {};
   pickBool(c, "enabled", out);
   pickString(c, "title", out);
-  pickEnum(c, "position", ["top", "bottom"], out);
+  pickEnum(
+    c,
+    "position",
+    ["top", "bottom", "top-left", "top-right", "bottom-left", "bottom-right"],
+    out,
+  );
+  pickEnum(c, "variant", ["bar", "badge"], out);
   pickNumber(c, "atPercent", out);
+  pickNumber(c, "hideAt", out);
+  pickNumber(c, "hideAtPercent", out);
   const showAt = c.showAt;
   if (showAt === "start" || (typeof showAt === "number" && Number.isFinite(showAt))) {
     out.showAt = showAt;
@@ -118,6 +126,11 @@ function normalizeCtaEnd(c: Record<string, unknown>): Record<string, unknown> {
   pickBool(c, "enabled", out);
   pickString(c, "title", out);
   pickBool(c, "showReplay", out);
+  pickEnum(c, "at", ["start", "end"], out);
+  pickNumber(c, "at", out);
+  pickNumber(c, "atPercent", out);
+  pickEnum(c, "frequency", ["playback", "session"], out);
+  pickString(c, "skipLabel", out);
   if (isObject(c.button)) out.button = normalizeCta(c.button);
   return out;
 }

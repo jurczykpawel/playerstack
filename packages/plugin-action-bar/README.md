@@ -38,25 +38,54 @@ The `@playerstack/*` packages are not published to npm yet; to compose your own 
 </player-stack>
 ```
 
+## Time window
+
+`hideAt` (seconds) or `hideAtPercent` ends the window opened by `showAt` / `atPercent`. With either of them the bar follows the playback position both ways: it is visible from the start point up to the hide point, and returns after seeking back into the window. A bar closed by the viewer stays closed. Without them the bar stays once shown.
+
+```json
+{
+  "actionBar": {
+    "enabled": true,
+    "variant": "badge",
+    "position": "top-left",
+    "showAt": 190,
+    "hideAt": 240,
+    "button": {
+      "label": "-20% until Friday",
+      "url": "https://example.com/offer"
+    }
+  }
+}
+```
+
+`variant: "badge"` renders the same content as a compact box in a corner instead of a full-width bar.
+
 ## Config
 
 `config.actionBar`:
 
-| Field      | Type                    | Description                                                            |
-| ---------- | ----------------------- | ---------------------------------------------------------------------- |
-| `enabled`  | boolean                 | Plugin is a no-op unless `true`                                        |
-| `showAt`   | `"start" \| number`     | `"start"` shows on init. Number ≤ 100 = % of duration, > 100 = seconds |
-| `title`    | string?                 | Heading text                                                           |
-| `html`     | string?                 | Custom inner HTML (innerHTML — sanitize on your end)                   |
-| `button`   | `{ label, url, utm? }`? | Optional anchor button with UTM appendage                              |
-| `position` | `"top" \| "bottom"`?    | Default `"bottom"`. `"top"` puts the bar at the top of the player      |
+| Field           | Type                    | Description                                                                                                                |
+| --------------- | ----------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| `enabled`       | boolean                 | Plugin is a no-op unless `true`                                                                                            |
+| `showAt`        | `"start" \| number`     | `"start"` (default without `atPercent`) shows on init; a number is seconds                                                 |
+| `atPercent`     | number?                 | Show from this percent (0-100) of the duration                                                                             |
+| `hideAt`        | number?                 | Hide from this second on                                                                                                   |
+| `hideAtPercent` | number?                 | Hide from this percent of the duration on                                                                                  |
+| `variant`       | `"bar" \| "badge"`?     | Default `"bar"`                                                                                                            |
+| `title`         | string?                 | Heading text                                                                                                               |
+| `html`          | string?                 | Custom HTML, filtered through core `sanitizeHtml`                                                                          |
+| `button`        | `{ label, url, utm? }`? | Optional anchor button with UTM appendage                                                                                  |
+| `position`      | string?                 | Bar: `"bottom"` (default) or `"top"`. Badge: also `"top-left"`, `"top-right"` (default), `"bottom-left"`, `"bottom-right"` |
 
 ## Events
 
-| Name                 | Payload          | When                           |
-| -------------------- | ---------------- | ------------------------------ |
-| `action-bar:click`   | `{ label, url }` | User clicks the CTA button     |
-| `action-bar:dismiss` | `undefined`      | User clicks the × close button |
+| Name                 | Payload          | When                                           |
+| -------------------- | ---------------- | ---------------------------------------------- |
+| `action-bar:show`    | `undefined`      | The bar appears for the first time             |
+| `action-bar:click`   | `{ label, url }` | User clicks the CTA button                     |
+| `action-bar:dismiss` | `undefined`      | User clicks the × close button (skips the bar) |
+
+To count them with [analytics](https://playerstack.techskills.academy/docs/plugins/analytics), list them in `analytics.forwardBusEvents` (the list replaces the default one). In a custom build register analytics before action-bar so it also hears a bar shown at start.
 
 ## License
 

@@ -39,7 +39,14 @@ interface State {
 
 const states = new WeakMap<PlayerstackContext, State>();
 
-const DEFAULT_BUS_EVENTS = ["thumb:click", "cta:click", "cta:replay", "chapter:jump"];
+const DEFAULT_BUS_EVENTS = [
+  "thumb:click",
+  "cta:show",
+  "cta:click",
+  "cta:skip",
+  "cta:replay",
+  "chapter:jump",
+];
 const DEFAULT_MEDIA_EVENTS = ["play", "pause", "ended"];
 const DEFAULT_QUARTILES = [25, 50, 75, 100];
 

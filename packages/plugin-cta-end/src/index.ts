@@ -6,6 +6,7 @@ import {
   type PlayerstackPlugin,
   type PlayerstackContext,
 } from "@playerstack/core";
+import { loadTimed } from "./load-timed";
 
 export interface CtaButton {
   label: string;
@@ -21,11 +22,27 @@ export interface CtaEndConfig {
   showReplay?: boolean;
   /** Replay button text (default: "Replay"). Set it in the page language. */
   replayLabel?: string;
+  /**
+   * When to show the card. "end" (default) on `ended`; "start" when playback
+   * starts from the beginning; a number is seconds. "start" and times pause the
+   * video and add a skip button.
+   */
+  at?: "start" | "end" | number;
+  /** Show at this percent (0-100) of the duration. Ignored when `at` is set. */
+  atPercent?: number;
+  /**
+   * "playback": once per loaded source; "session": once per browser tab session.
+   * "start" and timed cards default to "playback", end cards to every `ended`.
+   */
+  frequency?: "playback" | "session";
+  /** Skip button text (default: "Skip"). */
+  skipLabel?: string;
 }
 
 interface CtaState {
   cleanup: () => void;
   release?: () => void;
+  stop?: () => void;
 }
 
 const states = new WeakMap<PlayerstackContext, CtaState>();
@@ -42,26 +59,38 @@ export const ctaEndPlugin: PlayerstackPlugin = {
     };
     ctx.container.addEventListener("focusin", onInteraction);
     ctx.container.addEventListener("pointerdown", onInteraction);
-    const onEnded = () => {
+    const show = (extra?: HTMLElement) => {
       removeOverlay(ctx);
-      const overlay = renderOverlay(ctx, cfg);
+      const overlay = renderOverlay(ctx, cfg, extra);
       // Mount on <player-stack> (ctx.container) — has position:relative +
       // aspect-ratio + overflow from core DEFAULT_STYLES. Mounting inside
       // <media-controller> would tangle with Mux's shadow DOM stacking.
       ctx.container.appendChild(overlay);
-      const state = states.get(ctx);
-      if (state) state.release = activateOverlay(ctx.container, overlay, 3, interacted);
+      state.release = activateOverlay(ctx.container, overlay, 3, interacted);
+      return overlay;
     };
-    ctx.mediaPlayer.addEventListener("ended", onEnded);
+    const onEnded = () => show();
 
-    states.set(ctx, {
+    const state: CtaState = {
       cleanup: () => {
+        state.stop?.();
         ctx.mediaPlayer.removeEventListener("ended", onEnded);
         ctx.container.removeEventListener("focusin", onInteraction);
         ctx.container.removeEventListener("pointerdown", onInteraction);
         removeOverlay(ctx);
       },
-    });
+    };
+    states.set(ctx, state);
+
+    if ((cfg.at ?? cfg.atPercent ?? cfg.frequency) === undefined) {
+      ctx.mediaPlayer.addEventListener("ended", onEnded);
+      return;
+    }
+    // Not awaited: the plugins that follow must not wait for this download.
+    void loadTimed().then((timed) => {
+      if (states.get(ctx) === state)
+        state.stop = timed.startTimedCta(ctx, cfg, show, () => removeOverlay(ctx));
+    }, console.error);
   },
   destroy(ctx: PlayerstackContext): void {
     states.get(ctx)?.cleanup();
@@ -69,7 +98,11 @@ export const ctaEndPlugin: PlayerstackPlugin = {
   },
 };
 
-function renderOverlay(ctx: PlayerstackContext, cfg: CtaEndConfig): HTMLElement {
+function renderOverlay(
+  ctx: PlayerstackContext,
+  cfg: CtaEndConfig,
+  extra?: HTMLElement,
+): HTMLElement {
   const overlay = document.createElement("div");
   overlay.className = "playerstack-cta";
   overlay.style.cssText =
@@ -131,6 +164,8 @@ function renderOverlay(ctx: PlayerstackContext, cfg: CtaEndConfig): HTMLElement 
     });
     overlay.appendChild(replay);
   }
+
+  if (extra) overlay.appendChild(extra);
 
   for (const child of overlay.children) {
     const element = child as HTMLElement;

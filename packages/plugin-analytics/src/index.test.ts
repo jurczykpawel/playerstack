@@ -72,6 +72,19 @@ describe("analyticsPlugin", () => {
     expect(beaconMock).toHaveBeenCalledTimes(2);
   });
 
+  it("forwards card show and skip events by default", async () => {
+    const ctx = makeContext({
+      analytics: { enabled: true, endpoint: "https://example.com/api/track" },
+    });
+    await analyticsPlugin.init(ctx);
+    ctx.events.emit("cta:show", { at: 30 });
+    ctx.events.emit("cta:skip", { at: 30 });
+    expect(beaconMock.mock.calls.map(([, body]) => JSON.parse(body as string))).toMatchObject([
+      { event: "cta:show", data: { at: 30 } },
+      { event: "cta:skip", data: { at: 30 } },
+    ]);
+  });
+
   it("forwards native play / pause / ended events on mediaPlayer", async () => {
     const ctx = makeContext({
       analytics: { enabled: true, endpoint: "https://example.com/api/track" },

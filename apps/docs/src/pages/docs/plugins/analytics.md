@@ -41,16 +41,16 @@ Forward Playerstack event-bus events (and native HTML5 media events) to your ana
 
 `config.analytics`:
 
-| Field                | Type                       | Default                                                   | Description                                     |
-| -------------------- | -------------------------- | --------------------------------------------------------- | ----------------------------------------------- |
-| `enabled`            | boolean                    | `false`                                                   | Plugin is a no-op unless `true`                 |
-| `provider`           | `"beacon" \| "gtag"`       | `"beacon"` if endpoint set, else `"gtag"`                 | Where to send events                            |
-| `endpoint`           | string?                    | none                                                      | Required when `provider="beacon"`               |
-| `customProps`        | `Record<string, unknown>?` | `{}`                                                      | Merged into every event payload                 |
-| `forwardBusEvents`   | string[]?                  | `["thumb:click","cta:click","cta:replay","chapter:jump"]` | Which event-bus events to forward               |
-| `forwardMediaEvents` | string[]?                  | `["play","pause","ended"]`                                | Which native `<media-player>` events to forward |
-| `watchTime`          | boolean?                   | `false`                                                   | Send `watch_progress` (see below)               |
-| `watchTimeInterval`  | number?                    | off                                                       | Also send it every N seconds (minimum 5)        |
+| Field                | Type                       | Default                                                                         | Description                                     |
+| -------------------- | -------------------------- | ------------------------------------------------------------------------------- | ----------------------------------------------- |
+| `enabled`            | boolean                    | `false`                                                                         | Plugin is a no-op unless `true`                 |
+| `provider`           | `"beacon" \| "gtag"`       | `"beacon"` if endpoint set, else `"gtag"`                                       | Where to send events                            |
+| `endpoint`           | string?                    | none                                                                            | Required when `provider="beacon"`               |
+| `customProps`        | `Record<string, unknown>?` | `{}`                                                                            | Merged into every event payload                 |
+| `forwardBusEvents`   | string[]?                  | `["thumb:click","cta:show","cta:click","cta:skip","cta:replay","chapter:jump"]` | Which event-bus events to forward               |
+| `forwardMediaEvents` | string[]?                  | `["play","pause","ended"]`                                                      | Which native `<media-player>` events to forward |
+| `watchTime`          | boolean?                   | `false`                                                                         | Send `watch_progress` (see below)               |
+| `watchTimeInterval`  | number?                    | off                                                                             | Also send it every N seconds (minimum 5)        |
 
 ## Beacon payload shape
 

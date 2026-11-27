@@ -47,8 +47,8 @@ Presto Player has the marketing layer — only for WordPress.
 | ----------------------------------- | ------------------------------------------------------------------------------- |
 | `@playerstack/plugin-intro-card`    | Pre-roll marketing splash: title, subtitle, badge, CTA, big play button         |
 | `@playerstack/plugin-branded-thumb` | Custom poster + click-to-load (LCP + GDPR — no third-party cookies until click) |
-| `@playerstack/plugin-cta-end`       | Overlay HTML at end of video, button with UTM, replay                           |
-| `@playerstack/plugin-action-bar`    | Mid-video dismissible banner with CTA button                                    |
+| `@playerstack/plugin-cta-end`       | CTA overlay at end, start or a set time, with skip                              |
+| `@playerstack/plugin-action-bar`    | Mid-video banner or corner badge with a time window                             |
 | `@playerstack/plugin-email-gate`    | Lead capture: pause and require email before continuing                         |
 | `@playerstack/plugin-yt-subscribe`  | Subscribe-on-YouTube bar below the player                                       |
 | `@playerstack/plugin-autopreview`   | Muted autoplay in viewport, respects `prefers-reduced-motion`                   |

@@ -8,6 +8,11 @@ All notable changes to Playerstack will be documented in this file.
 
 - `watermark.moveInterval` moves the watermark to a random spot inside the frame, above the control bar, every given number of seconds (`moveTransition` `smooth` or `jump`; reduced motion always jumps). `watermark.reinsert` puts a removed overlay back. All off by default; the Sellf adapter passes them through.
 
+- `ctaEnd.at` (`"start"` or seconds) and `ctaEnd.atPercent` show the CTA card at the start or during playback: the video pauses and a skip button (`skipLabel`, also `Escape`) resumes it. `ctaEnd.frequency` limits the card to once per playback or per session. These modes download `playerstack-cta-end-timed.js` on demand; self-hosted setups must ship it. New events `cta:show` and `cta:skip`, forwarded by analytics by default.
+- `actionBar.hideAt` / `hideAtPercent` give the bar a time window, `actionBar.variant: "badge"` renders it as a corner box, and `action-bar:show` reports its first appearance.
+- The Sellf adapter passes the new `ctaEnd` and `actionBar` fields.
+- The standalone script now starts analytics before the other plugins, so events reported while they start are counted.
+
 - `analytics.watchTime` sends `watch_progress` (furthest point, seconds really watched, duration, percent) in batches on pause, end, page hide and source change; `watchTimeInterval` adds periodic sending. Off by default.
 
 - `sticky.position` picks the viewport corner of the pinned player (`bottom-right` by default, `bottom-left`, `top-right`, `top-left`) and `sticky.offset` sets its distance from the edges in pixels.

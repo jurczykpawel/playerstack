@@ -85,6 +85,8 @@ By default the adapter applies an allowlist to the API response and drops any fi
 - `customCss.tokens` (validated `--ps-*` CSS custom properties)
 - typed plugin configs: `actionBar`, `ctaEnd`, `introCard`, `brandedThumb`, `watermark` (including `moveInterval`, `moveTransition`, `reinsert`), `analytics` (`enabled`/`debug`/`customProps`/`forwardBusEvents`), `emailGate` (validated fields below), `preview` (`enabled`, `loopUntilInteraction`, `src`, `type`; see below), `autopreview`, `savedPosition`, `focusMode`, `sticky`, `chapters`, `ytSubscribe`, `twitch.parent`
 
+`actionBar` passes `showAt`, `atPercent`, `hideAt`, `hideAtPercent`, `variant`, `position`, `title` and `button`; `ctaEnd` passes `at`, `atPercent`, `frequency`, `skipLabel`, `title`, `button` and `showReplay`.
+
 `preview.src` is kept only when it is an http(s) URL (absolute or page-relative, at most 2048 characters) and `preview.type` only when it is a `video/*` MIME type (at most 128 characters); invalid values are dropped and the rest of `preview` is kept.
 
 The following fields are omitted by default:

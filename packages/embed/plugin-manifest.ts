@@ -1,4 +1,6 @@
 export const LAZY_PLUGINS = [
+  // First, so it hears events that later plugins report while starting.
+  { name: "analytics", exportName: "analyticsPlugin", configKey: "analytics" },
   { name: "controls-policy", exportName: "controlsPolicyPlugin", configKey: "controls" },
   { name: "autopreview", exportName: "autopreviewPlugin", configKey: "preview" },
   { name: "branded-thumb", exportName: "brandedThumbPlugin", configKey: "brandedThumb" },
@@ -9,7 +11,6 @@ export const LAZY_PLUGINS = [
   { name: "cta-end", exportName: "ctaEndPlugin", configKey: "ctaEnd" },
   { name: "sticky", exportName: "stickyPlugin", configKey: "sticky" },
   { name: "yt-subscribe", exportName: "ytSubscribePlugin", configKey: "ytSubscribe" },
-  { name: "analytics", exportName: "analyticsPlugin", configKey: "analytics" },
   { name: "watermark", exportName: "watermarkPlugin", configKey: "watermark" },
   { name: "custom-css", exportName: "customCssPlugin", configKey: "customCss" },
   { name: "intro-card", exportName: "introCardPlugin", configKey: "introCard" },

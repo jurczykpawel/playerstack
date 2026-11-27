@@ -48,10 +48,13 @@ all 14 conditional plugin files (`playerstack-plugin-controls-policy.js`,
 `playerstack-plugin-cta-end.js`, `playerstack-plugin-sticky.js`,
 `playerstack-plugin-yt-subscribe.js`, `playerstack-plugin-analytics.js`,
 `playerstack-plugin-watermark.js`, `playerstack-plugin-custom-css.js`,
-`playerstack-plugin-intro-card.js`), and each script's adjacent `*.LEGAL.txt` notice,
+`playerstack-plugin-intro-card.js`), the feature files loaded only by some settings
+(`playerstack-email-gate-hardened.js`, `playerstack-email-gate-fields.js`,
+`playerstack-cta-end-timed.js`; ES modules, so another origin needs
+`Access-Control-Allow-Origin`), and each script's adjacent `*.LEGAL.txt` notice,
 all from the same release. For a local build, run `bun install --frozen-lockfile`,
 `bun run --filter playerstack build` and `bash scripts/copy-standalone.sh <target-dir>`.
-The copy command requires all 20 scripts and 20 notices before replacing any files.
+The copy command requires all 23 scripts and 23 notices before replacing any files.
 Keep the complete set in one directory, and point the script tag at your own path:
 
 ```html
