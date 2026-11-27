@@ -226,10 +226,12 @@ describe("chapter menu", () => {
     expect(reached).toHaveBeenCalledOnce();
   });
 
-  it("keeps the menu inside media-controller, the element that goes fullscreen", async () => {
+  it("puts the menu inside media-controller, layered over corner overlays", async () => {
     const { ctx } = await mount({ menu: true });
     expect(panel(ctx)!.parentElement!.localName).toBe("media-controller");
     expect(panel(ctx)!.hasAttribute("noautohide")).toBe(true);
+    // Watermark and action bar sit at 2; modal overlays follow the controller at 3 and up.
+    expect(panel(ctx)!.style.zIndex).toBe("3");
   });
 
   it("takes its name from menuLabel", async () => {

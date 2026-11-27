@@ -205,24 +205,52 @@ test("the menu works from the keyboard without toggling playback", async ({ page
   await expect(main(page)).toHaveJSProperty("paused", true);
 });
 
-test("the menu is usable in fullscreen", async ({ page }) => {
-  await open(page, { menu: true });
-  await page.locator("media-fullscreen-button").click();
-  await expect.poll(() => page.evaluate(() => !!document.fullscreenElement)).toBe(true);
-  await toggle(page).click();
-  const item = menu(page).getByRole("button", { name: /Deploy/ });
-  await expect(item).toBeVisible();
-  expect(
-    await item.evaluate((el) => {
-      const box = el.getBoundingClientRect();
-      return document.elementFromPoint(box.x + box.width / 2, box.y + box.height / 2) === el;
-    }),
-  ).toBe(true);
-  await item.click();
-  await expect.poll(() => time(page)).toBe(9);
-  // Choosing a chapter is not a click on the video.
-  await expect(main(page)).toHaveJSProperty("paused", true);
-});
+/** True when nothing is painted over the middle or the edges of the element. */
+const uncovered = (el: Element) => {
+  const box = el.getBoundingClientRect();
+  return [0.05, 0.5, 0.95].every((share) => {
+    const x = box.x + box.width * share;
+    return document.elementFromPoint(x, box.y + box.height / 2) === el;
+  });
+};
+
+for (const fullscreen of [false, true]) {
+  const where = fullscreen ? "in fullscreen" : "in the page";
+  test(`the open menu is usable ${where}, above corner overlays`, async ({ page }) => {
+    await open(
+      page,
+      { menu: true },
+      {
+        watermark: { enabled: true, text: "Linked watermark", href: "https://example.com/" },
+        actionBar: {
+          enabled: true,
+          showAt: "start",
+          text: "Offer",
+          button: { label: "Open", url: "https://example.com/" },
+        },
+      },
+    );
+    await expect(page.locator(".playerstack-watermark")).toBeVisible();
+    await expect(page.locator(".playerstack-action-bar")).toBeAttached();
+    if (fullscreen) {
+      await page.locator("media-fullscreen-button").click();
+      await expect
+        .poll(() => page.evaluate(() => document.fullscreenElement?.localName))
+        .toBe("player-stack");
+    }
+    await toggle(page).click();
+    await expect(menu(page)).toBeVisible();
+    for (const item of await menu(page).locator("button").all()) {
+      expect(await item.evaluate(uncovered)).toBe(true);
+    }
+    await menu(page)
+      .getByRole("button", { name: /Deploy/ })
+      .click();
+    await expect.poll(() => time(page)).toBe(9);
+    // Choosing a chapter is not a click on the video.
+    await expect(main(page)).toHaveJSProperty("paused", true);
+  });
+}
 
 test("an open menu stays visible during playback without pointer activity", async ({ page }) => {
   await open(page, { menu: true });

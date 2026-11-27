@@ -29,7 +29,7 @@ export function mountMenu(
   // Keeps an open menu from fading out with the inactive controls.
   panel.setAttribute("noautohide", "");
   panel.style.cssText =
-    "position:absolute;right:8px;bottom:52px;z-index:2;box-sizing:border-box;padding:4px;" +
+    "position:absolute;right:8px;bottom:52px;z-index:3;box-sizing:border-box;padding:4px;" +
     "pointer-events:auto;" +
     "max-width:calc(100% - 16px);max-height:calc(100% - 60px);overflow:auto;border-radius:6px;" +
     "font:14px/20px system-ui,sans-serif;color:#fff;background:rgb(20 20 30 / .94);";
@@ -122,7 +122,6 @@ export function mountMenu(
   media.addEventListener("timeupdate", onTime);
 
   bar.insertBefore(toggle, bar.querySelector(":scope > media-fullscreen-button"));
-  // Only the controller and its children are visible in fullscreen.
   controller.appendChild(panel);
 
   return () => {
