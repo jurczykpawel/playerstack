@@ -1,9 +1,15 @@
 import type { PlayerstackPlugin, PlayerstackContext } from "@playerstack/core";
 
+const POSITIONS = ["bottom-right", "bottom-left", "top-right", "top-left"] as const;
+
 export interface StickyConfig {
   enabled?: boolean;
   /** Threshold for IntersectionObserver. Default 0.15. */
   threshold?: number;
+  /** Viewport corner of the pinned player. Default "bottom-right". */
+  position?: (typeof POSITIONS)[number];
+  /** Distance from both corner edges in CSS pixels. Default 16. */
+  offset?: number;
 }
 
 interface State {
@@ -15,6 +21,20 @@ interface State {
 const states = new WeakMap<PlayerstackContext, State>();
 
 const STICKY_CLASS = "playerstack-sticky";
+const OFFSET_VAR = "--playerstack-sticky-offset";
+const EDGE = `var(${OFFSET_VAR}, 16px)`;
+
+function cornerRule(position: (typeof POSITIONS)[number]): string {
+  const [vertical, horizontal] = position.split("-");
+  return `.${STICKY_CLASS}[data-playerstack-sticky-position="${position}"] {
+  top: auto;
+  right: auto;
+  bottom: auto;
+  left: auto;
+  ${vertical}: ${EDGE};
+  ${horizontal}: ${EDGE};
+}`;
+}
 
 function ensureStyles(): void {
   if (typeof document === "undefined") return;
@@ -24,8 +44,8 @@ function ensureStyles(): void {
   style.textContent = `
 .${STICKY_CLASS} {
   position: fixed !important;
-  bottom: 16px;
-  right: 16px;
+  bottom: ${EDGE};
+  right: ${EDGE};
   width: min(360px, 40vw);
   aspect-ratio: 16 / 9;
   z-index: 9999;
@@ -57,6 +77,7 @@ function ensureStyles(): void {
   align-items: center;
   justify-content: center;
 }
+${POSITIONS.slice(1).map(cornerRule).join("\n")}
 `;
   document.head.appendChild(style);
 }
@@ -77,6 +98,12 @@ export const stickyPlugin: PlayerstackPlugin = {
     const enterThreshold = cfg.threshold ?? 0.15;
     // Hysteresis: exit sticky only when mostly visible again.
     const exitThreshold = Math.min(Math.max(enterThreshold * 4, 0.5), 1.0);
+
+    const position = POSITIONS.find((value) => value === cfg.position);
+    const offset =
+      typeof cfg.offset === "number" && Number.isFinite(cfg.offset) && cfg.offset >= 0
+        ? cfg.offset
+        : undefined;
 
     const ensureClose = () => {
       if (closeBtn) return;
@@ -106,6 +133,8 @@ export const stickyPlugin: PlayerstackPlugin = {
       placeholder.setAttribute("aria-hidden", "true");
       placeholder.style.cssText = `width:${w}px;height:${h}px;visibility:hidden;pointer-events:none;flex-shrink:0;`;
       ctx.container.parentElement?.insertBefore(placeholder, ctx.container);
+      if (position) ctx.container.dataset.playerstackStickyPosition = position;
+      if (offset !== undefined) ctx.container.style.setProperty(OFFSET_VAR, `${offset}px`);
       ctx.container.classList.add(STICKY_CLASS);
       observer.observe(placeholder);
       ensureClose();
@@ -114,6 +143,8 @@ export const stickyPlugin: PlayerstackPlugin = {
     const leaveSticky = () => {
       isSticky = false;
       ctx.container.classList.remove(STICKY_CLASS);
+      delete ctx.container.dataset.playerstackStickyPosition;
+      if (offset !== undefined) ctx.container.style.removeProperty(OFFSET_VAR);
       closeBtn?.remove();
       closeBtn = null;
       if (placeholder) {
