@@ -28,6 +28,9 @@ test-results/
 playwright-report/
 .playwright/
 
+# Astro dev server state
+apps/docs/.astro/dev.json
+
 # Local dev bundle copy (built on demand for docs playground)
 apps/docs/public/playerstack*.js
 apps/docs/public/playerstack*.js.map

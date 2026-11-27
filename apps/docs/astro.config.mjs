@@ -4,6 +4,8 @@ import sitemap from "@astrojs/sitemap";
 export default defineConfig({
   site: "https://playerstack.techskills.academy",
   integrations: [sitemap()],
+  // Keep the spaces between inline elements.
+  compressHTML: true,
   server: {
     host: true,
     port: 5181,
