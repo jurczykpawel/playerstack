@@ -15,7 +15,7 @@ Playerstack is a thin layer on top of Mux's media-chrome and media-elements with
 
 The standalone script registers 15 plugins. focus-mode and sellf-adapter require a custom build from source; scoped packages are not published to npm yet.
 
-- `@playerstack/plugin-sources` — auto-detects YouTube, Vimeo, MP4, HLS, WebM, DASH
+- `@playerstack/plugin-sources` — auto-detects YouTube, Vimeo, MP4, HLS, WebM, DASH (optional `config.hls` passes hls.js options, e.g. `abrEwmaDefaultEstimate` in bits/s to choose the HLS starting quality; unset keeps the hls.js default)
 - `@playerstack/plugin-controls-policy` — theme color, show/hide controls
 - `@playerstack/plugin-autopreview` — muted autoplay in viewport, respects prefers-reduced-motion
 - `@playerstack/plugin-branded-thumb` — custom poster, click-to-load (no third-party cookies until click)

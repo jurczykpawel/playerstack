@@ -78,6 +78,23 @@ Multiple parent domains:
 
 Without `parent`, Twitch will refuse to render. Localhost works during development without configuration thanks to the wrapper's defaults.
 
+## HLS starting quality
+
+By default hls.js picks the first quality level itself. `config.hls` passes options to hls.js, which loads these streams; the object is read once, when the `<hls-video>` element is created.
+
+```html
+<player-stack
+  src="https://example.com/playlist.m3u8"
+  data-config='{ "hls": { "abrEwmaDefaultEstimate": 1200000 } }'
+></player-stack>
+```
+
+- `abrEwmaDefaultEstimate` (bits per second) is the assumed bandwidth before the first segment: hls.js starts with a level that fits it, then adapts as usual. About `1200000` starts a typical ladder around 480p.
+- `startLevel` selects the first level by index, ordered by bitrate (`0` is the lowest). The resolution behind an index depends on the stream.
+- Other [hls.js options](https://github.com/video-dev/hls.js/blob/master/docs/API.md#fine-tuning) are passed unchanged. `capLevelToPlayerSize` limits quality for the whole playback, not only the start.
+
+Browsers that play HLS natively, without hls.js, ignore these options.
+
 ## Programmatic resolver
 
 You can also use the parser without the plugin:

@@ -19,6 +19,8 @@ All notable changes to Playerstack will be documented in this file.
 - Email-gate after-video forms (`at: "after"`), optional privacy text/link and product identifier, dismissal, translated messages, and configurable memo retention.
 - Email-gate supports object or base64 ALTCHA submissions with a fresh challenge and nonce per attempt; the README specifies the endpoint contract and response handling.
 
+- `config.hls` passes options to hls.js for HLS sources, for example `abrEwmaDefaultEstimate` to choose the starting quality. Without it the hls.js defaults apply.
+
 ### Fixed
 
 - Send email-gate challenge and submission requests without cookies; support CORS endpoints that allow the embedding origin without Allow-Credentials.
