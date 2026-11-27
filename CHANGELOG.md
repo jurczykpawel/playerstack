@@ -10,6 +10,8 @@ All notable changes to Playerstack will be documented in this file.
 
 - `sticky.position` picks the viewport corner of the pinned player (`bottom-right` by default, `bottom-left`, `top-right`, `top-left`) and `sticky.offset` sets its distance from the edges in pixels.
 
+- Chapters: `markers: true` splits the progress bar at chapter starts, names the chapter on hover, on keyboard focus and in the slider's value text, and jumps to the exact start on a click next to a marker. `menu: true` adds a chapters button and menu to the control bar (`menuLabel` names it). Both are off by default.
+
 - `preview.src` (with optional `preview.type`) plays a separate light, muted, looping clip under the branded-thumb play button while the player is in view; the click aborts the preview download and starts the full video from 0:00 with sound and controls. Requires `brandedThumb` `enabled` and `clickToLoad`; reduced motion and `preload: "none"` skip the preview entirely.
 
 - Load email-gate optional fields and hardened submission code as separate versioned standalone modules; open forms never download the ALTCHA solver.
