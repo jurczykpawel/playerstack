@@ -43,6 +43,38 @@ describe("normalizeRemoteConfig", () => {
     expect(out).toEqual({ src: "https://example.com/v.mp4" });
   });
 
+  describe("overlay timing", () => {
+    it("keeps the card moment, frequency and skip text", () => {
+      const ctaEnd = { enabled: true, at: "start", frequency: "session", skipLabel: "Pomiń" };
+      expect(normalizeRemoteConfig({ ctaEnd })).toEqual({ ctaEnd });
+      expect(normalizeRemoteConfig({ ctaEnd: { at: 30 } })).toEqual({ ctaEnd: { at: 30 } });
+      expect(normalizeRemoteConfig({ ctaEnd: { at: "end", atPercent: 50 } })).toEqual({
+        ctaEnd: { at: "end", atPercent: 50 },
+      });
+    });
+
+    it("drops card values of the wrong shape", () => {
+      expect(
+        normalizeRemoteConfig({
+          ctaEnd: { at: "middle", atPercent: "50", frequency: "daily", skipLabel: 1 },
+        }),
+      ).toEqual({ ctaEnd: {} });
+    });
+
+    it("keeps the bar window, badge variant and corner", () => {
+      const actionBar = {
+        hideAt: 240,
+        hideAtPercent: 80,
+        variant: "badge",
+        position: "bottom-left",
+      };
+      expect(normalizeRemoteConfig({ actionBar })).toEqual({ actionBar });
+      expect(
+        normalizeRemoteConfig({ actionBar: { hideAt: "240", variant: "toast", position: "left" } }),
+      ).toEqual({ actionBar: {} });
+    });
+  });
+
   describe("customCss", () => {
     it("keeps `enabled` and validated `tokens`", () => {
       expect(

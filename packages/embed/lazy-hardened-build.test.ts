@@ -35,8 +35,20 @@ it("ships hardened separately and keeps the open email configuration within its 
   // (Bun 1.4.5, each file compressed separately, gzip level 9). See AGENTS.md rule 4.
   // 2026-11-27, config.hls (+16 B, same method): 51,887 B / 48,103 B; the second limit is
   // rounded up to the next 100 B.
-  expect(sizes.reduce((sum, size) => sum + size, 0)).toBeLessThanOrEqual(51900);
-  expect(sizes.slice(0, -1).reduce((sum, size) => sum + size, 0)).toBeLessThanOrEqual(48200);
+  // 2026-11-27, lazy switch for the cta-end modes behind at/atPercent/frequency (+130 B:
+  // cta-end +144, main -4, email-gate -10; Bun 1.4.5, same method): 52,026 B / 48,252 B,
+  // limits rounded up to the next 100 B.
+  expect(sizes.reduce((sum, size) => sum + size, 0)).toBeLessThanOrEqual(52100);
+  expect(sizes.slice(0, -1).reduce((sum, size) => sum + size, 0)).toBeLessThanOrEqual(48300);
+  // The card modes behind ctaEnd.at/atPercent/frequency ship separately.
+  const timed = "playerstack-cta-end-timed.js";
+  expect(sources(timed).some((source) => source.endsWith("timed.ts"))).toBe(true);
+  expect(
+    sources("playerstack-plugin-cta-end.js").some((source) => source.endsWith("src/timed.ts")),
+  ).toBe(false);
+  expect(readFileSync(join(dist, "playerstack-plugin-cta-end.js"), "utf8")).toMatch(
+    /playerstack-cta-end-timed\.js\?v=[a-f0-9]{8}/,
+  );
   const fields = "playerstack-email-gate-fields.js";
   expect(sources(fields).some((source) => source.includes("altcha-lib"))).toBe(false);
   expect(

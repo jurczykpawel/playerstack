@@ -108,13 +108,33 @@ if (missing.length > 0) {
   throw new Error(`provider files missing for: ${missing.join(", ")}`);
 }
 
-// Optional email features use stable sibling filenames, like providers.
-const emailChunks: Record<string, string> = {};
-for (const [module, name] of [
-  ["hardened", "hardened"],
-  ["optional-fields", "fields"],
-]) {
-  const file = `playerstack-email-gate-${name}.js`;
+// Optional plugin features use stable sibling filenames, like providers.
+// `retry` loaders request a fresh URL after a failed download.
+const featureChunks = [
+  {
+    module: "hardened",
+    exportName: "loadHardened",
+    source: "plugin-email-gate/src/hardened.ts",
+    file: "playerstack-email-gate-hardened.js",
+    retry: true,
+  },
+  {
+    module: "optional-fields",
+    exportName: "loadOptionalFields",
+    source: "plugin-email-gate/src/optional-fields.ts",
+    file: "playerstack-email-gate-fields.js",
+    retry: true,
+  },
+  {
+    module: "timed",
+    exportName: "loadTimed",
+    source: "plugin-cta-end/src/timed.ts",
+    file: "playerstack-cta-end-timed.js",
+    retry: false,
+  },
+];
+const chunkUrls: Record<string, string> = {};
+for (const { module, source, file } of featureChunks) {
   const result = await build({
     bundle: true,
     target: "es2020",
@@ -122,7 +142,7 @@ for (const [module, name] of [
     minify: true,
     sourcemap: true,
     legalComments: "linked",
-    entryPoints: [join(root, `../plugin-email-gate/src/${module}.ts`)],
+    entryPoints: [join(root, "..", source)],
     outfile: join(outdir, file),
     metafile: true,
   });
@@ -131,22 +151,28 @@ for (const [module, name] of [
     .update(readFileSync(join(outdir, file)))
     .digest("hex")
     .slice(0, 8);
-  emailChunks[module!] = `${file}?v=${version}`;
+  chunkUrls[module] = `${file}?v=${version}`;
 }
 
 const pluginEntries: Plugin = {
   name: "plugin-entries",
   setup(b) {
-    b.onResolve({ filter: /\/load-(hardened|optional-fields)$/ }, (args) => ({
+    b.onResolve({ filter: /\/load-(hardened|optional-fields|timed)$/ }, (args) => ({
       path: args.path.split("/load-")[1]!,
-      namespace: "email-loader",
+      namespace: "feature-loader",
     }));
-    b.onLoad({ filter: /.*/, namespace: "email-loader" }, (args) => ({
-      contents: `import { createModuleLoader } from "./src/module-imports";
-        const base = document.currentScript.src;
-        export const ${args.path === "hardened" ? "loadHardened" : "loadOptionalFields"} = createModuleLoader(base, ${JSON.stringify(emailChunks[args.path])});`,
-      resolveDir: root,
-    }));
+    b.onLoad({ filter: /.*/, namespace: "feature-loader" }, (args) => {
+      const { module, exportName, retry } = featureChunks.find((c) => c.module === args.path)!;
+      const url = JSON.stringify(chunkUrls[module]);
+      return {
+        contents: retry
+          ? `import { createModuleLoader } from "./src/module-imports";
+            export const ${exportName} = createModuleLoader(document.currentScript.src, ${url});`
+          : `const url = new URL(${url}, document.currentScript.src).href;
+            export const ${exportName} = () => import(url);`,
+        resolveDir: root,
+      };
+    });
     b.onResolve({ filter: /^plugin:/ }, (args) => ({
       path: args.path.slice(7),
       namespace: "plugin",

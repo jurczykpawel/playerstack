@@ -14,8 +14,8 @@ Every Playerstack feature beyond "play a video" is a plugin. There are 17 first-
 | -------------------------------------------- | ----------------------------------------------------------------- |
 | [intro-card](/docs/plugins/intro-card)       | Pre-roll splash with title, subtitle, badge, CTA, big play button |
 | [branded-thumb](/docs/plugins/branded-thumb) | Custom poster + click-to-load (LCP + GDPR)                        |
-| [cta-end](/docs/plugins/cta-end)             | Overlay HTML at end of video, button with UTM, replay             |
-| [action-bar](/docs/plugins/action-bar)       | Mid-video dismissible banner with CTA                             |
+| [cta-end](/docs/plugins/cta-end)             | CTA overlay at end, start or a set time, with skip                |
+| [action-bar](/docs/plugins/action-bar)       | Mid-video banner or corner badge with a time window               |
 | [email-gate](/docs/plugins/email-gate)       | Lead capture: pause and require email to keep watching            |
 | [yt-subscribe](/docs/plugins/yt-subscribe)   | Subscribe-on-YouTube bar below the player                         |
 | [autopreview](/docs/plugins/autopreview)     | Muted autoplay when in viewport                                   |
