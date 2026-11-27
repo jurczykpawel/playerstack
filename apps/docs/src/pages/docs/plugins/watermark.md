@@ -51,13 +51,15 @@ Text mode:
 | `href`     | `string`                                                       | —                | Optional click-through URL. Must be `http(s)`; other schemes silently ignored |
 | `position` | `"top-left" \| "top-right" \| "bottom-left" \| "bottom-right"` | `"bottom-right"` | Corner placement                                                              |
 | `opacity`  | `number`                                                       | `0.7`            | 0–1; out-of-range clamped, invalid falls back to default                      |
-| `margin`   | `number`                                                       | `16`             | Distance from corner in pixels                                                |
+| `margin`   | `number`                                                       | `16`             | Distance from corner in px; see bottom corners below                          |
 | `width`    | `number`                                                       | `80`             | Image width in px (image mode only)                                           |
 
 ## Behavior
 
 - Renders into the wrapper around the inner media element so the watermark sits inside the player frame, not over the page
-- `pointer-events: auto` on the overlay so a click-through `href` is clickable
+- Only a linked watermark (`href`) takes pointer events; without a link, clicks pass through to the player
+- Bottom corners stay above the control bar: the distance from the bottom edge is the larger of `margin` and `--ps-control-bar-clearance` (default `48px`). Override it on `player-stack`, for example `player-stack { --ps-control-bar-clearance: 0px; }` when the control bar is hidden, or raise it for a taller custom bar
+- Visible in fullscreen, because the whole `<player-stack>` goes fullscreen (not in the native iPhone video fullscreen, see [Fullscreen](/docs/api#fullscreen))
 - The text mode uses a small semi-transparent pill so it stays readable on bright frames
 
 ## Security

@@ -45,7 +45,7 @@ Playerstack.use(watermarkPlugin).define();
 | `href`     | `string`                                                       | —                | Optional click-through URL. Must be `http(s)`; other schemes silently ignored |
 | `position` | `"top-left" \| "top-right" \| "bottom-left" \| "bottom-right"` | `"bottom-right"` | Corner placement                                                              |
 | `opacity`  | `number`                                                       | `0.7`            | 0–1; out-of-range clamped, invalid falls back to default                      |
-| `margin`   | `number`                                                       | `16`             | Distance from the corner in pixels                                            |
+| `margin`   | `number`                                                       | `16`             | Distance from corner in px; see bottom corners below                          |
 | `width`    | `number`                                                       | `80`             | Image width in px (only when `src` is set)                                    |
 
 ## Behavior
@@ -53,7 +53,9 @@ Playerstack.use(watermarkPlugin).define();
 - Image mode (`src`): a styled `<img>` with `loading="lazy"` and `decoding="async"`
 - Text mode (`text`): a small pill with semi-transparent background and white text
 - When `href` is set, the overlay is wrapped in `<a target="_blank" rel="noopener noreferrer">`
-- `pointer-events: auto` so the link is clickable; the rest of the player still receives mouse events outside the badge
+- Only a linked watermark (`href`) takes pointer events; without a link, clicks pass through to the player
+- Bottom corners stay above the control bar: the distance from the bottom edge is the larger of `margin` and `--ps-control-bar-clearance` (default `48px`). Override it on `player-stack`, for example `player-stack { --ps-control-bar-clearance: 0px; }` when the control bar is hidden, or raise it for a taller custom bar
+- Visible in fullscreen, because the whole `<player-stack>` goes fullscreen (not in the native iPhone video fullscreen, see [Fullscreen](https://playerstack.techskills.academy/docs/api#fullscreen))
 
 ## Security
 

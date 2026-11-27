@@ -155,13 +155,21 @@ export const stickyPlugin: PlayerstackPlugin = {
       if (!dismissed) observer.observe(ctx.container);
     };
 
+    const isFullscreen = () => {
+      const root = ctx.container.getRootNode() as Document & {
+        webkitFullscreenElement?: Element | null;
+      };
+      const element = root.fullscreenElement ?? root.webkitFullscreenElement;
+      return !!element && ctx.container.contains(element);
+    };
+
     const observer = new IntersectionObserver(
       (entries) => {
         if (dismissed) return;
         for (const entry of entries) {
           const ratio = entry.intersectionRatio;
           const player = ctx.mediaPlayer as HTMLElement & { paused?: boolean };
-          if (!isSticky && ratio < enterThreshold && player.paused !== true) {
+          if (!isSticky && ratio < enterThreshold && player.paused !== true && !isFullscreen()) {
             goSticky();
           } else if (isSticky && ratio > exitThreshold) {
             leaveSticky();
@@ -172,10 +180,25 @@ export const stickyPlugin: PlayerstackPlugin = {
     );
     observer.observe(ctx.container);
 
+    const onFullscreenChange = () => {
+      if (isFullscreen()) {
+        if (isSticky) leaveSticky();
+      } else if (!dismissed && !isSticky) {
+        // Observing again reports the current position, which may not have crossed
+        // a threshold since the player went fullscreen.
+        observer.unobserve(ctx.container);
+        observer.observe(ctx.container);
+      }
+    };
+    const fullscreenEvents = ["fullscreenchange", "webkitfullscreenchange"];
+    const doc = ctx.container.ownerDocument;
+    for (const name of fullscreenEvents) doc.addEventListener(name, onFullscreenChange);
+
     states.set(ctx, {
       observer,
       closeBtn,
       cleanup: () => {
+        for (const name of fullscreenEvents) doc.removeEventListener(name, onFullscreenChange);
         leaveSticky();
         observer.disconnect();
       },

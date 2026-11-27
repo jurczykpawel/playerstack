@@ -46,6 +46,8 @@ When the player leaves the viewport AND `mediaPlayer.paused` is false, the plugi
 
 The pinned player is `min(360px, 40vw)` wide, which is 156 px on a 390 px screen. Overlays (CTA, email gate, action bar) stay inside the pinned box and become hard to use at that size; widen it with `.playerstack-sticky { width: ... }`, and use `!important` if the host page sets an inline width on `<player-stack>`.
 
+A fullscreen player is never pinned: entering fullscreen unpins it, and after exit it pins again if it is still out of view and playing.
+
 ## Styling
 
 Pick a corner with `position` and `offset`, or override the placement via CSS:

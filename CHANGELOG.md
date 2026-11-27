@@ -25,6 +25,9 @@ All notable changes to Playerstack will be documented in this file.
 
 ### Fixed
 
+- Fullscreen now targets the whole `<player-stack>`, so watermark, action bar, end card, email gate and other overlays stay visible. Page CSS that targeted `media-controller:fullscreen` should target `player-stack:fullscreen`.
+- The default watermark no longer blocks the fullscreen button: bottom corners sit above the control bar (`--ps-control-bar-clearance`, default `48px`), and only a linked watermark takes pointer events.
+- Sticky unpins a player that enters fullscreen and does not pin it while fullscreen.
 - Send email-gate challenge and submission requests without cookies; support CORS endpoints that allow the embedding origin without Allow-Credentials.
 
 - Keep email-gate triggers active while optional fields download; retry failed field downloads and show the configured network error without an incomplete form.
