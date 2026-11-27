@@ -1,4 +1,7 @@
 import { isSafeHttpUrl, type PlayerstackPlugin, type PlayerstackContext } from "@playerstack/core";
+import { trackWatchTime } from "./watch-time";
+
+export type { WatchProgress } from "./watch-time";
 
 export interface AnalyticsConfig {
   enabled?: boolean;
@@ -21,6 +24,13 @@ export interface AnalyticsConfig {
    * disables; an array overrides the thresholds (values 1-100).
    */
   quartiles?: boolean | number[];
+  /**
+   * Emit `watch_progress` (furthest point, seconds really watched) on pause,
+   * end, page hide and source change. Default: `false`.
+   */
+  watchTime?: boolean;
+  /** Also emit `watch_progress` every N seconds (minimum 5). Default: off. */
+  watchTimeInterval?: number;
 }
 
 interface State {
@@ -62,11 +72,11 @@ export const analyticsPlugin: PlayerstackPlugin = {
       return;
     }
 
-    const send = (event: string, data: Record<string, unknown> = {}) => {
+    const send = (event: string, data: object = {}, src = ctx.config.src) => {
       const payload = { ...data, ...customProps };
       if (cfg.debug || provider === "console") {
         console.log("[playerstack:analytics]", event, {
-          src: ctx.config.src,
+          src,
           data: payload,
           ts: Date.now(),
         });
@@ -80,7 +90,7 @@ export const analyticsPlugin: PlayerstackPlugin = {
       if (cfg.endpoint && typeof navigator !== "undefined" && "sendBeacon" in navigator) {
         navigator.sendBeacon(
           cfg.endpoint,
-          JSON.stringify({ event, src: ctx.config.src, data: payload, ts: Date.now() }),
+          JSON.stringify({ event, src, data: payload, ts: Date.now() }),
         );
       }
     };
@@ -137,8 +147,13 @@ export const analyticsPlugin: PlayerstackPlugin = {
       );
     }
 
+    const stopWatchTime = cfg.watchTime
+      ? trackWatchTime(ctx, cfg.watchTimeInterval, (data, src) => send("watch_progress", data, src))
+      : undefined;
+
     states.set(ctx, {
       cleanup: () => {
+        stopWatchTime?.();
         busUnsubscribers.forEach((u) => u());
         mediaListeners.forEach(({ name, handler }) =>
           ctx.mediaPlayer.removeEventListener(name, handler),
