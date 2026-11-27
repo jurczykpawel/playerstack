@@ -9,8 +9,8 @@
     "preview": "astro preview"
   },
   "dependencies": {
-    "@astrojs/sitemap": "^3.7.2",
-    "astro": "^6.3.1",
+    "@astrojs/sitemap": "^3.7.6",
+    "astro": "^7.4.13",
     "vanilla-cookieconsent": "^3.3.0"
   },
   "devDependencies": {
