@@ -128,4 +128,47 @@ describe("stickyPlugin", () => {
     expect(ctx.container.parentElement?.querySelector("[aria-hidden='true']")).toBeNull();
     expect(disconnectFns[0]).toHaveBeenCalled();
   });
+
+  it("keeps the bottom-right corner when no position is configured", async () => {
+    const ctx = makeContext({ sticky: { enabled: true } });
+    await stickyPlugin.init(ctx);
+    triggers[0]?.(0);
+    expect(ctx.container.dataset.playerstackStickyPosition).toBeUndefined();
+    expect(ctx.container.style.getPropertyValue("--playerstack-sticky-offset")).toBe("");
+  });
+
+  it.each(["bottom-right", "bottom-left", "top-right", "top-left"] as const)(
+    "pins to the %s corner and clears it on return",
+    async (position) => {
+      const ctx = makeContext({ sticky: { enabled: true, position } });
+      await stickyPlugin.init(ctx);
+      triggers[0]?.(0);
+      expect(ctx.container.dataset.playerstackStickyPosition).toBe(position);
+      triggers[0]?.(1);
+      expect(ctx.container.dataset.playerstackStickyPosition).toBeUndefined();
+    },
+  );
+
+  it("ignores an unknown position", async () => {
+    const ctx = makeContext({ sticky: { enabled: true, position: "center" as "top-left" } });
+    await stickyPlugin.init(ctx);
+    triggers[0]?.(0);
+    expect(ctx.container.dataset.playerstackStickyPosition).toBeUndefined();
+  });
+
+  it("applies a pixel offset while pinned and removes it on destroy", async () => {
+    const ctx = makeContext({ sticky: { enabled: true, offset: 0 } });
+    await stickyPlugin.init(ctx);
+    triggers[0]?.(0);
+    expect(ctx.container.style.getPropertyValue("--playerstack-sticky-offset")).toBe("0px");
+    stickyPlugin.destroy?.(ctx);
+    expect(ctx.container.style.getPropertyValue("--playerstack-sticky-offset")).toBe("");
+  });
+
+  it.each([-1, Number.NaN, "10"])("ignores the invalid offset %s", async (offset) => {
+    const ctx = makeContext({ sticky: { enabled: true, offset: offset as number } });
+    await stickyPlugin.init(ctx);
+    triggers[0]?.(0);
+    expect(ctx.container.style.getPropertyValue("--playerstack-sticky-offset")).toBe("");
+  });
 });

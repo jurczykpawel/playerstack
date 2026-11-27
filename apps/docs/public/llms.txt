@@ -24,7 +24,7 @@ The standalone script registers 15 plugins. focus-mode and sellf-adapter require
 - `@playerstack/plugin-action-bar` — mid-video dismissible CTA banner
 - `@playerstack/plugin-email-gate` — pause-and-collect lead capture
 - `@playerstack/plugin-saved-position` — resume watching
-- `@playerstack/plugin-sticky` — corner-pin on scroll
+- `@playerstack/plugin-sticky` — corner-pin on scroll (`sticky.position`: `bottom-right` default, `bottom-left`, `top-right`, `top-left`; `sticky.offset` in px)
 - `@playerstack/plugin-focus-mode` — auto-pause on tab blur (custom build only)
 - `@playerstack/plugin-analytics` — beacon / gtag forwarder; `watchTime: true` (optional `watchTimeInterval` seconds, default off) sends `watch_progress` with maxPosition, previousMaxPosition, watchedSeconds, watchedDelta, duration, percent
 - `@playerstack/plugin-yt-subscribe` — subscribe-on-YouTube bar
