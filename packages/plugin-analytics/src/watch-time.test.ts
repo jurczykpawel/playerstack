@@ -371,6 +371,18 @@ describe("analyticsPlugin watch time", () => {
     expect(last().previousMaxPosition).toBe(0);
   });
 
+  it("labels a source swapped in before anything was watched with its own URL", async () => {
+    const { media } = await setup();
+    fire(media, "loadstart");
+    media.setAttribute("src", "https://example.com/next.mp4");
+    fire(media, "emptied");
+    fire(media, "loadstart");
+    start(media);
+    watch(media, 5);
+    pause(media);
+    expect(sent().map((e) => e.src)).toEqual(["https://example.com/next.mp4"]);
+  });
+
   it("keeps the totals when the same source reloads", async () => {
     const { media } = await setup();
     start(media);

@@ -103,6 +103,7 @@ export function trackWatchTime(
   };
 
   const listeners: [EventTarget, string, () => void][] = [
+    [media, "loadstart", () => (firstAttr ??= media.getAttribute("src"))],
     [media, "playing", measure],
     // Paused timeupdates are scrubbing; the last segment is measured on `pause`.
     [media, "timeupdate", measurePlaying],

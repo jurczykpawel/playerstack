@@ -15,7 +15,7 @@ interface Progress {
   percent: number;
 }
 
-async function open(page: Page) {
+async function open(page: Page, extra: Record<string, unknown> = {}) {
   // Beacons are kept in sessionStorage so the one sent while leaving survives.
   await page.addInitScript(() => {
     navigator.sendBeacon = (_url, body) => {
@@ -27,6 +27,7 @@ async function open(page: Page) {
   });
   const config = {
     analytics: { enabled: true, endpoint: `${origin}/track`, watchTime: true },
+    ...extra,
   };
   await page.route("**/*", async (route) => {
     const url = new URL(route.request().url());
@@ -123,4 +124,22 @@ test("leaving the page during playback sends the last batch", async ({ page }) =
   const sent = await events(page);
   expect(sent).toHaveLength(1);
   expect(sent[0]!.watchedSeconds).toBeGreaterThan(0.5);
+});
+
+test("the muted in-player preview is not watch time", async ({ page }) => {
+  await open(page, { preview: { enabled: true } });
+  await expect.poll(() => time(page)).toBeGreaterThan(1);
+  await expect(video(page)).toHaveJSProperty("muted", true);
+  await video(page).evaluate((v: HTMLVideoElement) => v.pause());
+  await expect(video(page)).toHaveJSProperty("paused", true);
+  expect(await events(page)).toHaveLength(0);
+
+  // The viewer takes over: unmutes and watches from the start.
+  await video(page).evaluate((v: HTMLVideoElement) => (v.muted = false));
+  await seek(page, 0);
+  await playUntil(page, 1);
+  await video(page).evaluate((v: HTMLVideoElement) => v.pause());
+  await expect.poll(async () => (await events(page)).length).toBe(1);
+  const [sent] = await events(page);
+  expect(sent!.watchedSeconds).toBeLessThan((await time(page)) + 0.5);
 });
