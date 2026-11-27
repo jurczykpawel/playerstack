@@ -180,6 +180,9 @@ function normalizeWatermark(c: Record<string, unknown>): Record<string, unknown>
   pickNumber(c, "opacity", out);
   pickNumber(c, "margin", out);
   pickNumber(c, "width", out);
+  pickNumber(c, "moveInterval", out);
+  pickEnum(c, "moveTransition", ["smooth", "jump"], out);
+  pickBool(c, "reinsert", out);
   return out;
 }
 

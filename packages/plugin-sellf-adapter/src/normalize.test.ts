@@ -209,6 +209,25 @@ describe("normalizeRemoteConfig", () => {
         width: 120,
       });
     });
+
+    it("keeps moving and reinsert fields", () => {
+      const watermark = {
+        enabled: true,
+        text: "buyer@example.com",
+        margin: 24,
+        moveInterval: 10,
+        moveTransition: "jump",
+        reinsert: true,
+      };
+      expect(normalizeRemoteConfig({ watermark }).watermark).toEqual(watermark);
+    });
+
+    it("drops moving and reinsert fields of the wrong type", () => {
+      const out = normalizeRemoteConfig({
+        watermark: { moveInterval: "10", moveTransition: "spin", reinsert: "yes" },
+      });
+      expect(out.watermark).toEqual({});
+    });
   });
 
   describe("twitch", () => {
