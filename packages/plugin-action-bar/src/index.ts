@@ -1,5 +1,6 @@
 import {
   buildSafeCtaUrl,
+  focusPlayerControl,
   sanitizeHtml,
   type PlayerstackPlugin,
   type PlayerstackContext,
@@ -17,11 +18,17 @@ export interface ActionBarConfig {
   showAt?: "start" | number;
   /** Optional percent threshold (0-100) of duration. Mutually compatible with `showAt`. */
   atPercent?: number;
+  /** Hide from this second on. With either hide field the bar follows playback both ways. */
+  hideAt?: number;
+  /** Hide from this percent (0-100) of duration on. */
+  hideAtPercent?: number;
+  /** "badge" is a compact box in a corner instead of the full-width bar; default "bar". */
+  variant?: "bar" | "badge";
   title?: string;
   html?: string;
   button?: ActionBarButton;
-  /** "top" or "bottom"; default "bottom". */
-  position?: "top" | "bottom";
+  /** Bar: "top" or "bottom" (default). Badge: also a corner; default "top-right". */
+  position?: "top" | "bottom" | "top-left" | "top-right" | "bottom-left" | "bottom-right";
 }
 
 interface State {
@@ -36,27 +43,35 @@ export const actionBarPlugin: PlayerstackPlugin = {
     const cfg = (ctx.config as { actionBar?: ActionBarConfig }).actionBar;
     if (!cfg?.enabled) return;
 
-    let shown = false;
-    let removeTimeListener: (() => void) | null = null;
-
-    const show = () => {
-      if (shown) return;
-      shown = true;
+    let bar: HTMLElement | undefined;
+    let removeTimeListener: (() => void) | undefined;
+    const stopListening = () => {
       removeTimeListener?.();
-      removeTimeListener = null;
-      const bar = renderBar(cfg, ctx);
-      // Mount on <player-stack> directly — has position:relative + aspect-ratio
-      // + overflow from core DEFAULT_STYLES. Mounting inside <media-controller>
-      // would interleave with Mux's shadow DOM stacking.
-      ctx.container.appendChild(bar);
+      removeTimeListener = undefined;
     };
 
-    const atPercent = cfg.atPercent;
-    if (cfg.showAt === undefined && atPercent === undefined) {
-      show();
-    } else if (cfg.showAt === "start") {
-      show();
-    } else {
+    const setVisible = (visible: boolean) => {
+      if (visible) {
+        const first = !bar;
+        bar ??= renderBar(cfg, ctx, stopListening);
+        // Mount on <player-stack> directly — has position:relative + aspect-ratio
+        // + overflow from core DEFAULT_STYLES. Mounting inside <media-controller>
+        // would interleave with Mux's shadow DOM stacking.
+        if (!bar.isConnected) ctx.container.appendChild(bar);
+        if (first) ctx.events.emit("action-bar:show", undefined);
+      } else if (bar?.isConnected) {
+        const focused = bar.contains(bar.ownerDocument.activeElement);
+        bar.remove();
+        if (focused) focusPlayerControl(ctx.container);
+      }
+    };
+
+    const { atPercent, hideAt, hideAtPercent } = cfg;
+    const fromStart =
+      cfg.showAt === "start" || (cfg.showAt === undefined && atPercent === undefined);
+    const windowed = hideAt !== undefined || hideAtPercent !== undefined;
+
+    if (!fromStart || windowed) {
       const seconds = typeof cfg.showAt === "number" ? cfg.showAt : undefined;
       const onTime = () => {
         const player = ctx.mediaPlayer as HTMLElement & {
@@ -65,18 +80,25 @@ export const actionBarPlugin: PlayerstackPlugin = {
         };
         const t = player.currentTime ?? 0;
         const d = player.duration ?? 0;
-        const triggerSeconds = seconds !== undefined && t >= seconds;
-        const triggerPercent = atPercent !== undefined && d > 0 && (t / d) * 100 >= atPercent;
-        if (triggerSeconds || triggerPercent) show();
+        const reached = (second?: number, percent?: number) =>
+          (second !== undefined && t >= second) ||
+          (percent !== undefined && d > 0 && (t / d) * 100 >= percent);
+        const started = fromStart || reached(seconds, atPercent);
+        if (windowed) setVisible(started && !reached(hideAt, hideAtPercent));
+        else if (started) {
+          stopListening();
+          setVisible(true);
+        }
       };
       ctx.mediaPlayer.addEventListener("timeupdate", onTime);
       removeTimeListener = () => ctx.mediaPlayer.removeEventListener("timeupdate", onTime);
     }
+    if (fromStart) setVisible(true);
 
     states.set(ctx, {
       cleanup: () => {
-        removeTimeListener?.();
-        ctx.container.querySelector(".playerstack-action-bar")?.remove();
+        stopListening();
+        bar?.remove();
       },
     });
   },
@@ -86,12 +108,22 @@ export const actionBarPlugin: PlayerstackPlugin = {
   },
 };
 
-function renderBar(cfg: ActionBarConfig, ctx: PlayerstackContext): HTMLElement {
+function renderBar(
+  cfg: ActionBarConfig,
+  ctx: PlayerstackContext,
+  onDismiss: () => void,
+): HTMLElement {
   const bar = document.createElement("div");
   bar.className = "playerstack-action-bar";
-  const positionEdge = cfg.position === "top" ? "top:8px;" : "bottom:60px;";
+  const badge = cfg.variant === "badge";
+  if (badge) bar.classList.add("playerstack-action-bar-badge");
+  const position = cfg.position ?? (badge ? "top-right" : "bottom");
+  const positionEdge = position.startsWith("top") ? "top:8px;" : "bottom:60px;";
+  const sides = !badge
+    ? "left:8px;right:8px;"
+    : `${position.endsWith("left") ? "left" : "right"}:8px;max-width:calc(100% - 16px);box-sizing:border-box;`;
   bar.style.cssText =
-    `position:absolute;left:8px;right:8px;${positionEdge}` +
+    `position:absolute;${sides}${positionEdge}` +
     "background:rgba(0,0,0,0.85);color:#fff;padding:10px 14px;border-radius:8px;display:flex;align-items:center;gap:12px;z-index:2;backdrop-filter:blur(4px);";
 
   const text = document.createElement("div");
@@ -135,6 +167,7 @@ function renderBar(cfg: ActionBarConfig, ctx: PlayerstackContext): HTMLElement {
   close.style.cssText =
     "background:transparent;border:none;color:#fff;font-size:18px;cursor:pointer;padding:0 4px;flex-shrink:0;";
   close.addEventListener("click", () => {
+    onDismiss();
     bar.remove();
     ctx.events.emit("action-bar:dismiss", undefined);
   });
