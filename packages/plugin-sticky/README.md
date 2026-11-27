@@ -42,11 +42,11 @@ The `@playerstack/*` packages are not published to npm yet; to compose your own 
 
 When the player leaves the viewport AND `mediaPlayer.paused` is false, the plugin adds the `playerstack-sticky` class to the container. CSS pins it to the configured corner (bottom-right by default) with a small shadow. A close button is injected that disconnects the observer and removes the sticky state.
 
+A fullscreen player is never pinned: entering fullscreen unpins it, and after exit it pins again if it is still out of view and playing.
+
 ## Size
 
 The pinned player is `min(360px, 40vw)` wide, which is 156 px on a 390 px screen. Overlays (CTA, email gate, action bar) stay inside the pinned box and become hard to use at that size; widen it with `.playerstack-sticky { width: ... }`, and use `!important` if the host page sets an inline width on `<player-stack>`.
-
-A fullscreen player is never pinned: entering fullscreen unpins it, and after exit it pins again if it is still out of view and playing.
 
 ## Styling
 
