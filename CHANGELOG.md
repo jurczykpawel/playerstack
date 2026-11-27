@@ -4,6 +4,14 @@ All notable changes to Playerstack will be documented in this file.
 
 ## Unreleased
 
+### Changed
+
+- `sticky`: below a 600 px viewport the pinned player now spans the screen at the bottom (8 px gaps plus safe-area insets) instead of a `40vw` corner box; `position` does not apply there and `offset` is only the bottom gap. At every width it grows to `min(60dvh, 420px)` while a CTA card, e-mail form or intro card is open.
+
+### Fixed
+
+- `sticky`: the close button is 44 px and stays clickable above overlays; top action bars and the intro card close button no longer sit under it; an inline size on `<player-stack>` no longer pushes the pinned player off screen (#24).
+
 ### Added
 
 - `watermark.moveInterval` moves the watermark to a random spot inside the frame, above the control bar, every given number of seconds (`moveTransition` `smooth` or `jump`; reduced motion always jumps). `watermark.reinsert` puts a removed overlay back. All off by default; the Sellf adapter passes them through.

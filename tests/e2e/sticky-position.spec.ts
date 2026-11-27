@@ -41,8 +41,13 @@ for (const width of [390, 1440]) {
         "top" | "bottom",
         "left" | "right",
       ];
-      await expect.poll(async () => (await gaps(page))[vertical]).toBe(16);
-      expect((await gaps(page))[horizontal]).toBe(16);
+      if (width < 600) {
+        // A narrow screen docks the full-width player at the bottom, whatever the corner.
+        await expect.poll(() => gaps(page)).toMatchObject({ left: 8, right: 8, bottom: 8 });
+      } else {
+        await expect.poll(async () => (await gaps(page))[vertical]).toBe(16);
+        expect((await gaps(page))[horizontal]).toBe(16);
+      }
       await expect(page.locator(".playerstack-sticky-close")).toBeInViewport({ ratio: 1 });
     });
   }
@@ -50,8 +55,9 @@ for (const width of [390, 1440]) {
   test(`honors a custom offset at ${width} px`, async ({ page }) => {
     await page.setViewportSize({ width, height: 844 });
     await pin(page, { position: "top-left", offset: 72 });
-    await expect.poll(async () => (await gaps(page)).top).toBe(72);
-    expect((await gaps(page)).left).toBe(72);
+    await expect
+      .poll(() => gaps(page))
+      .toMatchObject(width < 600 ? { left: 8, right: 8, bottom: 72 } : { top: 72, left: 72 });
     await page.locator(".playerstack-sticky-close").click();
     await expect(page.locator("player-stack.playerstack-sticky")).toHaveCount(0);
   });
