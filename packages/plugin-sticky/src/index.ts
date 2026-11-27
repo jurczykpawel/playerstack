@@ -8,7 +8,10 @@ export interface StickyConfig {
   threshold?: number;
   /** Viewport corner of the pinned player. Default "bottom-right". */
   position?: (typeof POSITIONS)[number];
-  /** Distance from both corner edges in CSS pixels. Default 16. */
+  /**
+   * Distance from both corner edges in CSS pixels. Default 16. On narrow screens
+   * it is only the gap under the full-width player (default 8).
+   */
   offset?: number;
 }
 
@@ -23,6 +26,10 @@ const states = new WeakMap<PlayerstackContext, State>();
 const STICKY_CLASS = "playerstack-sticky";
 const OFFSET_VAR = "--playerstack-sticky-offset";
 const EDGE = `var(${OFFSET_VAR}, 16px)`;
+/** Below this viewport width the pinned player spans the screen: a corner box would be under 240 px. */
+const NARROW = "(max-width: 599.98px)";
+/** Overlays whose content does not fit a pinned 16:9 box without scrolling. */
+const TALL_OVERLAYS = ".playerstack-cta, .playerstack-email-gate, .playerstack-intro-card";
 
 function cornerRule(position: (typeof POSITIONS)[number]): string {
   const [vertical, horizontal] = position.split("-");
@@ -49,6 +56,9 @@ function ensureStyles(): void {
   width: min(360px, 40vw);
   aspect-ratio: 16 / 9;
   z-index: 9999;
+  max-width: calc(100% - 2 * ${EDGE}) !important;
+  min-width: 0 !important;
+  margin: 0 !important;
   background: #000;
   box-shadow: 0 12px 36px rgba(0,0,0,0.5);
   border-radius: 8px;
@@ -62,24 +72,57 @@ function ensureStyles(): void {
 }
 .playerstack-sticky-close {
   position: absolute;
-  top: 6px;
-  right: 6px;
+  top: 0;
+  right: 0;
   z-index: 10001;
-  width: 24px;
-  height: 24px;
+  width: 44px;
+  height: 44px;
+  padding: 0;
   border: none;
   border-radius: 50%;
-  background: rgba(0,0,0,0.8);
+  background: radial-gradient(circle, rgba(0,0,0,0.8) 0 14px, transparent 14.5px);
   color: #fff;
-  font: 14px/1 sans-serif;
+  font: 18px/1 sans-serif;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
 }
+.${STICKY_CLASS} > .playerstack-action-bar {
+  margin-top: 40px;
+}
+.${STICKY_CLASS} > .playerstack-intro-card > .playerstack-intro-card-close {
+  right: 52px !important;
+}
 ${POSITIONS.slice(1).map(cornerRule).join("\n")}
+@media ${NARROW} {
+  .${STICKY_CLASS}.${STICKY_CLASS} {
+    top: auto;
+    left: calc(8px + env(safe-area-inset-left, 0px));
+    right: calc(8px + env(safe-area-inset-right, 0px));
+    bottom: calc(var(${OFFSET_VAR}, 8px) + env(safe-area-inset-bottom, 0px));
+    width: auto !important;
+    max-width: none !important;
+    height: auto !important;
+    max-height: none !important;
+    min-height: 0 !important;
+  }
+}
+.${STICKY_CLASS}.${STICKY_CLASS}:has(> :is(${TALL_OVERLAYS})) {
+  aspect-ratio: auto;
+  height: min(60vh, 420px) !important;
+  height: min(60dvh, 420px) !important;
+}
 `;
   document.head.appendChild(style);
+}
+
+/** Overlays make their siblings inert; the pin must stay dismissible above them. */
+function keepUsable(button: HTMLElement): void {
+  const attributes = ["inert", "aria-hidden"];
+  new MutationObserver(() => {
+    for (const name of attributes) button.removeAttribute(name);
+  }).observe(button, { attributeFilter: attributes });
 }
 
 export const stickyPlugin: PlayerstackPlugin = {
@@ -117,6 +160,7 @@ export const stickyPlugin: PlayerstackPlugin = {
         leaveSticky();
         observer.disconnect();
       });
+      keepUsable(closeBtn);
       ctx.container.appendChild(closeBtn);
     };
 

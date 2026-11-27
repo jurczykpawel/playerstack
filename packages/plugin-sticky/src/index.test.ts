@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { stickyPlugin } from "./index";
-import { createEventBus } from "@playerstack/core";
+import { activateOverlay, createEventBus } from "@playerstack/core";
 import type { PlayerstackContext, PlayerstackConfig } from "@playerstack/core";
 
 type TriggerFn = (ratio: number) => void;
@@ -173,6 +173,48 @@ describe("stickyPlugin", () => {
     await stickyPlugin.init(ctx);
     triggers[0]?.(0);
     expect(ctx.container.style.getPropertyValue("--playerstack-sticky-offset")).toBe("");
+  });
+
+  it("keeps the close button usable above an active overlay", async () => {
+    const ctx = makeContext({ sticky: { enabled: true } });
+    await stickyPlugin.init(ctx);
+    const overlay = ctx.container.appendChild(document.createElement("div"));
+    const release = activateOverlay(ctx.container, overlay, 4);
+    triggers[0]?.(0);
+    const close = ctx.container.querySelector(".playerstack-sticky-close") as HTMLButtonElement;
+    // The overlay layer reacts to the new button first; wait until that has happened.
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    expect(close.hasAttribute("inert")).toBe(false);
+    expect(close.hasAttribute("aria-hidden")).toBe(false);
+    expect(ctx.mediaPlayer.hasAttribute("inert")).toBe(true);
+    release();
+  });
+
+  it("frees the close button when an overlay opens on the pinned player", async () => {
+    const ctx = makeContext({ sticky: { enabled: true } });
+    await stickyPlugin.init(ctx);
+    triggers[0]?.(0);
+    const overlay = ctx.container.appendChild(document.createElement("div"));
+    const release = activateOverlay(ctx.container, overlay, 4);
+    const close = ctx.container.querySelector(".playerstack-sticky-close") as HTMLButtonElement;
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    expect(close.hasAttribute("inert")).toBe(false);
+    close.click();
+    expect(ctx.container.classList.contains("playerstack-sticky")).toBe(false);
+    release();
+  });
+
+  it("stays unpinned after close, without touching playback", async () => {
+    const ctx = makeContext({ sticky: { enabled: true } });
+    const pause = vi.fn();
+    Object.assign(ctx.mediaPlayer, { pause });
+    await stickyPlugin.init(ctx);
+    triggers[0]?.(0);
+    (ctx.container.querySelector(".playerstack-sticky-close") as HTMLButtonElement).click();
+    triggers[0]?.(1);
+    triggers[0]?.(0);
+    expect(ctx.container.classList.contains("playerstack-sticky")).toBe(false);
+    expect(pause).not.toHaveBeenCalled();
   });
 
   describe("fullscreen", () => {
