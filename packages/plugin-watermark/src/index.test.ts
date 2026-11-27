@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { watermarkPlugin } from "./index";
 import { createEventBus } from "@playerstack/core";
 import type { PlayerstackContext, PlayerstackConfig } from "@playerstack/core";
@@ -218,5 +218,170 @@ describe("watermarkPlugin", () => {
       const wm = ctx.container.querySelector(".playerstack-watermark") as HTMLElement;
       expect(wm.style.pointerEvents).toBe(expected);
     }
+  });
+});
+
+describe("watermarkPlugin moveInterval", () => {
+  const started: PlayerstackContext[] = [];
+
+  async function start(extra: Record<string, unknown> = {}) {
+    const ctx = makeContext({ watermark: { enabled: true, text: "x", ...extra } });
+    await watermarkPlugin.init(ctx);
+    started.push(ctx);
+    return ctx.container.querySelector(".playerstack-watermark") as HTMLElement;
+  }
+  const spot = (el: HTMLElement) => [el.style.left, el.style.top, el.style.transform];
+  const reducedMotion = (matches: boolean) =>
+    vi.stubGlobal("matchMedia", () => ({ matches }) as MediaQueryList);
+
+  beforeEach(() => {
+    vi.useFakeTimers();
+    reducedMotion(false);
+  });
+  afterEach(() => {
+    for (const ctx of started.splice(0)) watermarkPlugin.destroy?.(ctx);
+    vi.useRealTimers();
+    vi.restoreAllMocks();
+    vi.unstubAllGlobals();
+  });
+
+  it("stays in its corner without moveInterval", async () => {
+    const wm = await start();
+    vi.advanceTimersByTime(60_000);
+    expect(wm.style.bottom).not.toBe("");
+    expect(wm.style.right).not.toBe("");
+    expect(wm.style.left).toBe("");
+    expect(wm.style.transition).toBe("");
+    expect(vi.getTimerCount()).toBe(0);
+  });
+
+  it("starts at a random spot inside the frame, above the control bar", async () => {
+    vi.spyOn(Math, "random").mockReturnValueOnce(0.25).mockReturnValueOnce(0.75);
+    const wm = await start({ moveInterval: 10, position: "top-right", margin: 20 });
+    expect(spot(wm)).toEqual([
+      "calc(20px + (100% - 2 * 20px) * 0.25)",
+      "calc(20px + (100% - 20px - max(20px, var(--ps-control-bar-clearance, 48px))) * 0.75)",
+      "translate(-25%, -75%)",
+    ]);
+    expect(wm.style.right).toBe("");
+    expect(wm.style.bottom).toBe("");
+  });
+
+  it("keeps its natural width wherever it lands", async () => {
+    const wm = await start({ moveInterval: 10 });
+    expect(wm.style.width).toBe("max-content");
+    expect(wm.style.maxWidth).toBe("calc(100% - 2 * 16px)");
+    expect(wm.style.overflowWrap).toBe("anywhere");
+  });
+
+  it("moves once per interval", async () => {
+    const random = vi.spyOn(Math, "random").mockReturnValue(0);
+    const wm = await start({ moveInterval: 5 });
+    const first = spot(wm);
+    random.mockReturnValue(0.5);
+    vi.advanceTimersByTime(4999);
+    expect(spot(wm)).toEqual(first);
+    vi.advanceTimersByTime(1);
+    expect(wm.style.transform).toBe("translate(-50%, -50%)");
+    random.mockReturnValue(1);
+    vi.advanceTimersByTime(5000);
+    expect(wm.style.transform).toBe("translate(-100%, -100%)");
+  });
+
+  it("does not move more often than once a second", async () => {
+    const random = vi.spyOn(Math, "random").mockReturnValue(0);
+    const wm = await start({ moveInterval: 0.05 });
+    random.mockReturnValue(0.5);
+    vi.advanceTimersByTime(999);
+    expect(wm.style.transform).toBe("translate(0%, 0%)");
+    vi.advanceTimersByTime(1);
+    expect(wm.style.transform).toBe("translate(-50%, -50%)");
+  });
+
+  it("caps an interval too long for a browser timer", async () => {
+    const random = vi.spyOn(Math, "random").mockReturnValue(0);
+    const wm = await start({ moveInterval: 1e12 });
+    random.mockReturnValue(0.5);
+    vi.advanceTimersByTime(60_000);
+    expect(wm.style.transform).toBe("translate(0%, 0%)");
+  });
+
+  it.each([0, -5, Number.NaN, "10"])("ignores moveInterval %s", async (moveInterval) => {
+    const wm = await start({ moveInterval });
+    expect(wm.style.left).toBe("");
+    expect(vi.getTimerCount()).toBe(0);
+  });
+
+  it("glides between spots by default, but not into the first one", async () => {
+    const wm = await start({ moveInterval: 5 });
+    expect(wm.style.transition).toBe("");
+    vi.advanceTimersByTime(5000);
+    expect(wm.style.transition).toBe("left 0.8s ease, top 0.8s ease, transform 0.8s ease");
+  });
+
+  it("jumps with moveTransition jump", async () => {
+    const wm = await start({ moveInterval: 5, moveTransition: "jump" });
+    vi.advanceTimersByTime(5000);
+    expect(wm.style.transition).toBe("none");
+  });
+
+  it("jumps while the viewer prefers reduced motion", async () => {
+    const wm = await start({ moveInterval: 5 });
+    reducedMotion(true);
+    vi.advanceTimersByTime(5000);
+    expect(wm.style.transition).toBe("none");
+    reducedMotion(false);
+    vi.advanceTimersByTime(5000);
+    expect(wm.style.transition).toContain("0.8s");
+  });
+
+  it("destroy stops the timer", async () => {
+    await start({ moveInterval: 5 });
+    watermarkPlugin.destroy?.(started.pop()!);
+    expect(vi.getTimerCount()).toBe(0);
+  });
+});
+
+describe("watermarkPlugin reinsert", () => {
+  const mutations = () => new Promise((resolve) => setTimeout(resolve, 0));
+
+  async function start(extra: Record<string, unknown> = {}) {
+    const ctx = makeContext({ watermark: { enabled: true, text: "x", ...extra } });
+    await watermarkPlugin.init(ctx);
+    const wm = ctx.container.querySelector(".playerstack-watermark") as HTMLElement;
+    return { ctx, wm };
+  }
+
+  it("leaves a removed overlay removed by default", async () => {
+    const { wm } = await start();
+    wm.remove();
+    await mutations();
+    expect(wm.isConnected).toBe(false);
+  });
+
+  it("puts the overlay back each time it is removed", async () => {
+    const { ctx, wm } = await start({ reinsert: true });
+    for (let i = 0; i < 2; i++) {
+      wm.remove();
+      await mutations();
+      expect(wm.parentElement).toBe(ctx.container);
+    }
+    expect(ctx.container.querySelectorAll(".playerstack-watermark")).toHaveLength(1);
+    watermarkPlugin.destroy?.(ctx);
+  });
+
+  it("brings the overlay back after it is moved elsewhere", async () => {
+    const { ctx, wm } = await start({ reinsert: true });
+    document.body.appendChild(wm);
+    await mutations();
+    expect(wm.parentElement).toBe(ctx.container);
+    watermarkPlugin.destroy?.(ctx);
+  });
+
+  it("destroy removes the overlay for good", async () => {
+    const { ctx, wm } = await start({ reinsert: true });
+    watermarkPlugin.destroy?.(ctx);
+    await mutations();
+    expect(wm.isConnected).toBe(false);
   });
 });

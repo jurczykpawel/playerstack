@@ -6,6 +6,8 @@ All notable changes to Playerstack will be documented in this file.
 
 ### Added
 
+- `watermark.moveInterval` moves the watermark to a random spot inside the frame, above the control bar, every given number of seconds (`moveTransition` `smooth` or `jump`; reduced motion always jumps). `watermark.reinsert` puts a removed overlay back. All off by default; the Sellf adapter passes them through.
+
 - `analytics.watchTime` sends `watch_progress` (furthest point, seconds really watched, duration, percent) in batches on pause, end, page hide and source change; `watchTimeInterval` adds periodic sending. Off by default.
 
 - `sticky.position` picks the viewport corner of the pinned player (`bottom-right` by default, `bottom-left`, `top-right`, `top-left`) and `sticky.offset` sets its distance from the edges in pixels.

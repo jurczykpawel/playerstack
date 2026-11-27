@@ -1,7 +1,7 @@
 import { defineConfig, devices } from "@playwright/test";
 export default defineConfig({
   testDir: "./tests/e2e",
-  testMatch: ["overlay-focus.spec.ts", "fullscreen-overlays.spec.ts"],
+  testMatch: ["overlay-focus.spec.ts", "fullscreen-overlays.spec.ts", "watermark-move.spec.ts"],
   workers: 1,
   retries: 0,
   reporter: "list",

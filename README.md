@@ -73,7 +73,7 @@ Presto Player has the marketing layer — only for WordPress.
 
 | Plugin                           | What it does                                                                  |
 | -------------------------------- | ----------------------------------------------------------------------------- |
-| `@playerstack/plugin-watermark`  | Corner-pinned logo or text overlay with optional click-through                |
+| `@playerstack/plugin-watermark`  | Logo or text overlay (pinned or moving) with optional click-through           |
 | `@playerstack/plugin-custom-css` | Inject arbitrary scoped CSS — escape hatch for anything controls-policy lacks |
 
 **Analytics & Integrations**
