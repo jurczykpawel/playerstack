@@ -67,7 +67,7 @@ export function validateTokens(
   return out;
 }
 
-const ALLOWED_AT_RULE = /^@(media|supports|container|layer|keyframes|-webkit-keyframes)\b/i;
+const ALLOWED_AT_RULE = /^@(media|supports|container|layer|keyframes|-webkit-keyframes)(?![\w-])/i;
 
 /**
  * Check that the CSS stays inside the scope wrapper: braces balance, strings
@@ -79,6 +79,8 @@ function staysInScope(css: string): boolean {
   let depth = 0;
   let inString: '"' | "'" | null = null;
   let inComment = false;
+  // ( and [ blocks: CSS keeps ; { } inside them as content, not as rule syntax.
+  let brackets = 0;
   let prelude = "";
   for (let i = 0; i < css.length; i++) {
     const ch = css[i];
@@ -105,6 +107,9 @@ function staysInScope(css: string): boolean {
       continue;
     }
     if (ch === '"' || ch === "'") inString = ch;
+    if (ch === "(" || ch === "[") brackets++;
+    else if ((ch === ")" || ch === "]") && --brackets < 0) return false;
+    else if (brackets > 0 && (ch === "{" || ch === "}" || ch === ";")) return false;
 
     if (ch === "{") {
       if (!isSafePrelude(prelude)) return false;
@@ -117,14 +122,14 @@ function staysInScope(css: string): boolean {
       prelude += ch;
     }
   }
-  return depth === 0 && !inString && !inComment;
+  return depth === 0 && brackets === 0 && !inString && !inComment;
 }
 
 /**
  * Inside the wrapper `&` is the player. A selector reaches outside it when
- * `&` sits inside a pseudo-class like `:not(&)`, or when the player is
- * followed by a sibling combinator (`& ~ p`, or a bare `~ p`, which nesting
- * reads as `& ~ p`).
+ * `&` sits inside a pseudo-class like `:not(&)`, or when a compound that
+ * contains `&` is followed by a sibling combinator (`& ~ p`, `&:hover + p`,
+ * or a bare `~ p`, which nesting reads as `& ~ p`).
  */
 function isSafePrelude(prelude: string): boolean {
   const text = prelude.trim();
@@ -135,7 +140,9 @@ function isSafePrelude(prelude: string): boolean {
     else if (ch === ")") parens--;
     else if (ch === "&" && parens > 0) return false;
   }
-  return !text.split(",").some((selector) => /^\s*[~+]|&\s*[~+]/.test(selector));
+  let flat = text;
+  while (/\([^()]*\)|\[[^[\]]*\]/.test(flat)) flat = flat.replace(/\([^()]*\)|\[[^[\]]*\]/g, "");
+  return !flat.split(",").some((selector) => /^\s*[~+]|&[^\s>~+]*\s*[~+]/.test(selector));
 }
 
 /**

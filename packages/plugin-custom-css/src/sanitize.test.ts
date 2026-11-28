@@ -71,6 +71,15 @@ describe("sanitizeCustomCss", () => {
       "+ div { color: red }",
       "& video, ~ aside { color: red }",
       "@media (min-width: 1px) { :not(&) { color: red } }",
+      "&:not(._) ~ #after { color: red }",
+      "&:where(*) + #after { color: red }",
+      "&.x~* { color: red }",
+      ".dark & ~ p { color: red }",
+      ":is(:not(&),;):is(#target) { color: red }",
+      ":where(:not(&),;)#target { color: red }",
+      ":is(:not(&),[;]):is(#target) { color: red }",
+      ":is(a{}) { color: red }",
+      "@media-x (min-width: 1px) { & video { color: red } }",
     ]) {
       expect(sanitizeCustomCss(css), css).toBeNull();
     }
@@ -84,6 +93,8 @@ describe("sanitizeCustomCss", () => {
       "&:not(.paused) media-control-bar { opacity: 1 }",
       ".dark & { border: 1px solid #fff }",
       "& li + li, & li ~ li { margin: 0 }",
+      "& > li ~ li, &:hover video + span { margin: 0 }",
+      "& [data-x] { margin: 0 }",
       "& :is(video, img) { object-fit: cover }",
       "transition: opacity 0.2s, transform calc(1s + 2s);",
       "@supports (display: grid) { & video { display: block } }",
