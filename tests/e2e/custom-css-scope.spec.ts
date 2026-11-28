@@ -55,6 +55,11 @@ for (const [name, css] of [
   ["a pseudo-class around &", ":not(&):is(#outside, #after) { visibility: hidden }"],
   ["a string broken by a newline", 'color: "\n} #outside, #after { visibility: hidden }'],
   ["a sibling combinator after the player", "& ~ #after { visibility: hidden }"],
+  ["a sibling combinator after a compound with &", "&:not(._) ~ #after { visibility: hidden }"],
+  [
+    "a semicolon inside a pseudo-class",
+    ":is(:not(&),;):is(#outside, #after) { visibility: hidden }",
+  ],
 ]) {
   test(`trusted CSS with ${name} is dropped`, async ({ page }) => {
     await openWithTrustedCss(page, css);

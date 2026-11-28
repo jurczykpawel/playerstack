@@ -22,6 +22,7 @@ All notable changes to Playerstack will be documented in this file.
 
 ### Fixed
 
+- `custom-css`: the scope check for `trustedCss` also drops sibling combinators after a compound containing `&` (`&:hover ~ p`) and `;`, `{` or `}` inside parentheses or brackets, which could still reach elements outside the player.
 - Wistia `fast.wistia.com/embed/medias/ID` and `/embed/iframe/ID` URLs now play: the player was handed `medias/ID` as the media id (#36).
 
 - `chapters`: `containerSelector` no longer mounts the list inside links, buttons, labels, `<summary>` or form fields, where a click on a chapter would trigger that element; an invalid selector no longer stops the player's later plugins. In both cases the list goes after the player with a console warning.
