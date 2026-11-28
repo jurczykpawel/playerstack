@@ -61,6 +61,23 @@ Keep the complete set in one directory, and point the script tag at your own pat
 <script src="/js/playerstack.min.js" defer></script>
 ```
 
+The script finds the other files in the directory it was loaded from, recognised by the name
+`playerstack.min.js` or `playerstack.js`. If the script is renamed, combined with other scripts
+or inlined by a cache or optimization plugin (for example on WordPress), or loaded with
+`type="module"`, set that directory by hand with `data-provider-base`. It applies to provider,
+plugin and feature files; a relative value resolves against the page:
+
+```html
+<script
+  src="/wp-content/cache/min/bundle-1a2b.js"
+  data-provider-base="/js/playerstack/"
+  defer
+></script>
+```
+
+The first `<script data-provider-base>` on the page wins; when inlining strips the attribute from the
+original tag, put it on any other `<script>` element.
+
 It is Apache-2.0 licensed, so you can host and redistribute it freely. Keep a copy of the [LICENSE](https://github.com/jurczykpawel/playerstack/blob/main/LICENSE) and [NOTICE](https://github.com/jurczykpawel/playerstack/blob/main/NOTICE) files with it, next to the `*.LEGAL.txt` notices of the third-party code bundled in each script.
 
 With a Content Security Policy, allow the directory that serves the script (for example
@@ -111,7 +128,7 @@ Two equivalent ways:
 </player-stack>
 ```
 
-When both are present, `data-config` wins. Use shorthand for simple cases, JSON for plugin-specific options like `controls`, `preview`, `brandedThumb`, `ctaEnd`.
+When both are present, `data-config` wins when the player starts. Changing a `src`, `poster`, `title` or `preload` attribute later, while the player is still starting or afterwards, overrides the JSON value: the attribute change is the newer instruction. Removing the `src` attribute keeps the current source. Use shorthand for simple cases, JSON for plugin-specific options like `controls`, `preview`, `brandedThumb`, `ctaEnd`.
 
 ## Next steps
 

@@ -93,7 +93,7 @@ interface ConfigProvider {
 }
 ```
 
-The default is `createInlineConfigProvider()`, which reads `src`, `poster`, `title`, `preload` attributes plus the `data-config` JSON attribute. JSON wins on merge.
+The default is `createInlineConfigProvider()`, which reads `src`, `poster`, `title`, `preload` attributes plus the `data-config` JSON attribute. JSON wins on merge when the player starts; a later change to one of those attributes (during or after start) overrides the JSON value.
 
 Replace the default in a module that your entry file imports first:
 
