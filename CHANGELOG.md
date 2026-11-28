@@ -10,6 +10,7 @@ All notable changes to Playerstack will be documented in this file.
 
 ### Fixed
 
+- `config.hls` passes only number and boolean options to hls.js; string and object options are ignored. Options such as `abrEwmaDefaultEstimate`, `startLevel`, `capLevelToPlayerSize` and `maxBufferLength` work as before.
 - `sticky`: the close button is 44 px and stays clickable above overlays; top action bars and the intro card close button no longer sit under it; an inline size on `<player-stack>` no longer pushes the pinned player off screen (#24).
 
 ### Added

@@ -39,6 +39,33 @@ describe("config.hls", () => {
     expect(media.config).toEqual(hls);
   });
 
+  it("passes only number and boolean options, never code or URL options", async () => {
+    const { media, initial } = await mount("https://example.com/v.m3u8", "hls-video", {
+      hls: {
+        startLevel: 2,
+        capLevelToPlayerSize: true,
+        workerPath: "/uploads/avatar.js",
+        drmSystems: { "com.widevine.alpha": { licenseUrl: "https://attacker.test/l" } },
+        debug: "yes",
+        maxBufferLength: Number.MAX_VALUE,
+      },
+    });
+    const expected = {
+      startLevel: 2,
+      capLevelToPlayerSize: true,
+      maxBufferLength: Number.MAX_VALUE,
+    };
+    expect(initial()).toEqual(expected);
+    expect(media.config).toEqual(expected);
+  });
+
+  it("drops string entries from a config.hls that is not a plain object", async () => {
+    const { media } = await mount("https://example.com/v.m3u8", "hls-video", {
+      hls: ["workerPath", "/uploads/avatar.js"],
+    });
+    expect(media.config).toEqual({});
+  });
+
   it("leaves the provider default when unset", async () => {
     const { media } = await mount("https://example.com/v.m3u8", "hls-video", {});
     expect(media.config).toBeUndefined();

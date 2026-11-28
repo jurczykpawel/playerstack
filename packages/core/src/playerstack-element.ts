@@ -222,7 +222,14 @@ export class PlayerstackElement extends HTMLElement {
 
     const mediaEl = document.createElement(tag);
     // Must be set before the first source load, when hls.js is constructed.
-    if (tag === "hls-video") (mediaEl as HTMLElement & { config?: unknown }).config = config.hls;
+    // Only number and boolean hls.js options: string and object options can
+    // load code (`workerPath` starts a Web Worker), and data-config may come
+    // from someone who must not run scripts on the page.
+    if (tag === "hls-video" && config.hls) {
+      (mediaEl as HTMLElement & { config?: unknown }).config = Object.fromEntries(
+        Object.entries(config.hls).filter(([, v]) => typeof v == "boolean" || Number.isFinite(v)),
+      );
+    }
     mediaEl.slot = "media";
     mediaEl.setAttribute("playsinline", "");
     // Do NOT default `crossorigin` — when set, the browser refuses to load any
