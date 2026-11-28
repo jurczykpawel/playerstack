@@ -61,6 +61,25 @@ describe("stickyPlugin", () => {
     expect(stickyPlugin.name).toBe("sticky");
   });
 
+  it("styles only the player element, not overlay content that reuses its class", async () => {
+    const ctx = makeContext({ sticky: { enabled: true } });
+    await stickyPlugin.init(ctx);
+    const link = document.createElement("a");
+    link.className = "playerstack-sticky playerstack-sticky-close";
+    link.setAttribute("data-playerstack-sticky-position", "top-left");
+    const overlay = document.createElement("div");
+    overlay.appendChild(link);
+    ctx.container.appendChild(overlay);
+    ctx.container.classList.add("playerstack-sticky");
+    ctx.container.setAttribute("data-playerstack-sticky-position", "top-left");
+    const sheet = document.querySelector<HTMLStyleElement>("#playerstack-sticky-styles")!.sheet!;
+    const selectors = [...sheet.cssRules].flatMap((rule) =>
+      rule instanceof CSSStyleRule ? [rule.selectorText] : [],
+    );
+    expect(selectors.some((selector) => ctx.container.matches(selector))).toBe(true);
+    expect(selectors.filter((selector) => link.matches(selector))).toEqual([]);
+  });
+
   it("does nothing when not enabled", async () => {
     const ctx = makeContext();
     await stickyPlugin.init(ctx);

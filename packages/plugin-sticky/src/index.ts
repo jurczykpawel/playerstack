@@ -24,6 +24,12 @@ interface State {
 const states = new WeakMap<PlayerstackContext, State>();
 
 const STICKY_CLASS = "playerstack-sticky";
+/**
+ * Rules select the player element itself: overlay HTML from config may reuse
+ * these class names and must stay inside the player. `:where()` keeps the
+ * specificity of a bare class, so documented overrides still win.
+ */
+const ROOT = `:where(player-stack).${STICKY_CLASS}`;
 const OFFSET_VAR = "--playerstack-sticky-offset";
 const EDGE = `var(${OFFSET_VAR}, 16px)`;
 /** Below this viewport width the pinned player spans the screen: a corner box would be under 240 px. */
@@ -33,7 +39,7 @@ const TALL_OVERLAYS = ".playerstack-cta, .playerstack-email-gate, .playerstack-i
 
 function cornerRule(position: (typeof POSITIONS)[number]): string {
   const [vertical, horizontal] = position.split("-");
-  return `.${STICKY_CLASS}[data-playerstack-sticky-position="${position}"] {
+  return `${ROOT}[data-playerstack-sticky-position="${position}"] {
   top: auto;
   right: auto;
   bottom: auto;
@@ -49,7 +55,7 @@ function ensureStyles(): void {
   const style = document.createElement("style");
   style.id = "playerstack-sticky-styles";
   style.textContent = `
-.${STICKY_CLASS} {
+${ROOT} {
   position: fixed !important;
   bottom: ${EDGE};
   right: ${EDGE};
@@ -64,13 +70,13 @@ function ensureStyles(): void {
   border-radius: 8px;
   overflow: hidden;
 }
-.${STICKY_CLASS} media-controller {
+${ROOT} media-controller {
   position: absolute !important;
   inset: 0;
   width: 100% !important;
   height: 100% !important;
 }
-.playerstack-sticky-close {
+:where(player-stack) > .playerstack-sticky-close {
   position: absolute;
   top: 0;
   right: 0;
@@ -88,15 +94,15 @@ function ensureStyles(): void {
   align-items: center;
   justify-content: center;
 }
-.${STICKY_CLASS} > .playerstack-action-bar {
+${ROOT} > .playerstack-action-bar {
   margin-top: 40px;
 }
-.${STICKY_CLASS} > .playerstack-intro-card > .playerstack-intro-card-close {
+${ROOT} > .playerstack-intro-card > .playerstack-intro-card-close {
   right: 52px !important;
 }
 ${POSITIONS.slice(1).map(cornerRule).join("\n")}
 @media ${NARROW} {
-  .${STICKY_CLASS}.${STICKY_CLASS} {
+  ${ROOT}.${STICKY_CLASS} {
     top: auto;
     left: calc(8px + env(safe-area-inset-left, 0px));
     right: calc(8px + env(safe-area-inset-right, 0px));
@@ -108,7 +114,7 @@ ${POSITIONS.slice(1).map(cornerRule).join("\n")}
     min-height: 0 !important;
   }
 }
-.${STICKY_CLASS}.${STICKY_CLASS}:has(> :is(${TALL_OVERLAYS})) {
+${ROOT}.${STICKY_CLASS}:has(> :is(${TALL_OVERLAYS})) {
   aspect-ratio: auto;
   height: min(60vh, 420px) !important;
   height: min(60dvh, 420px) !important;
