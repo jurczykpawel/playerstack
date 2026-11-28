@@ -12,6 +12,8 @@ All notable changes to Playerstack will be documented in this file.
 
 ### Fixed
 
+- Wistia `fast.wistia.com/embed/medias/ID` and `/embed/iframe/ID` URLs now play: the player was handed `medias/ID` as the media id (#36).
+
 - `config.hls` passes only number and boolean options to hls.js; string and object options are ignored. Options such as `abrEwmaDefaultEstimate`, `startLevel`, `capLevelToPlayerSize` and `maxBufferLength` work as before.
 - `custom-css`: `trustedCss` that could style elements outside its player is dropped: `&` inside a pseudo-class, a sibling combinator after the player, an unclosed string or comment, and at-rules other than `@media`, `@supports`, `@container`, `@layer` and `@keyframes`.
 - `sticky`: the pinned-player styles apply only to the `<player-stack>` element, so overlay HTML that reuses the `playerstack-sticky` class stays inside the player. Specificity is unchanged.

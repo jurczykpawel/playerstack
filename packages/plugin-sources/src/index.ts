@@ -31,6 +31,12 @@ export const sourcesPlugin: PlayerstackPlugin = {
       );
     }
 
+    // <wistia-video> takes everything after `/medias/` or `/embed/` as the id, so
+    // `/embed/medias/ID` and `/embed/iframe/ID` need the canonical form (#36).
+    // branded-thumb reads ctx.config.src on click, so rewrite it there.
+    if (resolved.type === "wistia")
+      ctx.config.src = "https://fast.wistia.com/medias/" + resolved.id;
+
     const brandedThumb = (ctx.config as { brandedThumb?: { clickToLoad?: boolean } }).brandedThumb;
     if (brandedThumb?.clickToLoad) {
       // branded-thumb plugin will set `src` after the user clicks the overlay.
