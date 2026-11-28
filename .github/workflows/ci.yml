@@ -9,14 +9,15 @@ on:
   schedule:
     - cron: "17 8 * * 1"
 
+permissions:
+  contents: read
+
 jobs:
   # Dependabot alerts read the package.json files only; this reads bun.lock,
   # including transitive dependencies.
   audit:
     name: Audit
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -101,25 +102,45 @@ jobs:
     needs: test
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    # One deploy at a time, none interrupted or dropped from the queue. A run that
+    # is no longer the tip of main deploys nothing, so an older build cannot
+    # replace a newer one.
     concurrency:
       group: deploy-pages
-      cancel-in-progress: true
-    permissions:
-      contents: read
-      deployments: write
+      cancel-in-progress: false
+      queue: max
     steps:
+      - name: Check that this commit is still the tip of main
+        id: tip
+        run: |
+          tip=$(git ls-remote "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY" refs/heads/main | cut -f1)
+          if [ -z "$tip" ]; then
+            echo "::error::Cannot read the tip of main"
+            exit 1
+          fi
+          if [ "$tip" = "$GITHUB_SHA" ]; then
+            echo "current=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "::notice::Not deploying $GITHUB_SHA, main is at $tip"
+          fi
+
       - name: Download docs dist
+        if: steps.tip.outputs.current == 'true'
         uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
         with:
           name: docs-dist
           path: apps/docs/dist
 
       - name: Deploy to Cloudflare Pages
+        if: steps.tip.outputs.current == 'true'
         uses: cloudflare/wrangler-action@953926a2e2182532811c01a25e53647d93bf07c0 # v4
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          # Dependabot does not update this input; raise it with the action.
+          wranglerVersion: "4.162.0"
           command: pages deploy apps/docs/dist --project-name=playerstack --branch=main
 
       - name: Smoke test
+        if: steps.tip.outputs.current == 'true'
         run: curl -sf https://playerstack.techskills.academy/ -o /dev/null
