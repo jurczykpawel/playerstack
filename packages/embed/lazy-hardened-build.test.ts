@@ -51,8 +51,11 @@ it("ships hardened separately and keeps the open email configuration within its 
   // to the next 100 B.
   // 2026-11-28, overlay HTML drops data-* and playerstack* classes (cta-end unchanged at 2,915 B,
   // +1 B main from the chunk hash; Bun 1.4.5, same method): 52,283 B / 48,510 B, limits unchanged.
-  expect(sizes.reduce((sum, size) => sum + size, 0)).toBeLessThanOrEqual(52300);
-  expect(sizes.slice(0, -1).reduce((sum, size) => sum + size, 0)).toBeLessThanOrEqual(48600);
+  // 2026-11-28, click-to-load waits for a click when branded-thumb cannot load, a src change before
+  // the click rebuilds the player, data-provider-base only from the executing script (+132 B in
+  // playerstack.min.js, Bun 1.4.5, same method): 52,388 B / 48,615 B, limits rounded up to 100 B.
+  expect(sizes.reduce((sum, size) => sum + size, 0)).toBeLessThanOrEqual(52400);
+  expect(sizes.slice(0, -1).reduce((sum, size) => sum + size, 0)).toBeLessThanOrEqual(48700);
   // The card modes behind ctaEnd.at/atPercent/frequency ship separately.
   const timed = "playerstack-cta-end-timed.js";
   expect(sources(timed).some((source) => source.endsWith("timed.ts"))).toBe(true);

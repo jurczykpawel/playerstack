@@ -20,6 +20,14 @@ afterEach(() => {
 });
 
 describe("resolveScriptBase", () => {
+  // A detached document: happy-dom fetches no scripts there, so real JS types can be used.
+  function page(html: string): Document {
+    const doc = document.implementation.createHTMLDocument("");
+    doc.head.innerHTML = html;
+    return doc;
+  }
+  const CDN = "https://cdn.example.com/assets/v2/playerstack.min.js";
+
   it("uses the directory of the currently executing playerstack script", () => {
     const script = document.createElement("script");
     script.src = "https://cdn.example.com/assets/v2/playerstack.min.js?x=1";
@@ -27,11 +35,10 @@ describe("resolveScriptBase", () => {
   });
 
   it("falls back to the last playerstack <script> on the page when currentScript is null", () => {
-    // Non-JS type keeps happy-dom from trying (and failing) to fetch them.
-    document.head.innerHTML = `
-      <script type="text/x-test" src="https://other.example.com/analytics.js"></script>
-      <script type="text/x-test" src="https://playerstack.techskills.academy/playerstack.min.js"></script>`;
-    expect(resolveScriptBase(null, document)).toBe("https://playerstack.techskills.academy/");
+    const doc = page(`
+      <script src="https://other.example.com/analytics.js"></script>
+      <script src="https://playerstack.techskills.academy/playerstack.min.js"></script>`);
+    expect(resolveScriptBase(null, doc)).toBe("https://playerstack.techskills.academy/");
   });
 
   it("prefers data-provider-base on the executing script (renamed copy)", () => {
@@ -40,12 +47,46 @@ describe("resolveScriptBase", () => {
     expect(resolveScriptBase(script, document)).toBe("https://cdn.example.com/playerstack/");
   });
 
-  it("reads data-provider-base from any <script> when currentScript is null (module, inlined)", () => {
-    document.head.innerHTML = `
-      <script type="text/x-test" src="https://playerstack.techskills.academy/playerstack.min.js"></script>
-      <script type="text/x-test" data-provider-base="/static/ps"></script>`;
+  it("reads data-provider-base from any JavaScript <script> when currentScript is null (module)", () => {
+    const doc = page(`
+      <script src="https://playerstack.techskills.academy/playerstack.min.js"></script>
+      <script data-provider-base="/static/ps"></script>`);
     // Relative values resolve against the page; a missing trailing slash is added.
-    expect(resolveScriptBase(null, document)).toBe(new URL("/static/ps/", document.baseURI).href);
+    expect(resolveScriptBase(null, doc)).toBe(new URL("/static/ps/", doc.baseURI).href);
+  });
+
+  it("ignores data-provider-base on other elements while the executing script has a src", () => {
+    const doc = page(`
+      <script src="${CDN}"></script>
+      <script type="text/plain" data-provider-base="https://attacker.test/"></script>
+      <script data-provider-base="https://attacker.test/js/"></script>`);
+    const current = doc.querySelector("script")!;
+    expect(resolveScriptBase(current, doc)).toBe("https://cdn.example.com/assets/v2/");
+  });
+
+  it("reads data-provider-base from another JavaScript <script> for an inlined copy", () => {
+    const doc = page(`
+      <script id="inline">/* inlined bundle */</script>
+      <script type="text/plain" data-provider-base="https://attacker.test/"></script>
+      <script data-provider-base="https://cdn.example.com/ps/"></script>`);
+    expect(resolveScriptBase(doc.querySelector("#inline"), doc)).toBe(
+      "https://cdn.example.com/ps/",
+    );
+  });
+
+  it("does not take data-provider-base from inert or SVG scripts when currentScript is null", () => {
+    const doc = page(`
+      <script type="application/ld+json" data-provider-base="https://attacker.test/a/"></script>
+      <script type="text/plain" data-provider-base="https://attacker.test/b/"></script>`);
+    doc.body.innerHTML = `<svg><script data-provider-base="https://attacker.test/c/"></script></svg>`;
+    expect(resolveScriptBase(null, doc)).toBe(new URL("./", doc.baseURI).href);
+  });
+
+  it("does not take the playerstack fallback from an inert script", () => {
+    const doc = page(`
+      <script src="https://playerstack.techskills.academy/playerstack.min.js"></script>
+      <script type="text/plain" src="https://attacker.test/playerstack.js"></script>`);
+    expect(resolveScriptBase(null, doc)).toBe("https://playerstack.techskills.academy/");
   });
 
   it("falls back to the document base when no playerstack <script> is found", () => {

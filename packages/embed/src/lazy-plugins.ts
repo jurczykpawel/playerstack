@@ -68,7 +68,16 @@ export function createLazyPlugins(
         const thumb = ctx.config.brandedThumb as
           { enabled?: boolean; clickToLoad?: boolean } | undefined;
         if (thumb?.enabled && thumb.clickToLoad && !loaded.get("branded-thumb")) {
-          ctx.mediaPlayer.setAttribute("src", ctx.config.src);
+          // No thumbnail: still wait for the visitor's click before the video
+          // provider is contacted. Any click on the player loads and plays it.
+          ctx.container.addEventListener(
+            "click",
+            () => {
+              ctx.mediaPlayer.setAttribute("src", ctx.config.src);
+              (ctx.mediaPlayer as HTMLMediaElement).play?.()?.catch(() => {});
+            },
+            { once: true },
+          );
         }
       },
       destroy(ctx) {

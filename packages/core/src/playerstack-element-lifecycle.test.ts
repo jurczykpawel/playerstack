@@ -288,6 +288,39 @@ describe("click-to-load does not wait for the provider", () => {
     expect(el.querySelector("wistia-video")!.hasAttribute("src")).toBe(false);
   });
 
+  it("keeps a new src behind the thumbnail when it changes before the click", async () => {
+    const seen: string[] = [];
+    setPluginsForElement([{ name: "seen", init: (ctx) => void seen.push(ctx.config.src) }]);
+    document.body.innerHTML = `<player-stack src="https://example.com/a.mp4" ${CLICK_TO_LOAD}></player-stack>`;
+    const el = document.querySelector("player-stack")!;
+    await vi.waitFor(() =>
+      expect((el.querySelector("media-controller") as HTMLElement | null)?.style.visibility).toBe(
+        "",
+      ),
+    );
+    el.setAttribute("src", "https://example.com/b.mp4");
+    await vi.waitFor(() =>
+      expect(seen).toEqual(["https://example.com/a.mp4", "https://example.com/b.mp4"]),
+    );
+    await flush();
+    expect(el.querySelectorAll("media-controller")).toHaveLength(1);
+    expect(el.querySelector("video")!.hasAttribute("src")).toBe(false);
+  });
+
+  it("forwards a src change once the visitor has started the video", async () => {
+    document.body.innerHTML = `<player-stack src="https://example.com/a.mp4" ${CLICK_TO_LOAD}></player-stack>`;
+    const el = document.querySelector("player-stack")!;
+    await vi.waitFor(() =>
+      expect((el.querySelector("media-controller") as HTMLElement | null)?.style.visibility).toBe(
+        "",
+      ),
+    );
+    const video = el.querySelector("video")!;
+    video.setAttribute("src", "https://example.com/a.mp4"); // what the thumbnail click does
+    el.setAttribute("src", "https://example.com/b.mp4");
+    expect(video.getAttribute("src")).toBe("https://example.com/b.mp4");
+  });
+
   it("removes the player and reports playerstack:error when the provider fails", async () => {
     const { gate } = pausedImporter();
     const plugin = recordingPlugin();
