@@ -3,7 +3,7 @@
 Two-tier styling for `<player-stack>`:
 
 1. **`tokens`** — validated CSS custom properties (`--ps-*`) applied as inline style. The right surface for theming driven by a CMS, a SaaS dashboard, or any config string you didn't author yourself.
-2. **`trustedCss`** — raw CSS, auto-scoped to the player instance. Requires an explicit `acknowledgeTrusted: true`, and is intended for stylesheets you author in your own codebase.
+2. **`trustedCss`** — raw CSS, auto-scoped to the player instance. Requires an explicit `acknowledgeTrusted: true` and the site owner's consent (`data-allow-trusted-css` on the PlayerStack `<script>` tag, or `createCustomCssPlugin({ allowTrustedCss: true })` in your own bundle), and is intended for stylesheets you author in your own codebase.
 
 Part of [Playerstack](https://github.com/jurczykpawel/playerstack). The standalone [`playerstack`](https://playerstack.techskills.academy/playerstack.min.js) bundle includes this plugin by default — use this package directly only if you're using `@playerstack/core` and composing your own bundle.
 
@@ -61,7 +61,24 @@ Tokens are applied as inline `style="--ps-…: …"` properties on the `<player-
 ></player-stack>
 ```
 
-Raw CSS is auto-scoped to this player instance via CSS Nesting. Use `&` to target descendants. Without `acknowledgeTrusted: true` the raw CSS is dropped and a console warning is logged.
+The page must allow raw CSS, because `data-config` may be written by people who cannot add scripts:
+
+```html
+<script
+  src="https://playerstack.techskills.academy/playerstack.min.js"
+  data-allow-trusted-css
+  defer
+></script>
+```
+
+```ts
+import { Playerstack } from "@playerstack/core";
+import { createCustomCssPlugin } from "@playerstack/plugin-custom-css";
+
+Playerstack.use(createCustomCssPlugin({ allowTrustedCss: true }));
+```
+
+Raw CSS is auto-scoped to this player instance via CSS Nesting. Use `&` to target descendants. Without `acknowledgeTrusted: true` or the consent above, the raw CSS is dropped and a console warning is logged. CSS containing a backslash is always rejected.
 
 Don't assemble `trustedCss` from CMS values, end-user input, or third-party API responses — wire those through `tokens` instead.
 
@@ -73,7 +90,7 @@ Don't assemble `trustedCss` from CMS values, end-user input, or third-party API 
 | -------------------- | ------------------------ | ------- | ---------------------------------------------------------------------------------------------------------------------------------- |
 | `enabled`            | `boolean`                | `false` | Plugin is a no-op unless `true`                                                                                                    |
 | `tokens`             | `Record<string, string>` | `{}`    | CSS custom properties. Keys must be `--ps-*`. Values are validated; entries that don't pass are silently dropped.                  |
-| `trustedCss`         | `string`                 | —       | Raw CSS, scoped to this player instance via CSS Nesting. Requires `acknowledgeTrusted: true`.                                      |
+| `trustedCss`         | `string`                 | —       | Raw CSS, scoped to this player instance via CSS Nesting. Requires `acknowledgeTrusted: true` and owner consent.                    |
 | `acknowledgeTrusted` | `boolean`                | `false` | Required to apply `trustedCss`. The verbose name is intentional.                                                                   |
 | `css`                | `string`                 | —       | _Deprecated._ Same shape as `trustedCss` but logs a warning. Still gated on `acknowledgeTrusted: true`. Removed in a future major. |
 

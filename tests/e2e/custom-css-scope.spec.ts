@@ -5,7 +5,11 @@ import { DIST, ORIGIN, SCRIPT, observeStandalone } from "./standalone-helpers";
 
 observeStandalone();
 
-async function openWithTrustedCss(page: Page, trustedCss: string): Promise<void> {
+async function openWithTrustedCss(
+  page: Page,
+  trustedCss: string,
+  scriptAttrs = "data-allow-trusted-css",
+): Promise<void> {
   const config = { customCss: { enabled: true, acknowledgeTrusted: true, trustedCss } };
   await page.route(`${ORIGIN}/**`, (route) => {
     const path = new URL(route.request().url()).pathname;
@@ -16,7 +20,7 @@ async function openWithTrustedCss(page: Page, trustedCss: string): Promise<void>
           <h1 id="outside">Host heading</h1>
           <player-stack src="${ORIGIN}/v.mp4" data-config='${JSON.stringify(config).replace(/'/g, "&#39;")}' style="display:block;width:640px;height:360px"></player-stack>
           <p id="after">Host paragraph</p>
-          <script src="${SCRIPT}"></script>
+          <script src="${SCRIPT}" ${scriptAttrs}></script>
         </body></html>`,
       });
     }
@@ -36,6 +40,15 @@ const visibility = (page: Page, selector: string) =>
 test("trusted CSS styles the player but cannot reach the rest of the page", async ({ page }) => {
   await openWithTrustedCss(page, "& media-controller { visibility: hidden }");
   await expect.poll(() => visibility(page, "player-stack media-controller")).toBe("hidden");
+});
+
+test("trusted CSS from data-config is ignored unless the script tag allows it", async ({
+  page,
+}) => {
+  await openWithTrustedCss(page, "& media-controller { visibility: hidden }", "");
+  await expect(page.locator("player-stack media-controller")).toBeAttached();
+  await expect(page.locator('style[data-playerstack="custom-css"]')).toHaveCount(0);
+  expect(await visibility(page, "player-stack media-controller")).toBe("visible");
 });
 
 for (const [name, css] of [

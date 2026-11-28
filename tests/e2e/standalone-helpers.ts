@@ -47,6 +47,7 @@ export async function openEmbed(
   src: string,
   config?: Record<string, unknown>,
   beforeFile?: (file: string) => Promise<boolean>,
+  scriptAttrs = "",
 ): Promise<string[]> {
   const fetched: string[] = [];
   page.on("request", (req: Request) => {
@@ -64,7 +65,7 @@ export async function openEmbed(
       contentType: "text/html",
       body: `<!doctype html><html><head><meta charset="utf-8"></head><body>
         <player-stack src="${src}" ${config ? `data-config='${JSON.stringify(config).replace(/'/g, "&#39;")}'` : ""} style="display:block;width:640px;height:360px"></player-stack>
-        <script src="${SCRIPT}"></script>
+        <script src="${SCRIPT}" ${scriptAttrs}></script>
       </body></html>`,
     }),
   );

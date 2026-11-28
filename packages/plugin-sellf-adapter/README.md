@@ -91,10 +91,19 @@ By default the adapter applies an allowlist to the API response and drops any fi
 
 The following fields are omitted by default:
 
-- `customCss.trustedCss`, `customCss.css`, `customCss.acknowledgeTrusted` — raw CSS belongs in your codebase
+- `customCss.trustedCss`, `customCss.css`, `customCss.acknowledgeTrusted` — kept only with `allowTrustedCss: true` (below)
 - `actionBar.html`, `ctaEnd.html`, `introCard.html` — raw HTML belongs in your codebase
 - `analytics.endpoint` — requires `trustedOrigins` or `SellfAdapterOptions.endpoints.analytics`
 - `emailGate.webhookUrl`, `emailGate.challengeUrl` — require `trustedOrigins` or `SellfAdapterOptions.endpoints.emailGate`
+
+`allowTrustedCss: true` keeps `customCss.trustedCss` from the Sellf response and marks it acknowledged, for integrators who trust their Sellf server to send raw CSS. The page must still allow raw CSS: `data-allow-trusted-css` on the PlayerStack `<script>` tag, or `createCustomCssPlugin({ allowTrustedCss: true })`.
+
+```ts
+createSellfConfigProvider({
+  baseUrl: "https://sellf.example",
+  allowTrustedCss: true,
+});
+```
 
 Legacy passthrough for tests and internal dashboards only (`trustRemote` is deprecated; prefer `trustedOrigins`):
 

@@ -154,7 +154,8 @@ import { demoCredit } from "../content/landing";
 
   <!-- Media Chrome ships its own UI as Web Components (shadow DOM); no external CSS needed. -->
   <!-- Bundle hosted with the docs (apps/docs/public/playerstack.min.js) -->
-  <script src="/playerstack.min.js" is:inline></script>
+  <!-- data-allow-trusted-css: the presets below use customCss.trustedCss -->
+  <script src="/playerstack.min.js" data-allow-trusted-css is:inline></script>
   <script>
     function readForm() {
       return {
@@ -209,7 +210,8 @@ import { demoCredit } from "../content/landing";
           cfgJson !== "{}" ? `data-config='${cfgJson}'` : "",
         ].filter(Boolean).join("\n  ");
 
-        snippet.textContent = '<script src="https://playerstack.techskills.academy/playerstack.min.js" defer><' + '/script>\n\n<player-stack\n  ' + attrs + '>\n</player-stack>';
+        const consent = (cfg.customCss as { trustedCss?: string } | undefined)?.trustedCss ? " data-allow-trusted-css" : "";
+        snippet.textContent = '<script src="https://playerstack.techskills.academy/playerstack.min.js"' + consent + ' defer><' + '/script>\n\n<player-stack\n  ' + attrs + '>\n</player-stack>';
       }
     }
 

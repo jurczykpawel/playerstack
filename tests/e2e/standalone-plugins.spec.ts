@@ -32,27 +32,33 @@ test("foundation configuration loads its four plugins, defers MP4, and supports 
 }) => {
   const errors: string[] = [];
   page.on("pageerror", (err) => errors.push(err.message));
-  const fetched = await openEmbed(page, SOURCES.mp4, {
-    controls: { accent: "#008AFF" },
-    brandedThumb: {
-      enabled: true,
-      clickToLoad: true,
-      playButtonStyle: "circle",
-      playLabel: "Odtwórz film zapraszający",
+  const fetched = await openEmbed(
+    page,
+    SOURCES.mp4,
+    {
+      controls: { accent: "#008AFF" },
+      brandedThumb: {
+        enabled: true,
+        clickToLoad: true,
+        playButtonStyle: "circle",
+        playLabel: "Odtwórz film zapraszający",
+      },
+      customCss: {
+        enabled: true,
+        acknowledgeTrusted: true,
+        trustedCss: ".playerstack-cta { background: rgba(0, 39, 83, 0.94) !important; }",
+      },
+      ctaEnd: {
+        enabled: true,
+        title: "Webinar",
+        button: { label: "Zapisuję się na webinar", url: "https://example.com/webinar/#zapis" },
+        showReplay: true,
+        replayLabel: "Obejrzyj jeszcze raz",
+      },
     },
-    customCss: {
-      enabled: true,
-      acknowledgeTrusted: true,
-      trustedCss: ".playerstack-cta { background: rgba(0, 39, 83, 0.94) !important; }",
-    },
-    ctaEnd: {
-      enabled: true,
-      title: "Webinar",
-      button: { label: "Zapisuję się na webinar", url: "https://example.com/webinar/#zapis" },
-      showReplay: true,
-      replayLabel: "Obejrzyj jeszcze raz",
-    },
-  });
+    undefined,
+    "data-allow-trusted-css",
+  );
   const video = page.locator("player-stack video");
   const play = page.locator("button.playerstack-thumb-play");
   await expect(play).toBeVisible();

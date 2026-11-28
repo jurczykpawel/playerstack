@@ -101,6 +101,35 @@ describe("createSellfConfigProvider", () => {
     expect(cfg.customCss).toEqual({ enabled: true, tokens: { "--ps-accent": "#008aff" } });
   });
 
+  it("allowTrustedCss: true keeps customCss.trustedCss from the API response", async () => {
+    (globalThis.fetch as ReturnType<typeof vi.fn>).mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        src: "https://cdn.example.com/v.mp4",
+        customCss: {
+          enabled: true,
+          tokens: { "--ps-accent": "#008aff" },
+          trustedCss: "& video { filter: invert(1); }",
+          css: "border: 1px solid red;",
+          acknowledgeTrusted: false,
+        },
+      }),
+    });
+    const provider = createSellfConfigProvider({
+      baseUrl: "https://sellf.app",
+      allowTrustedCss: true,
+    });
+    const cfg = (await provider.load(
+      el(`<player-stack data-sellf-product="x"></player-stack>`),
+    )) as Record<string, unknown>;
+    expect(cfg.customCss).toEqual({
+      enabled: true,
+      tokens: { "--ps-accent": "#008aff" },
+      trustedCss: "& video { filter: invert(1); }",
+      acknowledgeTrusted: true,
+    });
+  });
+
   it("drops actionBar.html / ctaEnd.html / introCard.html from the API response", async () => {
     (globalThis.fetch as ReturnType<typeof vi.fn>).mockResolvedValue({
       ok: true,
