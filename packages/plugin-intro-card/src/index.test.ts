@@ -91,11 +91,11 @@ describe("introCardPlugin", () => {
     const ctx = makeContext({
       introCard: {
         enabled: true,
-        html: "<p data-test='custom'>Custom <em>marketing</em> copy</p>",
+        html: "<p class='custom'>Custom <em>marketing</em> copy</p>",
       },
     });
     await introCardPlugin.init(ctx);
-    const custom = ctx.container.querySelector("[data-test='custom']");
+    const custom = ctx.container.querySelector(".custom");
     expect(custom).not.toBeNull();
     expect(custom?.querySelector("em")?.textContent).toBe("marketing");
   });
