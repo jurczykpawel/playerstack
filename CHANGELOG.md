@@ -31,6 +31,7 @@ All notable changes to Playerstack will be documented in this file.
 - `sticky`: the pinned-player styles apply only to the `<player-stack>` element, so overlay HTML that reuses the `playerstack-sticky` class stays inside the player. Specificity is unchanged.
 - `sticky`: the close button is 44 px and stays clickable above overlays; top action bars and the intro card close button no longer sit under it; an inline size on `<player-stack>` no longer pushes the pinned player off screen (#24).
 - WordPress shortcode example: shortcode attributes can no longer add their own `data-config` keys; `accent` accepts only hex colors.
+- `branded-thumb`: removing or rebuilding a click-to-load player before the click no longer writes the held source to the media element, which made YouTube and Wistia load their API scripts without a click.
 
 ### Added
 

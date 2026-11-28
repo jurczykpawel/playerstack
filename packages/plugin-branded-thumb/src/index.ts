@@ -148,12 +148,9 @@ export const brandedThumbPlugin: PlayerstackPlugin = {
     states.set(ctx, { overlay, heldSrc, cleanup });
   },
   destroy(ctx: PlayerstackContext): void {
-    const state = states.get(ctx);
-    if (!state) return;
-    if (state.heldSrc !== null && !ctx.mediaPlayer.hasAttribute("src")) {
-      ctx.mediaPlayer.setAttribute("src", state.heldSrc);
-    }
-    state.cleanup();
+    // Never write the held src here: with clickToLoad only the visitor's click
+    // may contact the video provider, and teardown is not a click.
+    states.get(ctx)?.cleanup();
   },
 };
 

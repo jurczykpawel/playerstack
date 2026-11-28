@@ -317,14 +317,14 @@ describe("brandedThumbPlugin", () => {
     expect(playSpy).toHaveBeenCalledTimes(1);
   });
 
-  it("destroy removes overlay and restores src if it was held", async () => {
+  it("destroy removes the overlay but never writes the held src: teardown is not a click", async () => {
     const ctx = makeContext({
       brandedThumb: { enabled: true, clickToLoad: true },
     });
     await brandedThumbPlugin.init(ctx);
     brandedThumbPlugin.destroy?.(ctx);
     expect(ctx.container.querySelector(".playerstack-thumb")).toBeNull();
-    expect(ctx.mediaPlayer.getAttribute("src")).toBe("youtube/abc123");
+    expect(ctx.mediaPlayer.hasAttribute("src")).toBe(false);
   });
   it("uses playLabel as the play button's accessible name (default: Play video)", async () => {
     const ctx = makeContext({ brandedThumb: { enabled: true, playLabel: "Odtwórz film" } });
