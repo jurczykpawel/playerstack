@@ -31,6 +31,13 @@ export interface SellfAdapterOptions {
    * boundary (internal dashboard, integration tests). Default: `false`.
    */
   trustRemote?: boolean;
+  /**
+   * Keep `customCss.trustedCss` from the API response (the Sellf server is
+   * trusted to send raw CSS). The page must still allow raw CSS: the
+   * `data-allow-trusted-css` script attribute or `createCustomCssPlugin({ allowTrustedCss: true })`.
+   * Default: `false`.
+   */
+  allowTrustedCss?: boolean;
 }
 
 export function createSellfConfigProvider(opts: SellfAdapterOptions): ConfigProvider {
@@ -58,6 +65,7 @@ export function createSellfConfigProvider(opts: SellfAdapterOptions): ConfigProv
       const remote: Partial<PlayerstackConfig> = opts.trustRemote
         ? (raw as Partial<PlayerstackConfig>)
         : normalizeRemoteConfig(raw, trustedOrigins);
+      if (opts.allowTrustedCss) keepTrustedCss(raw, remote);
 
       // Adapter-supplied endpoints always win over anything remote sent.
       const withEndpoints = applyEndpoints(remote, opts.endpoints);
@@ -73,6 +81,12 @@ export function createSellfConfigProvider(opts: SellfAdapterOptions): ConfigProv
       return merged as PlayerstackConfig;
     },
   };
+}
+
+function keepTrustedCss(raw: unknown, remote: Partial<PlayerstackConfig>): void {
+  const css = (raw as { customCss?: { trustedCss?: unknown } } | null)?.customCss?.trustedCss;
+  if (typeof css !== "string" || !remote.customCss) return;
+  remote.customCss = { ...(remote.customCss as object), trustedCss: css, acknowledgeTrusted: true };
 }
 
 function readInlineAttrs(element: HTMLElement): Partial<PlayerstackConfig> {

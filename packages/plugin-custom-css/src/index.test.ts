@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { customCssPlugin } from "./index";
+import { createCustomCssPlugin, customCssPlugin } from "./index";
 import { createEventBus } from "@playerstack/core";
 import type { PlayerstackContext, PlayerstackConfig } from "@playerstack/core";
 
@@ -18,9 +18,73 @@ function makeContext(extra: Partial<PlayerstackConfig> = {}): PlayerstackContext
   } as PlayerstackContext;
 }
 
+// Most tests stand for a site owner who allowed raw CSS on the script tag.
+let consent: HTMLScriptElement;
+beforeEach(() => {
+  consent = document.createElement("script");
+  consent.setAttribute("data-allow-trusted-css", "");
+  document.head.appendChild(consent);
+});
+
 afterEach(() => {
   document.body.innerHTML = "";
+  consent.remove();
   document.head.querySelectorAll('style[data-playerstack="custom-css"]').forEach((s) => s.remove());
+});
+
+describe("owner consent for trustedCss", () => {
+  const trusted = { enabled: true, trustedCss: "border-radius: 4px;", acknowledgeTrusted: true };
+  const injected = () => document.head.querySelectorAll('style[data-playerstack="custom-css"]');
+
+  it("ignores trustedCss from config, with a warning, when no script tag allows it", async () => {
+    consent.remove();
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    await customCssPlugin.init(makeContext({ customCss: trusted }));
+    expect(injected()).toHaveLength(0);
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining("data-allow-trusted-css"));
+    warn.mockRestore();
+  });
+
+  it("ignores the deprecated css field without consent", async () => {
+    consent.remove();
+    vi.spyOn(console, "warn").mockImplementation(() => {});
+    await customCssPlugin.init(
+      makeContext({ customCss: { enabled: true, css: "color: red;", acknowledgeTrusted: true } }),
+    );
+    expect(injected()).toHaveLength(0);
+    vi.restoreAllMocks();
+  });
+
+  it("does not take consent from an element other than a script", async () => {
+    consent.remove();
+    vi.spyOn(console, "warn").mockImplementation(() => {});
+    const div = document.createElement("div");
+    div.setAttribute("data-allow-trusted-css", "");
+    document.body.appendChild(div);
+    await customCssPlugin.init(makeContext({ customCss: trusted }));
+    expect(injected()).toHaveLength(0);
+    vi.restoreAllMocks();
+  });
+
+  it("applies trustedCss when a script tag carries data-allow-trusted-css", async () => {
+    await customCssPlugin.init(makeContext({ customCss: trusted }));
+    expect(injected()).toHaveLength(1);
+  });
+
+  it("applies trustedCss without the script attribute when created with allowTrustedCss", async () => {
+    consent.remove();
+    await createCustomCssPlugin({ allowTrustedCss: true }).init(
+      makeContext({ customCss: trusted }),
+    );
+    expect(injected()).toHaveLength(1);
+  });
+
+  it("keeps tokens working without consent", async () => {
+    consent.remove();
+    const ctx = makeContext({ customCss: { enabled: true, tokens: { "--ps-accent": "#ff0" } } });
+    await customCssPlugin.init(ctx);
+    expect(ctx.container.style.getPropertyValue("--ps-accent")).toBe("#ff0");
+  });
 });
 
 describe("customCssPlugin", () => {

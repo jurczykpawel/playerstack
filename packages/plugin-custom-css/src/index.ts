@@ -14,9 +14,10 @@ export interface CustomCssConfig {
   tokens?: Record<string, string>;
   /**
    * Raw CSS, auto-scoped to this player instance via CSS Nesting. Treated
-   * as developer-authored code — requires `acknowledgeTrusted: true` to
-   * take effect; without the flag the value is ignored and a console
-   * warning is logged.
+   * as developer-authored code — requires `acknowledgeTrusted: true` and the
+   * site owner's consent (`data-allow-trusted-css` on the PlayerStack script
+   * tag, or `createCustomCssPlugin({ allowTrustedCss: true })`); otherwise the
+   * value is ignored and a console warning is logged.
    */
   trustedCss?: string;
   /** Required to apply `trustedCss`. The verbose name is intentional. */
@@ -41,30 +42,54 @@ interface State {
 
 const states = new WeakMap<PlayerstackContext, State>();
 
-export const customCssPlugin: PlayerstackPlugin = {
-  name: "custom-css",
-  init(ctx: PlayerstackContext): void {
-    const cfg = (ctx.config as { customCss?: CustomCssConfig }).customCss;
-    if (!cfg?.enabled) return;
+export interface CustomCssPluginOptions {
+  /**
+   * Allow `trustedCss` without the `data-allow-trusted-css` attribute on the
+   * script tag. For bundles that register the plugin in their own code.
+   */
+  allowTrustedCss?: boolean;
+}
 
-    const tokensApplied = applyTokens(ctx, cfg.tokens);
-    const { styleEl, ownsId } = applyTrustedCss(ctx, cfg);
+/**
+ * Raw CSS needs the site owner's consent, given outside data-config (which
+ * people without script access may write): an option in code, or the
+ * `data-allow-trusted-css` attribute on a `<script>` element of the page.
+ */
+function ownerAllowsTrustedCss(options: CustomCssPluginOptions): boolean {
+  if (options.allowTrustedCss) return true;
+  return [...document.querySelectorAll("script[data-allow-trusted-css]")].some(
+    (el) => el instanceof HTMLScriptElement,
+  );
+}
 
-    if (tokensApplied.length === 0 && !styleEl) return;
+export function createCustomCssPlugin(options: CustomCssPluginOptions = {}): PlayerstackPlugin {
+  return {
+    name: "custom-css",
+    init(ctx: PlayerstackContext): void {
+      const cfg = (ctx.config as { customCss?: CustomCssConfig }).customCss;
+      if (!cfg?.enabled) return;
 
-    states.set(ctx, { styleEl, ownsId, tokensApplied });
-  },
-  destroy(ctx: PlayerstackContext): void {
-    const state = states.get(ctx);
-    if (!state) return;
-    for (const name of state.tokensApplied) {
-      ctx.container.style.removeProperty(name);
-    }
-    state.styleEl?.remove();
-    if (state.ownsId) ctx.mediaPlayer.removeAttribute(PS_ID_ATTR);
-    states.delete(ctx);
-  },
-};
+      const tokensApplied = applyTokens(ctx, cfg.tokens);
+      const { styleEl, ownsId } = applyTrustedCss(ctx, cfg, options);
+
+      if (tokensApplied.length === 0 && !styleEl) return;
+
+      states.set(ctx, { styleEl, ownsId, tokensApplied });
+    },
+    destroy(ctx: PlayerstackContext): void {
+      const state = states.get(ctx);
+      if (!state) return;
+      for (const name of state.tokensApplied) {
+        ctx.container.style.removeProperty(name);
+      }
+      state.styleEl?.remove();
+      if (state.ownsId) ctx.mediaPlayer.removeAttribute(PS_ID_ATTR);
+      states.delete(ctx);
+    },
+  };
+}
+
+export const customCssPlugin: PlayerstackPlugin = createCustomCssPlugin();
 
 function applyTokens(
   ctx: PlayerstackContext,
@@ -80,7 +105,14 @@ function applyTokens(
 function applyTrustedCss(
   ctx: PlayerstackContext,
   cfg: CustomCssConfig,
+  options: CustomCssPluginOptions,
 ): { styleEl: HTMLStyleElement | null; ownsId: boolean } {
+  if ((cfg.trustedCss || cfg.css) && !ownerAllowsTrustedCss(options)) {
+    console.warn(
+      "[playerstack] customCss.trustedCss is ignored: add data-allow-trusted-css to the PlayerStack <script> tag (or create the plugin with allowTrustedCss) to allow raw CSS. Use `tokens` for config-driven theming.",
+    );
+    return { styleEl: null, ownsId: false };
+  }
   const rawSource = pickTrustedSource(cfg);
   if (!rawSource) return { styleEl: null, ownsId: false };
 

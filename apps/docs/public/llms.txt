@@ -29,7 +29,7 @@ The standalone script registers 15 plugins. focus-mode and sellf-adapter require
 - `@playerstack/plugin-analytics` — beacon / gtag forwarder; `watchTime: true` (optional `watchTimeInterval` seconds, default off) sends `watch_progress` with maxPosition, previousMaxPosition, watchedSeconds, watchedDelta, duration, percent
 - `@playerstack/plugin-yt-subscribe` — subscribe-on-YouTube bar
 - `@playerstack/plugin-watermark` — corner-pinned logo/text overlay; opt-in `moveInterval` (seconds, random spot above the control bar), `moveTransition` (`smooth`/`jump`), `reinsert`; `text` is shown as given (host supplies viewer data); a deterrent, not DRM
-- `@playerstack/plugin-custom-css` — arbitrary scoped CSS injection (Presto Pro parity)
+- `@playerstack/plugin-custom-css` — validated `--ps-*` tokens; raw CSS scoped to the player only when the PlayerStack script tag has `data-allow-trusted-css`
 - `@playerstack/plugin-intro-card` — pre-roll marketing splash (title, subtitle, badge, CTA, big play button)
 - `@playerstack/plugin-sellf-adapter` — load config from a Sellf product endpoint (custom build only)
 

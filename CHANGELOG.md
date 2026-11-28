@@ -4,6 +4,10 @@ All notable changes to Playerstack will be documented in this file.
 
 ## Unreleased
 
+### Breaking
+
+- `custom-css`: `trustedCss` (and the deprecated `css`) now also needs the site owner's consent, because `data-config` may be written by people who cannot add scripts. **Migration:** add `data-allow-trusted-css` to the PlayerStack `<script>` tag, for example `<script src=".../playerstack.min.js" data-allow-trusted-css defer>`; in your own bundle register `createCustomCssPlugin({ allowTrustedCss: true })`. `acknowledgeTrusted: true` is still required; `tokens` are unchanged. Without consent the CSS is ignored with a console warning.
+
 ### Changed
 
 - With `brandedThumb.clickToLoad`, the thumbnail no longer waits for the YouTube, Vimeo, HLS, Wistia or Twitch provider file: it shows at once and the provider downloads in parallel (thumbnail visible after a median 27 ms instead of 1,559 ms with a provider delayed by 1.5 s, Chromium).
@@ -28,6 +32,7 @@ All notable changes to Playerstack will be documented in this file.
 
 - `data-provider-base` on a `<script>` sets the directory of provider, plugin and feature files for a renamed, inlined, combined or `type="module"` copy of `playerstack.min.js` (WordPress cache and optimization plugins).
 
+- `sellf-adapter`: `allowTrustedCss: true` keeps `customCss.trustedCss` from the Sellf response (the page must still allow raw CSS).
 - `watermark.moveInterval` moves the watermark to a random spot inside the frame, above the control bar, every given number of seconds (`moveTransition` `smooth` or `jump`; reduced motion always jumps). `watermark.reinsert` puts a removed overlay back. All off by default; the Sellf adapter passes them through.
 
 - `ctaEnd.at` (`"start"` or seconds) and `ctaEnd.atPercent` show the CTA card at the start or during playback: the video pauses and a skip button (`skipLabel`, also `Escape`) resumes it. `ctaEnd.frequency` limits the card to once per playback or per session. These modes download `playerstack-cta-end-timed.js` on demand; self-hosted setups must ship it. New events `cta:show` and `cta:skip`, forwarded by analytics by default.
