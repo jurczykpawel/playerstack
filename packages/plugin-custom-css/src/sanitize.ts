@@ -96,8 +96,12 @@ function staysInScope(css: string): boolean {
 
     if (inString) {
       if (ch === "\n" || ch === "\r" || ch === "\f") return false;
-      if (ch === inString) inString = null;
-      prelude += ch;
+      // The prelude keeps only the quotes: a string is one token in CSS, so
+      // brackets or & inside it must not count as selector structure.
+      if (ch === inString) {
+        inString = null;
+        prelude += ch;
+      }
       continue;
     }
 
@@ -141,7 +145,8 @@ function isSafePrelude(prelude: string): boolean {
     else if (ch === "&" && parens > 0) return false;
   }
   let flat = text;
-  while (/\([^()]*\)|\[[^[\]]*\]/.test(flat)) flat = flat.replace(/\([^()]*\)|\[[^[\]]*\]/g, "");
+  // A group becomes one placeholder character, so it still separates `&` from `~`.
+  while (/\([^()]*\)|\[[^[\]]*\]/.test(flat)) flat = flat.replace(/\([^()]*\)|\[[^[\]]*\]/g, "_");
   return !flat.split(",").some((selector) => /^\s*[~+]|&[^\s>~+]*\s*[~+]/.test(selector));
 }
 
