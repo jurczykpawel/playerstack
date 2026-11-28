@@ -46,8 +46,11 @@ it("ships hardened separately and keeps the open email configuration within its 
   // 2026-11-28, canonical Wistia URLs (#36, +36 B in playerstack.min.js): 52,174 B / 48,400 B.
   // 2026-11-28, data-provider-base for renamed/inlined copies (+40 B in playerstack.min.js,
   // Bun 1.4.5, same method): 52,214 B / 48,440 B, limits rounded up to the next 100 B.
+  // 2026-11-28, click-to-load builds the thumbnail before the provider loads (+66 B in
+  // playerstack.min.js, Bun 1.4.5, same method): 52,280 B / 48,506 B, second limit rounded up
+  // to the next 100 B.
   expect(sizes.reduce((sum, size) => sum + size, 0)).toBeLessThanOrEqual(52300);
-  expect(sizes.slice(0, -1).reduce((sum, size) => sum + size, 0)).toBeLessThanOrEqual(48500);
+  expect(sizes.slice(0, -1).reduce((sum, size) => sum + size, 0)).toBeLessThanOrEqual(48600);
   // The card modes behind ctaEnd.at/atPercent/frequency ship separately.
   const timed = "playerstack-cta-end-timed.js";
   expect(sources(timed).some((source) => source.endsWith("timed.ts"))).toBe(true);

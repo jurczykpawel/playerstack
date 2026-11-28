@@ -49,6 +49,8 @@ When `clickToLoad: true`:
 2. The plugin mounts an overlay with the poster and play button
 3. On click, the plugin sets the `src` attribute (the inner element loads), calls `play()` synchronously to preserve the user-gesture for autoplay policy, removes the overlay, and emits `thumb:click`
 
+With the standalone script, the YouTube, Vimeo, HLS, Wistia or Twitch provider file downloads in parallel with the thumbnail instead of before it, so the poster and play button appear without waiting for it. A click before the provider arrives starts playback as soon as it loads. If the provider fails to load, the thumbnail is removed and the element dispatches `playerstack:error`.
+
 ## Events
 
 | Name          | Payload     | When                    |

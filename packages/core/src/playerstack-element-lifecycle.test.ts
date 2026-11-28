@@ -23,6 +23,7 @@ import type { PlayerstackPlugin } from "./plugins";
 definePlayerstackElement();
 
 afterEach(() => {
+  vi.restoreAllMocks();
   document.body.replaceChildren();
   setPluginsForElement([]);
   setConfigProviderForElement(createInlineConfigProvider());
@@ -243,5 +244,67 @@ describe("lifecycle while plugins initialize", () => {
     await flush();
     expect(el.querySelectorAll("media-controller")).toHaveLength(1);
     expect((el.querySelector("media-controller") as HTMLElement).style.visibility).toBe("");
+  });
+});
+
+describe("click-to-load does not wait for the provider", () => {
+  // No test in this file defines wistia-video, so its importer is always called.
+  function pausedImporter() {
+    const gate = deferred<void>();
+    const importer = vi.fn(() => gate.promise);
+    setProviderImporter(importer);
+    return { gate, importer };
+  }
+  const CLICK_TO_LOAD = `data-config='{"brandedThumb":{"enabled":true,"clickToLoad":true}}'`;
+
+  it("initializes plugins (the thumbnail) while the provider still downloads", async () => {
+    const { importer } = pausedImporter();
+    const plugin = recordingPlugin();
+    setPluginsForElement([plugin]);
+    document.body.innerHTML = `<player-stack src="https://home.wistia.com/medias/abc123xyz" ${CLICK_TO_LOAD}></player-stack>`;
+    const el = document.querySelector("player-stack")!;
+    await vi.waitFor(() => expect(plugin.inits).toHaveLength(1));
+    expect(importer).toHaveBeenCalledWith("wistia-video");
+    expect(el.querySelector("wistia-video")).not.toBeNull();
+    // Controls stay hidden until the provider can play.
+    expect((el.querySelector("media-controller") as HTMLElement).style.visibility).toBe("hidden");
+  });
+
+  it("shows the controls once the provider loads", async () => {
+    const { gate } = pausedImporter();
+    document.body.innerHTML = `<player-stack src="https://home.wistia.com/medias/ghi789xyz" ${CLICK_TO_LOAD}></player-stack>`;
+    const el = document.querySelector("player-stack")!;
+    await vi.waitFor(() => expect(el.querySelector("media-controller")).not.toBeNull());
+    // Pretend the provider defined its element without touching the shared registry.
+    const get = customElements.get.bind(customElements);
+    const defined = class extends HTMLElement {};
+    vi.spyOn(customElements, "get").mockImplementation((name) =>
+      name === "wistia-video" ? defined : get(name),
+    );
+    gate.resolve();
+    await vi.waitFor(() =>
+      expect((el.querySelector("media-controller") as HTMLElement).style.visibility).toBe(""),
+    );
+    expect(el.querySelector("wistia-video")!.hasAttribute("src")).toBe(false);
+  });
+
+  it("removes the player and reports playerstack:error when the provider fails", async () => {
+    const { gate } = pausedImporter();
+    const plugin = recordingPlugin();
+    setPluginsForElement([plugin]);
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    const errors: CustomEvent[] = [];
+    document.addEventListener("playerstack:error", (e) => errors.push(e as CustomEvent), {
+      once: true,
+    });
+    document.body.innerHTML = `<player-stack src="https://home.wistia.com/medias/def456xyz" ${CLICK_TO_LOAD}></player-stack>`;
+    const el = document.querySelector("player-stack")!;
+    await vi.waitFor(() => expect(plugin.inits).toHaveLength(1));
+    gate.reject(new Error("offline"));
+    await vi.waitFor(() => expect(errors).toHaveLength(1));
+    expect(errors[0]!.detail).toMatchObject({ reason: "provider-load" });
+    expect(el.querySelector("media-controller")).toBeNull();
+    expect(plugin.destroys).toBe(1);
+    vi.mocked(console.error).mockRestore();
   });
 });
