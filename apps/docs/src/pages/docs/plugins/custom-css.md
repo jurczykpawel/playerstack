@@ -61,7 +61,7 @@ Without `acknowledgeTrusted: true` the raw CSS is dropped and a console warning 
 
 ## How scoping works
 
-`trustedCss` is wrapped in `player-stack:has([data-ps-id="<unique-id>"]) { ... }` and injected as a `<style data-playerstack="custom-css">` in `<head>`. Each `<player-stack>` on the page gets its own scope, so styles never leak between instances.
+`trustedCss` is wrapped in `player-stack:has([data-ps-id="<unique-id>"]) { ... }` and injected as a `<style data-playerstack="custom-css">` in `<head>`. Each `<player-stack>` on the page gets its own scope, so styles never leak between instances. CSS that could style elements outside the player is dropped as a whole, with the same console warning as other rejected CSS: `&` inside a pseudo-class (`:not(&)`, `:is(&)`), a sibling combinator after the player (`& ~ p`, `& + div`, or a bare `~ p`), a string or comment left open, and at-rules other than `@media`, `@supports`, `@container`, `@layer` and `@keyframes`.
 
 The wrapper uses native CSS Nesting (browser baseline since 2023). Inside your CSS you can:
 

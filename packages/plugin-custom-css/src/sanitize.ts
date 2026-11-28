@@ -18,7 +18,7 @@ export function sanitizeCustomCss(css: string): string | null {
   if (lower.includes("url(")) return null;
   if (lower.includes("image-set(")) return null;
 
-  if (!hasBalancedBraces(trimmed)) return null;
+  if (!staysInScope(trimmed)) return null;
 
   return trimmed;
 }
@@ -67,15 +67,19 @@ export function validateTokens(
   return out;
 }
 
+const ALLOWED_AT_RULE = /^@(media|supports|container|layer|keyframes|-webkit-keyframes)\b/i;
+
 /**
- * Balanced-brace check that ignores `{`/`}` inside string literals and
- * `/* ... *​/` comments. Returns `false` when any prefix has more `}` than
- * `{`, or when the total counts diverge.
+ * Check that the CSS stays inside the scope wrapper: braces balance, strings
+ * and comments close (a CSS string also ends at a newline, which would let a
+ * later `}` close the wrapper), and every rule prelude is an allowed at-rule
+ * or a selector that cannot reach outside the player.
  */
-function hasBalancedBraces(css: string): boolean {
+function staysInScope(css: string): boolean {
   let depth = 0;
   let inString: '"' | "'" | null = null;
   let inComment = false;
+  let prelude = "";
   for (let i = 0; i < css.length; i++) {
     const ch = css[i];
     const next = css[i + 1];
@@ -89,11 +93,9 @@ function hasBalancedBraces(css: string): boolean {
     }
 
     if (inString) {
-      if (ch === "\\") {
-        i++;
-        continue;
-      }
+      if (ch === "\n" || ch === "\r" || ch === "\f") return false;
       if (ch === inString) inString = null;
+      prelude += ch;
       continue;
     }
 
@@ -102,19 +104,38 @@ function hasBalancedBraces(css: string): boolean {
       i++;
       continue;
     }
-    if (ch === '"' || ch === "'") {
-      inString = ch;
-      continue;
-    }
+    if (ch === '"' || ch === "'") inString = ch;
 
     if (ch === "{") {
+      if (!isSafePrelude(prelude)) return false;
       depth++;
-    } else if (ch === "}") {
-      depth--;
-      if (depth < 0) return false;
+      prelude = "";
+    } else if (ch === "}" || ch === ";") {
+      if (ch === "}" && --depth < 0) return false;
+      prelude = "";
+    } else {
+      prelude += ch;
     }
   }
-  return depth === 0;
+  return depth === 0 && !inString && !inComment;
+}
+
+/**
+ * Inside the wrapper `&` is the player. A selector reaches outside it when
+ * `&` sits inside a pseudo-class like `:not(&)`, or when the player is
+ * followed by a sibling combinator (`& ~ p`, or a bare `~ p`, which nesting
+ * reads as `& ~ p`).
+ */
+function isSafePrelude(prelude: string): boolean {
+  const text = prelude.trim();
+  if (text.startsWith("@")) return ALLOWED_AT_RULE.test(text);
+  let parens = 0;
+  for (const ch of text) {
+    if (ch === "(") parens++;
+    else if (ch === ")") parens--;
+    else if (ch === "&" && parens > 0) return false;
+  }
+  return !text.split(",").some((selector) => /^\s*[~+]|&\s*[~+]/.test(selector));
 }
 
 /**

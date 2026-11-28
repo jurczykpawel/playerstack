@@ -54,6 +54,52 @@ describe("sanitizeCustomCss", () => {
     expect(sanitizeCustomCss(css)).toBe(css);
   });
 
+  it("returns null when a string or comment is not closed on its line", () => {
+    expect(sanitizeCustomCss('color: "\n} #site-header { visibility: hidden }')).toBeNull();
+    expect(sanitizeCustomCss("& video::after { content: 'open; }")).toBeNull();
+    expect(sanitizeCustomCss("& video { width: 100%; } /* open")).toBeNull();
+  });
+
+  it("returns null for selectors that reach elements outside the player", () => {
+    for (const css of [
+      ":not(&):is(#site-header) { visibility: hidden }",
+      ":is(&) p { color: red }",
+      ":where(.x, &) p { color: red }",
+      "& ~ p { color: red }",
+      "&+div { color: red }",
+      "& video { color: red } ~ footer { color: red }",
+      "+ div { color: red }",
+      "& video, ~ aside { color: red }",
+      "@media (min-width: 1px) { :not(&) { color: red } }",
+    ]) {
+      expect(sanitizeCustomCss(css), css).toBeNull();
+    }
+  });
+
+  it("keeps selectors that stay inside the player", () => {
+    for (const css of [
+      "& video { width: 100%; }",
+      "& > media-control-bar { opacity: 0.8 }",
+      "&:hover video { filter: none }",
+      "&:not(.paused) media-control-bar { opacity: 1 }",
+      ".dark & { border: 1px solid #fff }",
+      "& li + li, & li ~ li { margin: 0 }",
+      "& :is(video, img) { object-fit: cover }",
+      "transition: opacity 0.2s, transform calc(1s + 2s);",
+      "@supports (display: grid) { & video { display: block } }",
+      "@container (min-width: 400px) { & video { width: 50% } }",
+      "@layer brand { & video { width: 50% } }",
+      "@keyframes ps-pulse { from { opacity: 0 } to { opacity: 1 } }",
+    ]) {
+      expect(sanitizeCustomCss(css), css).toBe(css);
+    }
+  });
+
+  it("returns null for at-rules other than @media, @supports, @container, @layer and @keyframes", () => {
+    expect(sanitizeCustomCss("@scope (html) { p { color: red } }")).toBeNull();
+    expect(sanitizeCustomCss("@page { margin: 0 }")).toBeNull();
+  });
+
   it("returns null when input contains url()", () => {
     expect(sanitizeCustomCss("background: url('https://example.com/p.gif');")).toBeNull();
     expect(sanitizeCustomCss("background: URL(/local.png);")).toBeNull();
