@@ -75,8 +75,10 @@ plugin and feature files; a relative value resolves against the page:
 ></script>
 ```
 
-The first `<script data-provider-base>` on the page wins; when inlining strips the attribute from the
-original tag, put it on any other `<script>` element.
+When the PlayerStack `<script>` has a `src`, only its own `data-provider-base` counts. For a copy
+inlined into the page (no `src`) or loaded as a module, put the attribute on any other JavaScript
+`<script>` element; the first one wins. Scripts with a non-JavaScript `type` and SVG scripts are
+ignored.
 
 It is Apache-2.0 licensed, so you can host and redistribute it freely. Keep a copy of the [LICENSE](https://github.com/jurczykpawel/playerstack/blob/main/LICENSE) and [NOTICE](https://github.com/jurczykpawel/playerstack/blob/main/NOTICE) files with it, next to the `*.LEGAL.txt` notices of the third-party code bundled in each script.
 

@@ -70,6 +70,8 @@ export class PlayerstackElement extends HTMLElement {
   private destroyRegistry: (() => void) | null = null;
   /** Attribute changes made while boot() is still waiting (config, provider). */
   private pendingAttrs = new Map<string, string | null>();
+  /** Rebuilds the player; set while click-to-load still waits for the click. */
+  private reboot: (() => void) | null = null;
 
   connectedCallback(): void {
     if (this.mediaPlayer) return;
@@ -98,6 +100,12 @@ export class PlayerstackElement extends HTMLElement {
       return;
     if (value === null) {
       this.mediaPlayer.removeAttribute(name);
+      return;
+    }
+    // Before the click-to-load click a new source must stay behind the thumbnail.
+    if (name === "src" && this.reboot && !this.mediaPlayer.hasAttribute("src")) {
+      this.pendingAttrs.set(name, value);
+      this.reboot();
       return;
     }
     if ((name === "src" || name === "poster") && !isSafeHttpUrl(value)) {
@@ -185,12 +193,13 @@ export class PlayerstackElement extends HTMLElement {
       teardown();
       return this.providerFailed(tag, err);
     }
-    if (this.pendingAttrs.size > 0) {
+    const reboot = () => {
       const next = this.applyPendingAttrs(config);
       teardown();
       void this.boot(next);
-      return;
-    }
+    };
+    if (this.pendingAttrs.size > 0) return reboot();
+    this.reboot = deferredSrc ? reboot : null;
 
     // If plugin init threw, don't write a fallback `src` — the sources
     // plugin owns the resolution decision and we must not override it.

@@ -163,12 +163,14 @@ describe("conditional standalone plugins", () => {
     expect(plugin.init).toHaveBeenCalledTimes(1);
   });
 
-  it("releases a validated click-to-load source when its poster plugin cannot download", async () => {
+  it("keeps a click-to-load source until a click on the player when its poster plugin cannot download", async () => {
     const ctx = context({ brandedThumb: { enabled: true, clickToLoad: true } });
     await initialize(
       createLazyPlugins(source(), vi.fn().mockRejectedValue(new Error("offline"))),
       ctx,
     );
+    expect(ctx.mediaPlayer.hasAttribute("src")).toBe(false);
+    ctx.container.click();
     expect(ctx.mediaPlayer.getAttribute("src")).toBe(ctx.config.src);
   });
 

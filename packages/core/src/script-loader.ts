@@ -2,24 +2,30 @@ import type { LazyMediaElementTag, ProviderImporter } from "./providers";
 
 const MAIN_SCRIPT_RE = /\/playerstack(?:\.min)?\.js(?:[?#]|$)/;
 
+/** HTML scripts that run as JavaScript: inert types and SVG scripts are page content. */
+const isJsScript = (el: Element): el is HTMLScriptElement =>
+  el instanceof HTMLScriptElement &&
+  (!el.type || /^(module|(text|application)\/(java|ecma)script)$/i.test(el.type));
+
 /**
  * Directory the standalone script was served from, so provider files can be
  * fetched next to it. Pass `document.currentScript` captured at top-level
- * evaluation: it is null in callbacks and for module scripts. The first
- * `<script data-provider-base>` on the page sets the directory by hand, for
- * renamed, inlined, module or combined copies.
+ * evaluation: it is null in callbacks and for module scripts.
+ * `data-provider-base` sets the directory by hand for renamed, inlined, module
+ * or combined copies. Only the executing script's own attribute counts when it
+ * has a `src`; other scripts on the page are read only without one, so injected
+ * markup cannot choose where code is loaded from.
  */
 export function resolveScriptBase(current: HTMLOrSVGScriptElement | null, doc: Document): string {
-  const manual = doc.querySelector<HTMLScriptElement>("script[data-provider-base]")?.dataset
-    .providerBase;
-  if (manual) return new URL(manual.replace(/\/?$/, "/"), doc.baseURI).href;
-  let src = current instanceof HTMLScriptElement ? current.src : "";
-  if (!src) {
-    const candidates = [...doc.querySelectorAll<HTMLScriptElement>("script[src]")].filter((s) =>
-      MAIN_SCRIPT_RE.test(s.src),
-    );
-    src = candidates[candidates.length - 1]?.src ?? "";
+  const own = current instanceof HTMLScriptElement ? current : null;
+  let manual = own?.dataset.providerBase;
+  let src = own?.src ?? "";
+  if (!manual && !src) {
+    const scripts = [...doc.querySelectorAll("script")].filter(isJsScript);
+    manual = scripts.find((s) => s.dataset.providerBase)?.dataset.providerBase;
+    src = scripts.filter((s) => MAIN_SCRIPT_RE.test(s.src)).pop()?.src ?? "";
   }
+  if (manual) return new URL(manual.replace(/\/?$/, "/"), doc.baseURI).href;
   return new URL("./", src || doc.baseURI).href;
 }
 

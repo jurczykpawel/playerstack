@@ -32,6 +32,8 @@ All notable changes to Playerstack will be documented in this file.
 - `sticky`: the close button is 44 px and stays clickable above overlays; top action bars and the intro card close button no longer sit under it; an inline size on `<player-stack>` no longer pushes the pinned player off screen (#24).
 - WordPress shortcode example: shortcode attributes can no longer add their own `data-config` keys; `accent` accepts only hex colors.
 - `branded-thumb`: removing or rebuilding a click-to-load player before the click no longer writes the held source to the media element, which made YouTube and Wistia load their API scripts without a click.
+- `brandedThumb.clickToLoad`: when `playerstack-plugin-branded-thumb.js` cannot load, the player no longer loads the video source on its own; the first click on the player loads it. Changing `src` before the click rebuilds the player so the new source also waits for the click.
+- `data-provider-base`: when the PlayerStack `<script>` has a `src`, only its own attribute sets where provider and plugin files load from; other scripts on the page count only for inlined or module copies, and only JavaScript `<script>` elements (not SVG or inert types).
 
 ### Added
 
