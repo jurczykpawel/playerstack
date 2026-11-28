@@ -8,8 +8,8 @@ type Media = HTMLElement & {
   duration: number;
   paused: boolean;
   muted: boolean;
-  play: ReturnType<typeof vi.fn>;
-  pause: ReturnType<typeof vi.fn>;
+  play: ReturnType<typeof vi.fn<() => void>>;
+  pause: ReturnType<typeof vi.fn<() => void>>;
 };
 
 const contexts: PlayerstackContext[] = [];
