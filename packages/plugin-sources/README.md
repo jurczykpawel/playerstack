@@ -93,7 +93,7 @@ By default hls.js picks the first quality level itself. `config.hls` passes opti
 - `startLevel` selects the first level by index, ordered by bitrate (`0` is the lowest). The resolution behind an index depends on the stream.
 - Other [hls.js options](https://github.com/video-dev/hls.js/blob/master/docs/API.md#fine-tuning) with number or boolean values are passed unchanged; options with string or object values (for example `workerPath`, `drmSystems`) are ignored. `capLevelToPlayerSize` limits quality for the whole playback, not only the start.
 
-Browsers that play HLS natively, without hls.js, ignore these options.
+Safari and every iOS browser (Apple WebKit) play HLS natively: without `config.hls` the player uses a native `<video>` there and never downloads `playerstack-hls.js` (about 166 KB gzip). Setting `config.hls` (even `{}`) keeps hls.js on those browsers too, so the options apply everywhere. Chrome, Edge and Firefox always use hls.js.
 
 ## Programmatic resolver
 

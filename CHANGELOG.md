@@ -6,6 +6,8 @@ All notable changes to Playerstack will be documented in this file.
 
 ### Changed
 
+- HLS on Safari and iOS (Apple WebKit) plays in a native `<video>` and no longer downloads `playerstack-hls.js` (about 166 KB gzip less per page). Set `config.hls` to keep hls.js there; other browsers are unchanged.
+
 - `sticky`: below a 600 px viewport the pinned player now spans the screen at the bottom (8 px gaps plus safe-area insets) instead of a `40vw` corner box; `position` does not apply there and `offset` is only the bottom gap. At every width it grows to `min(60dvh, 420px)` while a CTA card, e-mail form or intro card is open.
 
 ### Fixed

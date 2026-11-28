@@ -40,8 +40,11 @@ it("ships hardened separately and keeps the open email configuration within its 
   // limits rounded up to the next 100 B.
   // 2026-11-28, config.hls limited to number/boolean options (+42 B in playerstack.min.js,
   // Bun 1.4.5, same method): 52,067 B / 48,293 B, limits unchanged.
-  expect(sizes.reduce((sum, size) => sum + size, 0)).toBeLessThanOrEqual(52100);
-  expect(sizes.slice(0, -1).reduce((sum, size) => sum + size, 0)).toBeLessThanOrEqual(48300);
+  // 2026-11-28, native HLS on Apple WebKit without hls.js (+71 B in playerstack.min.js,
+  // Bun 1.4.5, same method; saves 166,349 B gzip per Safari/iOS HLS page): 52,138 B /
+  // 48,364 B, limits rounded up to the next 100 B.
+  expect(sizes.reduce((sum, size) => sum + size, 0)).toBeLessThanOrEqual(52200);
+  expect(sizes.slice(0, -1).reduce((sum, size) => sum + size, 0)).toBeLessThanOrEqual(48400);
   // The card modes behind ctaEnd.at/atPercent/frequency ship separately.
   const timed = "playerstack-cta-end-timed.js";
   expect(sources(timed).some((source) => source.endsWith("timed.ts"))).toBe(true);
