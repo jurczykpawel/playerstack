@@ -49,6 +49,8 @@ it("ships hardened separately and keeps the open email configuration within its 
   // 2026-11-28, click-to-load builds the thumbnail before the provider loads (+66 B in
   // playerstack.min.js, Bun 1.4.5, same method): 52,280 B / 48,506 B, second limit rounded up
   // to the next 100 B.
+  // 2026-11-28, overlay HTML drops data-* and playerstack* classes (cta-end unchanged at 2,915 B,
+  // +1 B main from the chunk hash; Bun 1.4.5, same method): 52,283 B / 48,510 B, limits unchanged.
   expect(sizes.reduce((sum, size) => sum + size, 0)).toBeLessThanOrEqual(52300);
   expect(sizes.slice(0, -1).reduce((sum, size) => sum + size, 0)).toBeLessThanOrEqual(48600);
   // The card modes behind ctaEnd.at/atPercent/frequency ship separately.

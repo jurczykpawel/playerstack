@@ -39,15 +39,14 @@ const ALLOWED_ATTRS: Record<string, Set<string>> = {
  */
 const DROP_SUBTREE = new Set(["SCRIPT", "STYLE", "IFRAME", "NOSCRIPT", "OBJECT", "EMBED"]);
 
+/**
+ * `data-*` is not kept: frameworks on the host page act on such attributes
+ * (for example `data-method` turns a link into a form submission).
+ */
 function isAttrAllowedForTag(tag: string, name: string): boolean {
   const lower = name.toLowerCase();
-  if (lower.startsWith("on")) return false;
-  if (lower === "style" || lower === "id") return false;
-  if (lower === "class") return true;
-  if (lower.startsWith("data-") || lower.startsWith("aria-")) return true;
-  if (lower === "role") return true;
-  const tagSpecific = ALLOWED_ATTRS[tag];
-  return tagSpecific ? tagSpecific.has(lower) : false;
+  if (lower === "class" || lower === "role" || lower.startsWith("aria-")) return true;
+  return ALLOWED_ATTRS[tag]?.has(lower) ?? false;
 }
 
 /** Return true for absolute URLs whose protocol is `http:` or `https:`. */
@@ -107,6 +106,9 @@ function sanitizeNode(node: Node): void {
         el.removeAttribute("href");
       }
     }
+
+    // PlayerStack's own class names would pick up its layout rules.
+    for (const name of [...el.classList]) if (/^playerstack/i.test(name)) el.classList.remove(name);
 
     if (tag === "A" && el.hasAttribute("href")) {
       el.setAttribute("rel", "noopener noreferrer");

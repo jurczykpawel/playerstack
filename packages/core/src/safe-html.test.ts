@@ -56,11 +56,29 @@ describe("sanitizeHtml", () => {
     expect(out).toContain("<h3>");
   });
 
-  it("keeps class, data-*, aria-* attributes", () => {
-    const out = sanitizeHtml('<p class="hi" data-id="x" aria-label="lbl">x</p>');
+  it("keeps class, aria-* and role attributes", () => {
+    const out = sanitizeHtml('<p class="hi" aria-label="lbl" role="note">x</p>');
     expect(out).toContain('class="hi"');
-    expect(out).toContain('data-id="x"');
     expect(out).toContain('aria-label="lbl"');
+    expect(out).toContain('role="note"');
+  });
+
+  it("drops data-* attributes, which host-page scripts may act on", () => {
+    const out = sanitizeHtml(
+      '<a href="https://example.com/account" data-method="delete" data-remote="true">x</a>' +
+        '<span data-controller="probe" data-bs-toggle="modal">y</span>',
+    );
+    expect(out).not.toContain("data-");
+    expect(out).toContain('href="https://example.com/account"');
+  });
+
+  it("drops class names reserved for PlayerStack", () => {
+    expect(
+      sanitizeHtml('<a class="playerstack-sticky cta PlayerStack-x" href="https://a.test">x</a>'),
+    ).toContain('class="cta"');
+    expect(sanitizeHtml('<span class="playerstack-thumb-play">x</span>')).not.toContain(
+      "playerstack",
+    );
   });
 
   it("removes style, id, and event-handler attributes from whitelisted tags", () => {
