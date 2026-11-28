@@ -170,8 +170,11 @@ describe("conditional standalone plugins", () => {
       ctx,
     );
     expect(ctx.mediaPlayer.hasAttribute("src")).toBe(false);
+    const play = vi.fn(() => Promise.resolve());
+    Object.assign(ctx.mediaPlayer, { play });
     ctx.container.click();
     expect(ctx.mediaPlayer.getAttribute("src")).toBe(ctx.config.src);
+    expect(play).toHaveBeenCalledTimes(1);
   });
 
   it("propagates init failures without calling them download failures", async () => {
