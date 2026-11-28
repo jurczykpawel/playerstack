@@ -7,7 +7,10 @@ import {
   _resetProvidersForTesting,
 } from "./providers";
 
-/** happy-dom keeps one CustomElementRegistry per test file, so tests below use distinct tags. */
+/**
+ * happy-dom keeps one CustomElementRegistry per test file, so each test below
+ * uses a tag no other test defines and passes in any order.
+ */
 function defineLater(tag: string): () => Promise<void> {
   return async () => {
     customElements.define(tag, class extends HTMLElement {});
@@ -66,21 +69,18 @@ describe("ensureMediaElement", () => {
     expect(customElements.get("youtube-video")).toBeDefined();
   });
 
-  it("imports the HLS provider and resolves once the element is defined", async () => {
+  it("imports the HLS provider once, then skips the importer while it stays defined", async () => {
     const tag = "hls-video";
     const importer = vi.fn(defineLater(tag));
     setProviderImporter(importer);
     await ensureMediaElement(tag);
     expect(importer).toHaveBeenCalledWith("hls-video");
     expect(customElements.get(tag)).toBeDefined();
-  });
-
-  it("skips the importer when the provider element is already defined", async () => {
-    // hls-video was defined by the previous test (shared registry).
-    const importer = vi.fn();
-    setProviderImporter(importer);
-    await ensureMediaElement("hls-video");
-    expect(importer).not.toHaveBeenCalled();
+    // A new importer forgets pending loads; the defined element still skips it.
+    const next = vi.fn();
+    setProviderImporter(next);
+    await ensureMediaElement(tag);
+    expect(next).not.toHaveBeenCalled();
   });
 
   it("issues a single import for concurrent players of the same provider", async () => {
