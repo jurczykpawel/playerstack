@@ -23,6 +23,27 @@ interface ChapterState {
 
 const states = new WeakMap<PlayerstackContext, ChapterState>();
 
+/**
+ * Interactive elements pass a click on anything inside them to their own
+ * action (submit, navigate), so the chapter buttons must never sit there.
+ */
+const INTERACTIVE = "a[href], button, label, summary, select, textarea, input";
+
+function mountTarget(selector: string | undefined): HTMLElement | null {
+  if (!selector) return null;
+  let target: HTMLElement | null = null;
+  try {
+    target = document.querySelector<HTMLElement>(selector);
+  } catch {
+    // Invalid selector: fall through to the warning below.
+  }
+  if (target && !target.closest(INTERACTIVE)) return target;
+  console.warn(
+    `[playerstack:chapters] containerSelector "${selector}" is not a usable container (missing, invalid, or inside a link, button or form control); the list goes after the player.`,
+  );
+  return null;
+}
+
 export const chaptersPlugin: PlayerstackPlugin = {
   name: "chapters",
   async init(ctx: PlayerstackContext): Promise<void> {
@@ -67,9 +88,7 @@ export const chaptersPlugin: PlayerstackPlugin = {
     // clip the list out of view. Default placement: as a sibling immediately
     // after <player-stack>. The caller can opt into a custom mount via
     // `containerSelector`.
-    const customTarget = cfg.containerSelector
-      ? document.querySelector<HTMLElement>(cfg.containerSelector)
-      : null;
+    const customTarget = mountTarget(cfg.containerSelector);
     if (customTarget) {
       customTarget.appendChild(list);
     } else {
