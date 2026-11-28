@@ -16,13 +16,16 @@ interface Progress {
 }
 
 async function open(page: Page, extra: Record<string, unknown> = {}) {
-  // Beacons are kept in sessionStorage so the one sent while leaving survives.
+  // Analytics bodies are kept in sessionStorage so the one sent while leaving survives.
   await page.addInitScript(() => {
-    navigator.sendBeacon = (_url, body) => {
-      const all = JSON.parse(sessionStorage.getItem("beacons") || "[]");
-      all.push(JSON.parse(body as string));
-      sessionStorage.setItem("beacons", JSON.stringify(all));
-      return true;
+    const send = window.fetch.bind(window);
+    window.fetch = (input, init) => {
+      if (String(input).endsWith("/track")) {
+        const all = JSON.parse(sessionStorage.getItem("beacons") || "[]");
+        all.push(JSON.parse(init?.body as string));
+        sessionStorage.setItem("beacons", JSON.stringify(all));
+      }
+      return send(input, init);
     };
   });
   const config = {
@@ -114,6 +117,31 @@ test("real playback reports watched time without the skipped part", async ({ pag
   expect(second.watchedDelta).toBeGreaterThan(0.5);
   expect(second.watchedDelta).toBeLessThan(1.3);
   expect(second.watchedSeconds).toBeCloseTo(first!.watchedSeconds + second.watchedDelta, 5);
+});
+
+test("analytics requests reach the endpoint without the page's cookies", async ({ page }) => {
+  await page.context().addCookies([{ name: "session", value: "dummy", url: origin }]);
+  const tracked: { method: string; cookie?: string; type?: string }[] = [];
+  page.on("request", (request) => {
+    if (!request.url().endsWith("/track")) return;
+    // allHeaders() includes the Cookie header the browser adds on the wire.
+    void request.allHeaders().then((headers) =>
+      tracked.push({
+        method: request.method(),
+        cookie: headers["cookie"],
+        type: headers["content-type"],
+      }),
+    );
+  });
+  await open(page);
+  await playUntil(page, 1);
+  await video(page).evaluate((v: HTMLVideoElement) => v.pause());
+  await expect.poll(() => tracked.length).toBeGreaterThan(0);
+  expect(tracked[0]).toEqual({
+    method: "POST",
+    cookie: undefined,
+    type: "text/plain;charset=UTF-8",
+  });
 });
 
 test("leaving the page during playback sends the last batch", async ({ page }) => {

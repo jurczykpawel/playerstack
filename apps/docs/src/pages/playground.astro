@@ -706,11 +706,11 @@ import { demoCredit } from "../content/landing";
             customProps: { source: "playground" },
           },
         },
-        tipTitle: "sendBeacon POST + console.log side by side",
+        tipTitle: "Cookie-free POST + console.log side by side",
         tipSteps: [
           "Open DevTools → Console + Network tabs BEFORE clicking play.",
           "Hit play → Console: [playerstack:analytics] play {...}. Network: POST to httpbin.org/post.",
-          "Pause, resume, watch to end, click CTA → each fires both a log and a beacon.",
+          "Pause, resume, watch to end, click CTA → each fires both a log and a request.",
           "debug: true adds console.log on top of any provider — remove it in production.",
           "Swap endpoint for your own API, or add provider: 'gtag' for GA4.",
         ],

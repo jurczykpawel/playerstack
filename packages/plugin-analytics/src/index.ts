@@ -5,7 +5,7 @@ export type { WatchProgress } from "./watch-time";
 
 export interface AnalyticsConfig {
   enabled?: boolean;
-  /** "beacon" sends to endpoint via sendBeacon; "gtag" calls window.gtag; "console" logs to console. Default: "beacon" if endpoint is set. */
+  /** "beacon" POSTs to endpoint without cookies; "gtag" calls window.gtag; "console" logs to console. Default: "beacon" if endpoint is set. */
   provider?: "beacon" | "gtag" | "console";
   /** Required when provider="beacon". */
   endpoint?: string;
@@ -94,11 +94,17 @@ export const analyticsPlugin: PlayerstackPlugin = {
         gtag?.("event", event, payload);
         return;
       }
-      if (cfg.endpoint && typeof navigator !== "undefined" && "sendBeacon" in navigator) {
-        navigator.sendBeacon(
-          cfg.endpoint,
-          JSON.stringify({ event, src, data: payload, ts: Date.now() }),
-        );
+      if (cfg.endpoint) {
+        // Cookies are left out (sendBeacon cannot do that): the endpoint comes
+        // from data-config. keepalive delivers events sent while the page
+        // closes; no-cors keeps endpoints without CORS headers working.
+        fetch(cfg.endpoint, {
+          method: "POST",
+          body: JSON.stringify({ event, src, data: payload, ts: Date.now() }),
+          credentials: "omit",
+          keepalive: true,
+          mode: "no-cors",
+        }).catch(() => {});
       }
     };
 
