@@ -56,6 +56,7 @@ test.beforeAll(async () => {
             enabled: true,
             at: "after",
             product: " guide ",
+            locale: "en",
             remember: false,
             altchaFormat: "base64",
             marketingConsent: { text: "Send updates", version: "v1", required: true },
@@ -128,6 +129,7 @@ for (const path of ["/", "/trusted"]) {
     expect(remoteRequests).toEqual([]);
     expect(received[0]).toMatchObject({
       product: "guide",
+      locale: "en",
       marketingConsent: true,
       consentVersion: "v1",
       consentText: "Send updates",

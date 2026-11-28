@@ -22,6 +22,8 @@ export interface EmailGateConfig {
     required?: boolean;
   };
   product?: string;
+  /** Language code sent with the submission, e.g. "en" or "en-GB"; other values are ignored. */
+  locale?: string;
   dismissible?: boolean;
   messages?: Partial<EmailGateMessages>;
   remember?: boolean;
@@ -185,7 +187,7 @@ export const emailGatePlugin: PlayerstackPlugin = {
     states.set(ctx, instance);
     let optional: OptionalFields | undefined;
     const fields =
-      cfg.privacy || cfg.marketingConsent !== undefined || cfg.product !== undefined
+      cfg.privacy || cfg.marketingConsent !== undefined || (cfg.product ?? cfg.locale) !== undefined
         ? loadOptionalFields().catch(() => undefined)
         : undefined;
 
@@ -459,7 +461,10 @@ function renderOverlay(
   return overlay;
 }
 
-type ConsentFields = Pick<LeadsSubmission, "marketingConsent" | "consentVersion" | "consentText">;
+type ConsentFields = Pick<
+  LeadsSubmission,
+  "marketingConsent" | "consentVersion" | "consentText" | "locale"
+>;
 
 function resumePlayback(ctx: PlayerstackContext): void {
   const player = ctx.mediaPlayer as HTMLElement & { play?: () => Promise<void> | void };

@@ -1,6 +1,11 @@
 import type { EmailGateConfig } from "./index";
 import type { LeadsSubmission } from "./types";
-type ConsentFields = Pick<LeadsSubmission, "marketingConsent" | "consentVersion" | "consentText">;
+type ConsentFields = Pick<
+  LeadsSubmission,
+  "marketingConsent" | "consentVersion" | "consentText" | "locale"
+>;
+const validLocale = (value: unknown): value is string =>
+  typeof value === "string" && /^[a-z]{2}(-[A-Z]{2})?$/.test(value);
 export function validConfig(cfg: EmailGateConfig): boolean {
   if (
     cfg.product !== undefined &&
@@ -27,6 +32,10 @@ export function validConfig(cfg: EmailGateConfig): boolean {
       "[playerstack] email-gate: marketingConsent requires text (1–500 characters) and version (1–64). Plugin disabled.",
     );
     return false;
+  }
+
+  if (cfg.locale !== undefined && !validLocale(cfg.locale)) {
+    console.warn('[playerstack] email-gate: locale must look like "en" or "en-GB". Ignored.');
   }
 
   return true;
@@ -90,7 +99,7 @@ export function readConsent(
         }
       : { marketingConsent: false };
 
-  return consent;
+  return validLocale(cfg.locale) ? { ...consent, locale: cfg.locale } : consent;
 }
 function appendConfiguredLink(
   parent: HTMLElement,

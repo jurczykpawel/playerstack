@@ -31,7 +31,7 @@ interface HardenedArgs {
   cfg: EmailGateConfig;
   src: string;
   email: string;
-  consent: Pick<LeadsSubmission, "marketingConsent" | "consentVersion" | "consentText">;
+  consent: Pick<LeadsSubmission, "marketingConsent" | "consentVersion" | "consentText" | "locale">;
   response: Promise<{ value?: Response }>;
   active: () => boolean;
   success: () => void;
