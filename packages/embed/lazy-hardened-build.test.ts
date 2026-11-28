@@ -54,7 +54,9 @@ it("ships hardened separately and keeps the open email configuration within its 
   // 2026-11-28, click-to-load waits for a click when branded-thumb cannot load, a src change before
   // the click rebuilds the player, data-provider-base only from the executing script (+132 B in
   // playerstack.min.js, Bun 1.4.5, same method): 52,388 B / 48,615 B, limits rounded up to 100 B.
-  expect(sizes.reduce((sum, size) => sum + size, 0)).toBeLessThanOrEqual(52400);
+  // 2026-11-28, emailGate.locale (+14 B in playerstack-plugin-email-gate.js; validation ships in the
+  // optional-fields chunk): 52,402 B / 48,615 B, first limit rounded up to the next 100 B.
+  expect(sizes.reduce((sum, size) => sum + size, 0)).toBeLessThanOrEqual(52500);
   expect(sizes.slice(0, -1).reduce((sum, size) => sum + size, 0)).toBeLessThanOrEqual(48700);
   // The card modes behind ctaEnd.at/atPercent/frequency ship separately.
   const timed = "playerstack-cta-end-timed.js";
