@@ -267,6 +267,8 @@ function normalizeEmailGate(
     const product = c.product.trim();
     if (product.length > 0 && product.length <= 100) out.product = product;
   }
+  if (typeof c.locale === "string" && /^[a-z]{2}(-[A-Z]{2})?$/.test(c.locale))
+    out.locale = c.locale;
   if (isObject(c.privacy)) {
     const privacy = normalizeGateText(c.privacy);
     if (privacy.text !== undefined) out.privacy = privacy;

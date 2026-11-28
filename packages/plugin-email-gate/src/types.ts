@@ -36,6 +36,8 @@ export interface LeadsSubmission {
   src: string;
   /** Optional product identifier, 1–100 characters; validated by the server. */
   product?: string;
+  /** `emailGate.locale`, present only when it is a code like "en" or "en-GB". */
+  locale?: string;
   /** Omitted when not configured; false for contact only, true when selected. */
   marketingConsent?: boolean;
   /** Consent wording version, present only when selected. */

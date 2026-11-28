@@ -22,7 +22,7 @@ The standalone script registers 15 plugins. focus-mode and sellf-adapter require
 - `@playerstack/plugin-cta-end` — overlay at end of video (button with UTM, replay), or with `ctaEnd.at` ("start" or seconds) / `atPercent` during playback: pauses, adds a skip button (`skipLabel`); `frequency` "playback" or "session"; events cta:show, cta:click, cta:skip, cta:replay
 - `@playerstack/plugin-chapters` — clickable timecoded navigation; optional `markers` (progress bar segments and titles) and `menu` (control bar chapter menu, `menuLabel`)
 - `@playerstack/plugin-action-bar` — mid-video dismissible CTA banner; `hideAt` / `hideAtPercent` close the time window, `variant: "badge"` with a corner `position`; events action-bar:show, action-bar:click, action-bar:dismiss
-- `@playerstack/plugin-email-gate` — pause-and-collect lead capture
+- `@playerstack/plugin-email-gate` — pause-and-collect lead capture; `emailGate.locale` (`"en"`, `"pl"`, `"en-GB"`) is sent as `locale` in the submission and the `email-gate:submit` event (it does not translate the form; use `emailGate.messages`)
 - `@playerstack/plugin-saved-position` — resume watching
 - `@playerstack/plugin-sticky` — corner-pin on scroll (`sticky.position`: `bottom-right` default, `bottom-left`, `top-right`, `top-left`; `sticky.offset` in px). Below 600 px viewport width it docks full width at the bottom (`offset` = bottom gap, default 8); while a CTA card, e-mail form or intro card is open it grows to min(60dvh, 420px); the close button stays clickable
 - `@playerstack/plugin-focus-mode` — auto-pause on tab blur (custom build only)

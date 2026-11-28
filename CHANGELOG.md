@@ -37,6 +37,7 @@ All notable changes to Playerstack will be documented in this file.
 
 ### Added
 
+- `email-gate`: `emailGate.locale` (for example `"en"` or `"en-GB"`) is sent as `locale` in the submission and the `email-gate:submit` event, so the server can answer in the viewer's language; the Sellf adapter passes it through.
 - `data-provider-base` on a `<script>` sets the directory of provider, plugin and feature files for a renamed, inlined, combined or `type="module"` copy of `playerstack.min.js` (WordPress cache and optimization plugins).
 
 - `sellf-adapter`: `allowTrustedCss: true` keeps `customCss.trustedCss` from the Sellf response (the page must still allow raw CSS).

@@ -22,6 +22,7 @@ it.each([false, true])(
             enabled: true,
             at: "after",
             product: " guide ",
+            locale: "en",
             remember: false,
             altchaFormat: "base64",
             dismissible: true,
@@ -74,6 +75,7 @@ it.each([false, true])(
     expect(config.emailGate).toMatchObject({
       at: "after",
       product: "guide",
+      locale: "en",
       altchaFormat: "base64",
       remember: false,
     });
@@ -115,6 +117,7 @@ it.each([false, true])(
       const body = JSON.parse(fetcher.mock.calls[2]![1].body);
       expect(body).toMatchObject({
         product: "guide",
+        locale: "en",
         marketingConsent: true,
         consentVersion: "v1",
         consentText: "Send updates",
@@ -131,6 +134,7 @@ it.each([false, true])(
 it("keeps bounded known fields and fresh nested objects", () => {
   const emailGate = {
     product: "x".repeat(100),
+    locale: "en-GB",
     at: 0,
     atPercent: 100,
     rememberDays: 0,
@@ -189,6 +193,8 @@ it.each([
     altchaFormat: "json",
   },
   { title: "t".repeat(501), buttonLabel: false, storageKey: "k".repeat(201) },
+  { locale: "en_US" },
+  { locale: ["en"] },
 ])("drops invalid fields (%j)", (emailGate) => {
   expect(normalizeRemoteConfig({ emailGate }).emailGate).toEqual({});
 });
