@@ -1,3 +1,6 @@
+# Version updates only. Dependabot security updates cannot update bun.lock, so
+# they are switched off in the repository settings. Dependabot alerts stay on,
+# and the Audit job in .github/workflows/ci.yml checks the lockfile.
 version: 2
 updates:
 - package-ecosystem: bun
@@ -20,10 +23,6 @@ updates:
     maintenance:
       patterns:
       - '*'
-    security:
-      applies-to: security-updates
-      patterns:
-      - '*'
 - package-ecosystem: github-actions
   directory: /
   commit-message:
@@ -37,9 +36,5 @@ updates:
     default-days: 14
   groups:
     actions:
-      patterns:
-      - '*'
-    security:
-      applies-to: security-updates
       patterns:
       - '*'
