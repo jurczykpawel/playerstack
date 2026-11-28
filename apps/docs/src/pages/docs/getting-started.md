@@ -29,7 +29,7 @@ One script tag, 15 of the 17 first-party plugins included. `focus-mode` and `sel
 
 The `<player-stack>` custom element registers itself, the `sources` plugin validates the URL, and the core element picks the right inner media element (native `<video>` for MP4/WebM, `<youtube-video>`, `<vimeo-video>`, or `<hls-video>`) and mounts a default `<media-controller>` UI. You can configure plugins via `data-config` JSON or shorthand attributes.
 
-The bundle above is served free from this site's Cloudflare Pages CDN.
+The bundle above is served free from this site's Cloudflare Pages CDN and always points at the newest release. To pin one release with Subresource Integrity, use a versioned URL from [Versions and caching](/docs/versions).
 
 ### Self-host the bundle
 

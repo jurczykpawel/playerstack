@@ -1,0 +1,79 @@
+---
+import { existsSync, readFileSync } from "fs";
+import { fileURLToPath } from "url";
+import Docs from "../../layouts/Docs.astro";
+
+// Written by `bun packages/embed/release-versions.ts stage apps/docs/public`
+// before the docs build. Older versions are added to the deployed manifest only.
+interface Version {
+  id: string;
+  published: string;
+  files: Record<string, string>;
+}
+const path = fileURLToPath(new URL("../../../public/v/versions.json", import.meta.url));
+const latest: Version | undefined = existsSync(path)
+  ? JSON.parse(readFileSync(path, "utf8")).versions[0]
+  : undefined;
+const origin = "https://playerstack.techskills.academy";
+const snippet = latest
+  ? `<script
+  src="${origin}/v/${latest.id}/playerstack.min.js"
+  integrity="${latest.files["playerstack.min.js"]}"
+  crossorigin="anonymous"
+  defer
+></script>`
+  : "";
+---
+
+<Docs
+  title="Versions and caching — Playerstack"
+  description="Pin a Playerstack release with a versioned URL and Subresource Integrity, and how the hosted script is cached."
+>
+  <h1>Versions and caching</h1>
+
+  <h2>Latest script</h2>
+  <p>
+    <code>{origin}/playerstack.min.js</code> always serves the newest release. Browsers and the CDN
+    may keep it for up to 5 minutes (plus 10 minutes while revalidating), so fixes reach your
+    visitors shortly after a release. Provider and plugin files load from the same directory with a
+    content hash in the query string, so they can be cached for a year.
+  </p>
+
+  <h2>Pinned version with Subresource Integrity</h2>
+  <p>
+    Every release that changes the bundle is also published under <code>/v/&lt;id&gt;/</code>,
+    where the id is derived from the content of its files. These URLs never change and are cached
+    as <code>immutable</code>. Providers and plugins load from the same versioned directory, so a
+    pinned page never mixes files from different releases. A pinned page does not receive fixes
+    until you update the snippet.
+  </p>
+  {
+    latest ? (
+      <>
+        <p>
+          Current version: <code>{latest.id}</code>, published{" "}
+          <time datetime={latest.published}>{latest.published.slice(0, 10)}</time>.
+        </p>
+        <pre><code>{snippet}</code></pre>
+      </>
+    ) : (
+      <p>
+        The version list is generated when the standalone bundle is built. Run
+        <code>bash scripts/build-docs.sh</code> to see the current snippet here.
+      </p>
+    )
+  }
+  <p>
+    The <code>integrity</code> hash covers <code>playerstack.min.js</code>. The files it loads later
+    come from the same immutable directory; their hashes are listed in
+    <a href="/v/versions.json"><code>/v/versions.json</code></a>
+    (newest first, with the publication date and every file's <code>sha384</code> hash). Older versions
+    stay available after later releases.
+  </p>
+
+  <h2>Content Security Policy</h2>
+  <p>
+    Allow the directory, not only the main file: <code>script-src {origin}/</code> for the latest
+    script or <code>script-src {origin}/v/</code> for pinned versions.
+  </p>
+</Docs>

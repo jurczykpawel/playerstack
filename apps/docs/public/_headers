@@ -1,0 +1,38 @@
+# Cloudflare Pages response headers for playerstack.techskills.academy.
+# The zone has a 1-year Browser Cache TTL; a Cache Rule for this host
+# ("respect origin") lets these values through. Rules for the same header
+# must not overlap: Pages joins values from every matching rule.
+
+# Security headers for every response. Player scripts stay embeddable from any
+# origin (Pages adds Access-Control-Allow-Origin: * by default).
+# script-src keeps 'unsafe-inline': the GTM container runs a Custom HTML tag
+# (Meta Pixel) and a static site cannot issue nonces.
+/*
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://*.google-analytics.com https://t.techskills.academy https://stats.techskills.academy https://connect.facebook.net https://www.youtube.com https://fast.wistia.com https://fast.wistia.net; style-src 'self' 'unsafe-inline' https://fast.wistia.com https://fast.wistia.net; img-src 'self' data: blob: https:; media-src 'self' data: blob: https:; font-src 'self' data: https://fast.wistia.com https://fast.wistia.net; connect-src 'self' https:; frame-src https://www.youtube-nocookie.com https://www.youtube.com https://player.vimeo.com https://player.twitch.tv https://fast.wistia.net https://fast.wistia.com https://www.googletagmanager.com https://td.doubleclick.net https://www.facebook.com; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'
+  X-Frame-Options: SAMEORIGIN
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  Strict-Transport-Security: max-age=31536000
+  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=()
+
+# Stable alias of the main script: embeds pick up fixes within minutes.
+/playerstack.min.js
+  Cache-Control: public, max-age=300, stale-while-revalidate=600
+
+# Providers, plugins and feature chunks: the main script always requests them
+# with ?v=<content hash>, so a changed file gets a new URL.
+/playerstack-*.js
+  Cache-Control: public, max-age=31536000
+
+# Astro build assets carry a content hash in their file names.
+/_astro/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# Versioned releases never change once published.
+/v/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# The version list changes with every release.
+/v/versions.json
+  ! Cache-Control
+  Cache-Control: public, max-age=300

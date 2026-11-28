@@ -77,6 +77,9 @@ jobs:
       - name: Copy bundle to docs public
         run: bash scripts/copy-standalone.sh apps/docs/public
 
+      - name: Stage versioned release (v/<id>/ with SRI hashes)
+        run: bun packages/embed/release-versions.ts stage apps/docs/public
+
       - name: Install Playwright browsers
         run: bunx playwright install --with-deps chromium
 
@@ -88,6 +91,12 @@ jobs:
 
       - name: Check docs page titles
         run: bun scripts/check-docs-titles.ts
+
+      # Pages keeps only what one deploy uploads: copy every published version
+      # from the live site (verified against its SRI hash) into this build.
+      - name: Carry over published versions
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        run: bun packages/embed/release-versions.ts carry apps/docs/dist https://playerstack.techskills.academy
 
       - name: Upload docs dist
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
