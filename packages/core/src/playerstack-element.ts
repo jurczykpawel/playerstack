@@ -32,17 +32,23 @@ export function setConfigProviderForElement(provider: ConfigProvider): void {
 }
 
 /**
- * Heuristic source-type detection. Plugin-sources can override the choice
- * via `config.__elementTag` (set during its init) before the element is
- * appended; if not, this fallback runs.
+ * Heuristic source-type detection from `config.src`. Safari and iOS play HLS
+ * natively, so native `<video>` there skips downloading hls.js unless
+ * `config.hls` asks for hls.js options. Chrome also reports native HLS but
+ * keeps hls.js (vendor check).
  */
-function detectElementTag(src: string): MediaElementTag {
+function detectElementTag({ src, hls }: PlayerstackConfig): MediaElementTag {
   if (!src) return "video";
   if (/youtube\.com|youtu\.be|youtube-nocookie\.com/i.test(src)) return "youtube-video";
   if (/vimeo\.com/i.test(src)) return "vimeo-video";
   if (/(?:wistia\.com|wi\.st)\/(?:medias|embed)\//i.test(src)) return "wistia-video";
   if (/(?:^|\/\/)(?:www\.|go\.|player\.)?twitch\.tv\//i.test(src)) return "twitch-video";
-  if (/\.m3u8(\?|$)/i.test(src)) return "hls-video";
+  if (/\.m3u8(\?|$)/i.test(src))
+    return hls ||
+      !/^Apple/.test(navigator.vendor) ||
+      !document.createElement("video").canPlayType("application/vnd.apple.mpegurl")
+      ? "hls-video"
+      : "video";
   return "video";
 }
 
@@ -117,7 +123,7 @@ export class PlayerstackElement extends HTMLElement {
 
     // Loading a provider can take seconds; apply attribute changes made in the
     // meantime and pick the provider again if the source type changed.
-    let tag = detectElementTag(config.src);
+    let tag = detectElementTag(config);
     for (;;) {
       try {
         await ensureMediaElement(tag);
@@ -133,7 +139,7 @@ export class PlayerstackElement extends HTMLElement {
       }
       if (generation !== this.bootGeneration) return;
       config = this.applyPendingAttrs(config);
-      const next = detectElementTag(config.src);
+      const next = detectElementTag(config);
       if (next === tag) break;
       tag = next;
     }
