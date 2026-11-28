@@ -62,11 +62,55 @@ test("HLS loads only the hls provider next to the main script and plays in Chrom
 });
 
 test("Vimeo loads only the vimeo provider", async ({ page }) => {
+  await page.route("https://player.vimeo.com/**", (route) =>
+    route.fulfill({ contentType: "text/html", body: "<!doctype html><title>stub</title>" }),
+  );
   const fetched = await openEmbed(page, SOURCES.vimeo);
   await expect(page.locator("player-stack vimeo-video")).toBeAttached();
+  await expect(page.locator("player-stack vimeo-video iframe")).toHaveAttribute(
+    "src",
+    /^https:\/\/player\.vimeo\.com\/video\/76979871\b/,
+  );
   expect(await page.evaluate(() => !!customElements.get("vimeo-video"))).toBe(true);
   expect(lazyFiles(fetched)).toEqual([
     expect.stringMatching(/^playerstack-vimeo\.js\?v=[0-9a-f]{8}$/),
+  ]);
+});
+
+test("Wistia loads only the wistia provider and the Wistia script for the media id", async ({
+  page,
+}) => {
+  const wistiaScript = page.waitForRequest("https://fast.wistia.com/assets/external/E-v1.js");
+  await page.route("https://fast.wistia.com/**", (route) =>
+    route.fulfill({
+      contentType: "application/javascript",
+      body: "window.Wistia = {}; window._wq = [];",
+    }),
+  );
+  const fetched = await openEmbed(page, "https://home.wistia.com/medias/abc123xyz");
+  await expect(page.locator("player-stack wistia-video .wistia_embed")).toHaveClass(
+    /\bwistia_async_abc123xyz\b/,
+  );
+  await wistiaScript;
+  expect(lazyFiles(fetched)).toEqual([
+    expect.stringMatching(/^playerstack-wistia\.js\?v=[0-9a-f]{8}$/),
+  ]);
+});
+
+test("Twitch loads only the twitch provider and embeds the channel for this host", async ({
+  page,
+}) => {
+  await page.route("https://player.twitch.tv/**", (route) =>
+    route.fulfill({ contentType: "text/html", body: "<!doctype html><title>stub</title>" }),
+  );
+  const fetched = await openEmbed(page, "https://www.twitch.tv/somechannel");
+  const iframe = page.locator("player-stack twitch-video iframe");
+  await expect(iframe).toHaveAttribute("src", /^https:\/\/player\.twitch\.tv\/\?/);
+  const src = new URL((await iframe.getAttribute("src"))!);
+  expect(src.searchParams.get("channel")).toBe("somechannel");
+  expect(src.search).toContain("ps.test");
+  expect(lazyFiles(fetched)).toEqual([
+    expect.stringMatching(/^playerstack-twitch\.js\?v=[0-9a-f]{8}$/),
   ]);
 });
 
@@ -137,4 +181,34 @@ test("switching the source type while a provider downloads picks the new element
   await page.locator("player-stack").evaluate((el, s) => el.setAttribute("src", s), SOURCES.mp4);
   await expect(page.locator("player-stack video")).toHaveAttribute("src", SOURCES.mp4);
   await expect(page.locator("player-stack hls-video")).toHaveCount(0);
+});
+
+test("moving the player while its provider downloads builds a single controller", async ({
+  page,
+}) => {
+  await openWithSlowProviders(page, SOURCES.hls, 800);
+  await page.evaluate(() => {
+    const target = document.body.appendChild(document.createElement("section"));
+    target.appendChild(document.querySelector("player-stack")!);
+  });
+  await expect(page.locator("section > player-stack hls-video")).toBeAttached();
+  await expect(page.locator("player-stack media-controller")).toHaveCount(1);
+  await expect(page.locator("player-stack media-controller")).toBeVisible();
+});
+
+test("removing the player while its provider downloads leaves it empty", async ({ page }) => {
+  await openWithSlowProviders(page, SOURCES.hls, 800);
+  await page.evaluate(() => {
+    const el = document.querySelector("player-stack")!;
+    (window as { removed?: Element }).removed = el;
+    el.remove();
+  });
+  await expect.poll(() => page.evaluate(() => !!customElements.get("hls-video"))).toBe(true);
+  // Give a boot that ignored the removal time to build its controller.
+  await page.waitForTimeout(300);
+  expect(
+    await page.evaluate(
+      () => (window as { removed?: Element }).removed!.querySelector("media-controller") === null,
+    ),
+  ).toBe(true);
 });
