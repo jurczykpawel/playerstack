@@ -130,7 +130,7 @@ test("multiple players share a plugin download and initialize independently", as
   expect(lazyFiles(fetched)).toHaveLength(1);
 });
 
-test("failed poster download emits plugin-load and leaves MP4 playable with native controls", async ({
+test("failed poster download emits plugin-load and keeps the MP4 until a click on the controls", async ({
   page,
 }) => {
   await page.addInitScript(() =>
@@ -152,8 +152,11 @@ test("failed poster download emits plugin-load and leaves MP4 playable with nati
     )
     .toMatchObject({ reason: "plugin-load", plugin: "branded-thumb" });
   const video = page.locator("player-stack video");
-  await expect(video).toHaveAttribute("src", SOURCES.mp4);
+  // Click-to-load stays closed without the thumbnail: nothing loads before a click.
+  await page.waitForTimeout(300);
+  expect(await video.getAttribute("src")).toBeNull();
   await page.locator("player-stack media-play-button").click();
+  await expect(video).toHaveAttribute("src", SOURCES.mp4);
   await expect
     .poll(() => video.evaluate((el) => (el as HTMLVideoElement).paused), { timeout: 15000 })
     .toBe(false);
