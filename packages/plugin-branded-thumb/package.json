@@ -26,7 +26,7 @@
   "devDependencies": {
     "@playerstack/core": "workspace:*",
     "@playerstack/plugin-sources": "workspace:*",
-    "vitest": "^3.2.4",
-    "happy-dom": "^20.0.0"
+    "vitest": "^4.1.12",
+    "happy-dom": "^21.0.4"
   }
 }
