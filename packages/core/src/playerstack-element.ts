@@ -122,21 +122,18 @@ export class PlayerstackElement extends HTMLElement {
     if (generation !== this.bootGeneration) return;
 
     // Loading a provider can take seconds; apply attribute changes made in the
-    // meantime and pick the provider again if the source type changed.
+    // meantime and pick the provider again if the source type changed. With
+    // click-to-load the thumbnail is built first and the provider downloads
+    // meantime (media-chrome and the provider elements upgrade in place).
+    const deferredSrc = (config as { brandedThumb?: { clickToLoad?: boolean } }).brandedThumb
+      ?.clickToLoad;
     let tag = detectElementTag(config);
+    let ready: Promise<Error | void>;
     for (;;) {
-      try {
-        await ensureMediaElement(tag);
-      } catch (err) {
-        console.error(`[playerstack] could not load <${tag}>:`, (err as Error).message);
-        this.dispatchEvent(
-          new CustomEvent("playerstack:error", {
-            bubbles: true,
-            detail: { reason: "provider-load", tag, error: err },
-          }),
-        );
-        return;
-      }
+      ready = ensureMediaElement(tag).catch((err: Error) => err);
+      if (deferredSrc) break;
+      const err = await ready;
+      if (err) return this.providerFailed(tag, err);
       if (generation !== this.bootGeneration) return;
       config = this.applyPendingAttrs(config);
       const next = detectElementTag(config);
@@ -175,25 +172,42 @@ export class PlayerstackElement extends HTMLElement {
 
     if (generation !== this.bootGeneration) return;
     this.initializing = false;
-    if (this.pendingAttrs.size > 0) {
-      const next = this.applyPendingAttrs(config);
+    const teardown = () => {
       registry.destroy();
       this.destroyRegistry = null;
       controller.remove();
       this.mediaPlayer = null;
       this.events = null;
+    };
+    const err = await ready;
+    if (generation !== this.bootGeneration) return;
+    if (err) {
+      teardown();
+      return this.providerFailed(tag, err);
+    }
+    if (this.pendingAttrs.size > 0) {
+      const next = this.applyPendingAttrs(config);
+      teardown();
       void this.boot(next);
       return;
     }
 
-    const deferredSrc = (config as { brandedThumb?: { clickToLoad?: boolean } }).brandedThumb
-      ?.clickToLoad;
     // If plugin init threw, don't write a fallback `src` — the sources
     // plugin owns the resolution decision and we must not override it.
     if (pluginsOk && !deferredSrc && !mediaEl.hasAttribute("src")) {
       mediaEl.setAttribute("src", config.src);
     }
     controller.style.removeProperty("visibility");
+  }
+
+  private providerFailed(tag: MediaElementTag, err: Error): void {
+    console.error(`[playerstack] could not load <${tag}>:`, err.message);
+    this.dispatchEvent(
+      new CustomEvent("playerstack:error", {
+        bubbles: true,
+        detail: { reason: "provider-load", tag, error: err },
+      }),
+    );
   }
 
   private applyPendingAttrs(config: PlayerstackConfig): PlayerstackConfig {
