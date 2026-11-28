@@ -5,6 +5,7 @@ set -euo pipefail
 cd packages/embed
 bun run build
 bash ../../scripts/copy-standalone.sh ../../apps/docs/public
+bun release-versions.ts stage ../../apps/docs/public
 
 # Build Astro docs
 cd ../../apps/docs

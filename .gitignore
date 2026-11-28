@@ -35,9 +35,13 @@ apps/docs/.astro/dev.json
 apps/docs/public/playerstack*.js
 apps/docs/public/playerstack*.js.map
 apps/docs/public/playerstack*.LEGAL.txt
+apps/docs/public/v/
 apps/playground/playerstack.min.js
 apps/playground/playerstack.min.js.map
 
 # Private task tracking / working docs (never commit)
 priv/
 docs/superpowers/
+
+# wrangler pages dev local state
+.wrangler/

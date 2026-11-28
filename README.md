@@ -23,7 +23,7 @@ Embeddable video player for any HTML page. One script tag. YouTube, Vimeo, Wisti
 </player-stack>
 ```
 
-The script is hosted by the documentation site. To self-host it, copy `playerstack.min.js`, `playerstack-youtube.js`, `playerstack-hls.js`, `playerstack-vimeo.js`, `playerstack-wistia.js`, `playerstack-twitch.js`, all 14 `playerstack-plugin-*.js` files and each file's `*.LEGAL.txt` notice from the same release into one directory on your domain. For a local build, run `bun install --frozen-lockfile` and `bun run --filter playerstack build`; all files are in `packages/embed/dist/`. `bash scripts/copy-standalone.sh <target-dir>` copies and checks this complete set.
+The script is hosted by the documentation site; `/playerstack.min.js` is the latest release (cached for 5 minutes), and [versioned URLs with SRI](https://playerstack.techskills.academy/docs/versions) pin one release. To self-host it, copy `playerstack.min.js`, `playerstack-youtube.js`, `playerstack-hls.js`, `playerstack-vimeo.js`, `playerstack-wistia.js`, `playerstack-twitch.js`, all 14 `playerstack-plugin-*.js` files and each file's `*.LEGAL.txt` notice from the same release into one directory on your domain. For a local build, run `bun install --frozen-lockfile` and `bun run --filter playerstack build`; all files are in `packages/embed/dist/`. `bash scripts/copy-standalone.sh <target-dir>` copies and checks this complete set.
 
 That's it. The custom element registers itself, parses the URL, mounts the right Mux media element underneath (`<video>` for MP4/WebM, `<youtube-video>`, `<vimeo-video>`, `<wistia-video>`, `<twitch-video>`, or `<hls-video>`) inside `<media-controller>`, and applies the plugins from `data-config`.
 

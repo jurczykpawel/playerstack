@@ -42,6 +42,7 @@ Apache-2.0 for core and all 17 first-party plugins. Premium plugins (post-MVP) a
 ## Links
 - Site: https://playerstack.techskills.academy
 - GitHub: https://github.com/jurczykpawel/playerstack
-- Standalone script: https://playerstack.techskills.academy/playerstack.min.js
+- Standalone script: https://playerstack.techskills.academy/playerstack.min.js (latest release, cached 5 minutes)
+- Pinned versions with SRI: https://playerstack.techskills.academy/docs/versions (list: https://playerstack.techskills.academy/v/versions.json)
 - Engine UI: https://github.com/muxinc/media-chrome
 - Engine media elements: https://github.com/muxinc/media-elements
