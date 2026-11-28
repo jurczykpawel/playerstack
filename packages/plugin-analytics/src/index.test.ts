@@ -1,23 +1,33 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi, type Mock } from "vitest";
 import { analyticsPlugin } from "./index";
 import { createEventBus } from "@playerstack/core";
 import type { PlayerstackContext, PlayerstackConfig } from "@playerstack/core";
 
-let beaconMock: ReturnType<typeof vi.fn>;
+// beaconMock records (url, body) of every request the plugin sends.
+let beaconMock: Mock<(url: string, body: unknown) => void>;
+let fetchMock: ReturnType<typeof vi.fn>;
+let sendBeaconMock: ReturnType<typeof vi.fn>;
 let gtagMock: ReturnType<typeof vi.fn>;
 
 beforeEach(() => {
-  beaconMock = vi.fn(() => true);
+  beaconMock = vi.fn<(url: string, body: unknown) => void>();
+  fetchMock = vi.fn((url: string, init?: RequestInit) => {
+    beaconMock(url, init?.body);
+    return Promise.resolve(new Response(null));
+  });
+  vi.stubGlobal("fetch", fetchMock);
+  sendBeaconMock = vi.fn(() => true);
   gtagMock = vi.fn();
   Object.defineProperty(navigator, "sendBeacon", {
     configurable: true,
-    value: beaconMock,
+    value: sendBeaconMock,
   });
   (globalThis as unknown as { gtag?: unknown }).gtag = gtagMock;
 });
 
 afterEach(() => {
   delete (globalThis as { gtag?: unknown }).gtag;
+  vi.unstubAllGlobals();
 });
 
 type MockMediaPlayer = HTMLElement & { currentTime: number; duration: number };
@@ -48,7 +58,25 @@ describe("analyticsPlugin", () => {
     expect(beaconMock).not.toHaveBeenCalled();
   });
 
-  it("with endpoint: sends sendBeacon on cta:click", async () => {
+  it("sends to the endpoint without cookies and survives leaving the page", async () => {
+    const ctx = makeContext({
+      analytics: { enabled: true, endpoint: "https://example.com/api/track" },
+    });
+    await analyticsPlugin.init(ctx);
+    ctx.events.emit("cta:click", { label: "Buy", url: "https://example.com/buy" });
+    expect(fetchMock).toHaveBeenCalledWith(
+      "https://example.com/api/track",
+      expect.objectContaining({
+        method: "POST",
+        credentials: "omit",
+        keepalive: true,
+        mode: "no-cors",
+      }),
+    );
+    expect(sendBeaconMock).not.toHaveBeenCalled();
+  });
+
+  it("with endpoint: sends a request on cta:click", async () => {
     const ctx = makeContext({
       analytics: { enabled: true, endpoint: "https://example.com/api/track" },
     });

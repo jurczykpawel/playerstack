@@ -1,6 +1,6 @@
 # @playerstack/plugin-analytics
 
-Forward Playerstack events (and native HTML5 media events) to your analytics endpoint. Supports `navigator.sendBeacon` to a custom URL or `window.gtag` for Google Analytics. Part of [Playerstack](https://github.com/jurczykpawel/playerstack).
+Forward Playerstack events (and native HTML5 media events) to your analytics endpoint. Supports a cookie-free `POST` to a custom URL or `window.gtag` for Google Analytics. Part of [Playerstack](https://github.com/jurczykpawel/playerstack).
 
 Included in the standalone [`playerstack`](https://playerstack.techskills.academy/playerstack.min.js) bundle.
 
@@ -47,16 +47,16 @@ The `@playerstack/*` packages are not published to npm yet; to compose your own 
 
 `config.analytics`:
 
-| Field                | Type                       | Default                                                                         | Description                                           |
-| -------------------- | -------------------------- | ------------------------------------------------------------------------------- | ----------------------------------------------------- |
-| `enabled`            | boolean                    | `false`                                                                         | Plugin is a no-op unless `true`                       |
-| `provider`           | `"beacon" \| "gtag"`       | `"beacon"` if endpoint set, else `"gtag"`                                       | Where to send events                                  |
-| `endpoint`           | string?                    | none                                                                            | Required when `provider="beacon"` — sendBeacon target |
-| `customProps`        | `Record<string, unknown>?` | `{}`                                                                            | Merged into every event payload                       |
-| `forwardBusEvents`   | string[]?                  | `["thumb:click","cta:show","cta:click","cta:skip","cta:replay","chapter:jump"]` | Which Playerstack event-bus events to forward         |
-| `forwardMediaEvents` | string[]?                  | `["play","pause","ended"]`                                                      | Which native `<media-player>` events to forward       |
-| `watchTime`          | boolean?                   | `false`                                                                         | Send `watch_progress` (see below)                     |
-| `watchTimeInterval`  | number?                    | off                                                                             | Also send it every N seconds (minimum 5)              |
+| Field                | Type                       | Default                                                                         | Description                                        |
+| -------------------- | -------------------------- | ------------------------------------------------------------------------------- | -------------------------------------------------- |
+| `enabled`            | boolean                    | `false`                                                                         | Plugin is a no-op unless `true`                    |
+| `provider`           | `"beacon" \| "gtag"`       | `"beacon"` if endpoint set, else `"gtag"`                                       | Where to send events                               |
+| `endpoint`           | string?                    | none                                                                            | Required when `provider="beacon"` — request target |
+| `customProps`        | `Record<string, unknown>?` | `{}`                                                                            | Merged into every event payload                    |
+| `forwardBusEvents`   | string[]?                  | `["thumb:click","cta:show","cta:click","cta:skip","cta:replay","chapter:jump"]` | Which Playerstack event-bus events to forward      |
+| `forwardMediaEvents` | string[]?                  | `["play","pause","ended"]`                                                      | Which native `<media-player>` events to forward    |
+| `watchTime`          | boolean?                   | `false`                                                                         | Send `watch_progress` (see below)                  |
+| `watchTimeInterval`  | number?                    | off                                                                             | Also send it every N seconds (minimum 5)           |
 
 ## Beacon payload shape
 
@@ -122,7 +122,9 @@ Beacon payload:
 
 Seconds are rounded to 0.1. At 2x speed, 60 s of video counts as 60 s. A playback starts when the player loads a source and ends when the page or source goes away. Nothing is sent for live streams (no finite duration). The muted in-player preview (`preview` without `preview.src`) is not counted until the viewer unmutes. Delivery is best effort, as with any beacon.
 
-The player sends no IP address field and no viewer or session identifier (your server sees the IP of the request, as with any request). To tell viewers apart, add your own value in `customProps`.
+The player sends no IP address field and no viewer or session identifier (your server sees the IP of the request, as with any request). Requests carry no cookies, not even for an endpoint on your own domain. To tell viewers apart, add your own value in `customProps`.
+
+Events are sent with `fetch` (`POST`, `text/plain` JSON body, `credentials: "omit"`, `keepalive: true`, `mode: "no-cors"`), so endpoints do not need CORS headers. `keepalive` lets the last events go out while the page closes; Firefox before version 133 ignores it, so there the batch sent while leaving the page can be lost.
 
 ### Building reports without an identifier
 

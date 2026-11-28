@@ -8,7 +8,7 @@ description: Forward Playerstack and native media events to your analytics endpo
 
 > Package: `@playerstack/plugin-analytics` ([source](https://github.com/jurczykpawel/playerstack/tree/main/packages/plugin-analytics)), not published to npm yet
 
-Forward Playerstack event-bus events (and native HTML5 media events) to your analytics. Two providers built in: `navigator.sendBeacon` to a custom URL, or `window.gtag` for Google Analytics 4.
+Forward Playerstack event-bus events (and native HTML5 media events) to your analytics. Two providers built in: a cookie-free `POST` to a custom URL, or `window.gtag` for Google Analytics 4.
 
 ## Quickstart — beacon to your endpoint
 
@@ -116,7 +116,9 @@ Beacon payload:
 
 Seconds are rounded to 0.1. At 2x speed, 60 s of video counts as 60 s. A playback starts when the player loads a source and ends when the page or source goes away. Nothing is sent for live streams (no finite duration). The muted in-player preview (`preview` without `preview.src`) is not counted until the viewer unmutes. Delivery is best effort, as with any beacon.
 
-The player sends no IP address field and no viewer or session identifier (your server sees the IP of the request, as with any request). To tell viewers apart, add your own value in `customProps`.
+The player sends no IP address field and no viewer or session identifier (your server sees the IP of the request, as with any request). Requests carry no cookies, not even for an endpoint on your own domain. To tell viewers apart, add your own value in `customProps`.
+
+Events are sent with `fetch` (`POST`, `text/plain` JSON body, `credentials: "omit"`, `keepalive: true`, `mode: "no-cors"`), so endpoints do not need CORS headers. `keepalive` lets the last events go out while the page closes; Firefox before version 133 ignores it, so there the batch sent while leaving the page can be lost.
 
 ### Building reports without an identifier
 

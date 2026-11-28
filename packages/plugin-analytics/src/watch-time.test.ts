@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi, type Mock } from "vitest";
 import { analyticsPlugin, type AnalyticsConfig } from "./index";
 import { createEventBus } from "@playerstack/core";
 import type { PlayerstackContext, PlayerstackConfig } from "@playerstack/core";
@@ -22,13 +22,19 @@ interface Progress {
   [key: string]: unknown;
 }
 
-let beacon: ReturnType<typeof vi.fn>;
+let beacon: Mock<(url: string, body: unknown) => void>;
 let active: PlayerstackContext[] = [];
 
 beforeEach(() => {
   vi.useFakeTimers({ toFake: ["setInterval", "clearInterval", "performance"] });
-  beacon = vi.fn(() => true);
-  Object.defineProperty(navigator, "sendBeacon", { configurable: true, value: beacon });
+  beacon = vi.fn<(url: string, body: unknown) => void>();
+  vi.stubGlobal(
+    "fetch",
+    vi.fn((url: string, init?: RequestInit) => {
+      beacon(url, init?.body);
+      return Promise.resolve(new Response(null));
+    }),
+  );
 });
 
 afterEach(() => {
@@ -36,6 +42,7 @@ afterEach(() => {
   active = [];
   setVisibility("visible");
   vi.useRealTimers();
+  vi.unstubAllGlobals();
 });
 
 async function setup(
