@@ -13,6 +13,7 @@ All notable changes to Playerstack will be documented in this file.
 - `config.hls` passes only number and boolean options to hls.js; string and object options are ignored. Options such as `abrEwmaDefaultEstimate`, `startLevel`, `capLevelToPlayerSize` and `maxBufferLength` work as before.
 - `custom-css`: `trustedCss` that could style elements outside its player is dropped: `&` inside a pseudo-class, a sibling combinator after the player, an unclosed string or comment, and at-rules other than `@media`, `@supports`, `@container`, `@layer` and `@keyframes`.
 - `sticky`: the close button is 44 px and stays clickable above overlays; top action bars and the intro card close button no longer sit under it; an inline size on `<player-stack>` no longer pushes the pinned player off screen (#24).
+- WordPress shortcode example: shortcode attributes can no longer add their own `data-config` keys; `accent` accepts only hex colors.
 
 ### Added
 
