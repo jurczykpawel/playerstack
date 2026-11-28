@@ -50,7 +50,7 @@ By default hls.js picks the first quality level itself. `config.hls` passes opti
 
 - `abrEwmaDefaultEstimate` (bits per second) is the assumed bandwidth before the first segment: hls.js starts with a level that fits it, then adapts as usual. About `1200000` starts a typical ladder around 480p.
 - `startLevel` selects the first level by index, ordered by bitrate (`0` is the lowest). The resolution behind an index depends on the stream.
-- Other [hls.js options](https://github.com/video-dev/hls.js/blob/master/docs/API.md#fine-tuning) are passed unchanged. `capLevelToPlayerSize` limits quality for the whole playback, not only the start.
+- Other [hls.js options](https://github.com/video-dev/hls.js/blob/master/docs/API.md#fine-tuning) with number or boolean values are passed unchanged; options with string or object values (for example `workerPath`, `drmSystems`) are ignored. `capLevelToPlayerSize` limits quality for the whole playback, not only the start.
 
 Browsers that play HLS natively, without hls.js, ignore these options.
 

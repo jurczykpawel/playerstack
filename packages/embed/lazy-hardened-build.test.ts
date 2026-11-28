@@ -38,6 +38,8 @@ it("ships hardened separately and keeps the open email configuration within its 
   // 2026-11-27, lazy switch for the cta-end modes behind at/atPercent/frequency (+131 B:
   // cta-end +144, main -3, email-gate -10; Bun 1.4.5, same method): 52,026 B / 48,252 B,
   // limits rounded up to the next 100 B.
+  // 2026-11-28, config.hls limited to number/boolean options (+42 B in playerstack.min.js,
+  // Bun 1.4.5, same method): 52,067 B / 48,293 B, limits unchanged.
   expect(sizes.reduce((sum, size) => sum + size, 0)).toBeLessThanOrEqual(52100);
   expect(sizes.slice(0, -1).reduce((sum, size) => sum + size, 0)).toBeLessThanOrEqual(48300);
   // The card modes behind ctaEnd.at/atPercent/frequency ship separately.
