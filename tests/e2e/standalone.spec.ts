@@ -227,3 +227,36 @@ test("removing the player while its provider downloads leaves it empty", async (
     ),
   ).toBe(true);
 });
+for (const type of ["text/javascript", "module"]) {
+  test(`data-provider-base locates providers for a renamed copy (${type})`, async ({ page }) => {
+    const providers: string[] = [];
+    await page.route(`${ORIGIN}/**/*.js*`, (route) => {
+      const url = new URL(route.request().url());
+      const file = url.pathname.split("/").pop()!;
+      if (url.pathname === "/wp-content/cache/min/bundle-1a2b.js") {
+        return route.fulfill({
+          body: readFileSync(join(DIST, "playerstack.min.js")),
+          contentType: "application/javascript",
+        });
+      }
+      if (!url.pathname.startsWith("/assets/")) return route.fulfill({ status: 404 });
+      providers.push(file);
+      return route.fulfill({
+        body: readFileSync(join(DIST, file)),
+        contentType: "application/javascript",
+      });
+    });
+    await page.route(`${ORIGIN}/`, (route) =>
+      route.fulfill({
+        contentType: "text/html",
+        body: `<!doctype html><html><head><meta charset="utf-8"></head><body>
+          <player-stack src="${SOURCES.hls}"></player-stack>
+          <script type="${type}" src="${ORIGIN}/wp-content/cache/min/bundle-1a2b.js" data-provider-base="/assets"></script>
+        </body></html>`,
+      }),
+    );
+    await page.goto(`${ORIGIN}/`);
+    await expect(page.locator("player-stack hls-video")).toBeAttached();
+    expect(providers).toEqual([expect.stringMatching(/^playerstack-hls\.js$/)]);
+  });
+}

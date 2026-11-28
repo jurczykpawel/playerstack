@@ -7,6 +7,9 @@ All notable changes to Playerstack will be documented in this file.
 ### Changed
 
 - HLS on Safari and iOS (Apple WebKit) plays in a native `<video>` and no longer downloads `playerstack-hls.js` (about 166 KB gzip less per page). Set `config.hls` to keep hls.js there; other browsers are unchanged.
+- Self-hosting: unlike v0.1.0, YouTube, HLS, Vimeo, Wistia and Twitch are no longer inside `playerstack.min.js`; they load on first use from sibling files. Copy `playerstack-youtube.js`, `playerstack-hls.js`, `playerstack-vimeo.js`, `playerstack-wistia.js` and `playerstack-twitch.js` (plus the plugin and feature files, see [Self-host the bundle](https://playerstack.techskills.academy/docs/getting-started/#self-host-the-bundle)) next to `playerstack.min.js`, or the player stays empty and emits `playerstack:error` for those sources; `bash scripts/copy-standalone.sh <dir>` copies the complete set.
+- The `playerstack` package no longer declares a `browser` entry pointing at the standalone script, so bundlers pick the ESM build, which does not fetch sibling files (the package is not on npm yet).
+- `data-config` wins over the `src`, `poster`, `title` and `preload` attributes when the player starts; changing one of those attributes later overrides it (documented, behaviour unchanged).
 
 - `sticky`: below a 600 px viewport the pinned player now spans the screen at the bottom (8 px gaps plus safe-area insets) instead of a `40vw` corner box; `position` does not apply there and `offset` is only the bottom gap. At every width it grows to `min(60dvh, 420px)` while a CTA card, e-mail form or intro card is open.
 
@@ -21,6 +24,8 @@ All notable changes to Playerstack will be documented in this file.
 - WordPress shortcode example: shortcode attributes can no longer add their own `data-config` keys; `accent` accepts only hex colors.
 
 ### Added
+
+- `data-provider-base` on a `<script>` sets the directory of provider, plugin and feature files for a renamed, inlined, combined or `type="module"` copy of `playerstack.min.js` (WordPress cache and optimization plugins).
 
 - `watermark.moveInterval` moves the watermark to a random spot inside the frame, above the control bar, every given number of seconds (`moveTransition` `smooth` or `jump`; reduced motion always jumps). `watermark.reinsert` puts a removed overlay back. All off by default; the Sellf adapter passes them through.
 

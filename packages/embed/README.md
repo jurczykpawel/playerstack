@@ -82,7 +82,7 @@ A network, CSP, missing-file or 15-second download timeout dispatches a bubbling
 
 The feature files are ES modules loaded with `import()`: `playerstack-cta-end-timed.js` only when `ctaEnd.at`, `atPercent` or `frequency` is set. From another origin they need an `Access-Control-Allow-Origin` header.
 
-Plugin filenames remain stable and requests use `?v=<content hash>`. Cached main scripts can therefore load newer plugin files: keep filenames, names, `init(ctx)`, destroy and event contracts compatible across releases. The internal module registry keys each implementation by its full versioned URL. Self-host all files together and allow their directory in CSP `script-src`.
+Plugin filenames remain stable and requests use `?v=<content hash>`. Cached main scripts can therefore load newer plugin files: keep filenames, names, `init(ctx)`, destroy and event contracts compatible across releases. The internal module registry keys each implementation by its full versioned URL. Self-host all files together and allow their directory in CSP `script-src`. A renamed, inlined, combined or `type="module"` copy cannot find that directory by itself: set it with `data-provider-base` on any `<script>` (for example `<script src="/cache/bundle.js" data-provider-base="/js/playerstack/">`).
 
 ## Provider files and compatibility
 

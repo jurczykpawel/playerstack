@@ -5,9 +5,14 @@ const MAIN_SCRIPT_RE = /\/playerstack(?:\.min)?\.js(?:[?#]|$)/;
 /**
  * Directory the standalone script was served from, so provider files can be
  * fetched next to it. Pass `document.currentScript` captured at top-level
- * evaluation: it is null in callbacks and for module scripts.
+ * evaluation: it is null in callbacks and for module scripts. The first
+ * `<script data-provider-base>` on the page sets the directory by hand, for
+ * renamed, inlined, module or combined copies.
  */
 export function resolveScriptBase(current: HTMLOrSVGScriptElement | null, doc: Document): string {
+  const manual = doc.querySelector<HTMLScriptElement>("script[data-provider-base]")?.dataset
+    .providerBase;
+  if (manual) return new URL(manual.replace(/\/?$/, "/"), doc.baseURI).href;
   let src = current instanceof HTMLScriptElement ? current.src : "";
   if (!src) {
     const candidates = [...doc.querySelectorAll<HTMLScriptElement>("script[src]")].filter((s) =>

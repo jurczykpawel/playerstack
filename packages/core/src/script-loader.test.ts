@@ -34,6 +34,20 @@ describe("resolveScriptBase", () => {
     expect(resolveScriptBase(null, document)).toBe("https://playerstack.techskills.academy/");
   });
 
+  it("prefers data-provider-base on the executing script (renamed copy)", () => {
+    document.head.innerHTML = `<script type="text/x-test" src="https://example.com/wp-content/cache/min/bundle-1a2b.js" data-provider-base="https://cdn.example.com/playerstack/"></script>`;
+    const script = document.head.querySelector("script")!;
+    expect(resolveScriptBase(script, document)).toBe("https://cdn.example.com/playerstack/");
+  });
+
+  it("reads data-provider-base from any <script> when currentScript is null (module, inlined)", () => {
+    document.head.innerHTML = `
+      <script type="text/x-test" src="https://playerstack.techskills.academy/playerstack.min.js"></script>
+      <script type="text/x-test" data-provider-base="/static/ps"></script>`;
+    // Relative values resolve against the page; a missing trailing slash is added.
+    expect(resolveScriptBase(null, document)).toBe(new URL("/static/ps/", document.baseURI).href);
+  });
+
   it("falls back to the document base when no playerstack <script> is found", () => {
     expect(resolveScriptBase(null, document)).toBe(new URL("./", document.baseURI).href);
   });

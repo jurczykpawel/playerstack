@@ -43,8 +43,11 @@ it("ships hardened separately and keeps the open email configuration within its 
   // 2026-11-28, native HLS on Apple WebKit without hls.js (+71 B in playerstack.min.js,
   // Bun 1.4.5, same method; saves 166,349 B gzip per Safari/iOS HLS page): 52,138 B /
   // 48,364 B, limits rounded up to the next 100 B.
-  expect(sizes.reduce((sum, size) => sum + size, 0)).toBeLessThanOrEqual(52200);
-  expect(sizes.slice(0, -1).reduce((sum, size) => sum + size, 0)).toBeLessThanOrEqual(48400);
+  // 2026-11-28, canonical Wistia URLs (#36, +36 B in playerstack.min.js): 52,174 B / 48,400 B.
+  // 2026-11-28, data-provider-base for renamed/inlined copies (+40 B in playerstack.min.js,
+  // Bun 1.4.5, same method): 52,214 B / 48,440 B, limits rounded up to the next 100 B.
+  expect(sizes.reduce((sum, size) => sum + size, 0)).toBeLessThanOrEqual(52300);
+  expect(sizes.slice(0, -1).reduce((sum, size) => sum + size, 0)).toBeLessThanOrEqual(48500);
   // The card modes behind ctaEnd.at/atPercent/frequency ship separately.
   const timed = "playerstack-cta-end-timed.js";
   expect(sources(timed).some((source) => source.endsWith("timed.ts"))).toBe(true);
