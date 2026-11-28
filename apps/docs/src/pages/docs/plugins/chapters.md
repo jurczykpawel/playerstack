@@ -33,13 +33,13 @@ Render a clickable chapter list under (or anywhere around) the player. Active ch
 
 `config.chapters`:
 
-| Field               | Type                     | Description                                                                        |
-| ------------------- | ------------------------ | ---------------------------------------------------------------------------------- |
-| `points`            | `Array<{ time, label }>` | Sorted automatically. Time in seconds. Required                                    |
-| `containerSelector` | string?                  | CSS selector to mount the list elsewhere; defaults to right after `<player-stack>` |
-| `markers`           | boolean?                 | Chapter markers and titles on the progress bar. Default `false`                    |
-| `menu`              | boolean?                 | Chapters button with a menu in the control bar. Default `false`                    |
-| `menuLabel`         | string?                  | Accessible name of that button; set it in the page language. Default `Chapters`    |
+| Field               | Type                     | Description                                                                                                                                                                                                                                                                                        |
+| ------------------- | ------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `points`            | `Array<{ time, label }>` | Sorted automatically. Time in seconds. Required                                                                                                                                                                                                                                                    |
+| `containerSelector` | string?                  | CSS selector of a layout container to mount the list in; defaults to right after `<player-stack>`. Links, buttons, labels, `<summary>` and form fields (or anything inside them) are not used: the list then goes after the player, with a console warning, as for an invalid or missing selector. |
+| `markers`           | boolean?                 | Chapter markers and titles on the progress bar. Default `false`                                                                                                                                                                                                                                    |
+| `menu`              | boolean?                 | Chapters button with a menu in the control bar. Default `false`                                                                                                                                                                                                                                    |
+| `menuLabel`         | string?                  | Accessible name of that button; set it in the page language. Default `Chapters`                                                                                                                                                                                                                    |
 
 ## Active chapter styling
 

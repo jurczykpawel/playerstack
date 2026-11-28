@@ -77,6 +77,50 @@ describe("chaptersPlugin", () => {
     expect(ctx.container.nextElementSibling).toBe(list);
   });
 
+  describe("containerSelector", () => {
+    const points = [{ time: 0, label: "Intro" }];
+    const afterPlayer = (ctx: PlayerstackContext) =>
+      ctx.container.nextElementSibling?.classList.contains("playerstack-chapters");
+
+    it("mounts the list into the matched layout container", async () => {
+      const box = document.createElement("section");
+      box.id = "chapter-box";
+      document.body.appendChild(box);
+      await chaptersPlugin.init(
+        makeContext({ chapters: { points, containerSelector: "#chapter-box" } }),
+      );
+      expect(box.querySelector(".playerstack-chapters")).not.toBeNull();
+    });
+
+    for (const [name, html] of [
+      ["a button", '<form><button id="target" type="submit"></button></form>'],
+      ["a link", '<a id="target" href="https://example.com/logout"></a>'],
+      ["an element inside a link", '<a href="https://example.com/x"><span id="target"></span></a>'],
+      ["a label", '<label id="target"><input type="checkbox"></label>'],
+      ["a summary", '<details><summary id="target"></summary></details>'],
+    ] as const) {
+      it(`does not mount into ${name}; places the list after the player and warns`, async () => {
+        document.body.insertAdjacentHTML("beforeend", html);
+        const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+        const ctx = makeContext({ chapters: { points, containerSelector: "#target" } });
+        await chaptersPlugin.init(ctx);
+        expect(document.querySelector("#target .playerstack-chapters")).toBeNull();
+        expect(afterPlayer(ctx)).toBe(true);
+        expect(warn).toHaveBeenCalled();
+        warn.mockRestore();
+      });
+    }
+
+    it("falls back to the default place, with a warning, for an invalid selector", async () => {
+      const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+      const ctx = makeContext({ chapters: { points, containerSelector: "][" } });
+      await expect(chaptersPlugin.init(ctx)).resolves.toBeUndefined();
+      expect(afterPlayer(ctx)).toBe(true);
+      expect(warn).toHaveBeenCalled();
+      warn.mockRestore();
+    });
+  });
+
   it("clicking a chapter sets mediaPlayer.currentTime", async () => {
     const ctx = makeContext({
       chapters: { points: [{ time: 30, label: "Body" }] },
