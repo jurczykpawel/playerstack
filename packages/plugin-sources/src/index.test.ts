@@ -32,6 +32,26 @@ describe("sourcesPlugin", () => {
     expect(ctx.mediaPlayer.getAttribute("src")).toBe("https://vimeo.com/123456789");
   });
 
+  it.each([
+    "https://fast.wistia.com/embed/medias/abc123xyz",
+    "https://fast.wistia.com/embed/iframe/abc123xyz",
+    "https://acme.wistia.com/medias/abc123xyz",
+    "https://wi.st/medias/abc123xyz",
+  ])("hands <wistia-video> the media id it can parse for %s", async (url) => {
+    const ctx = makeContext(url);
+    await sourcesPlugin.init(ctx);
+    expect(ctx.mediaPlayer.getAttribute("src")).toBe("https://fast.wistia.com/medias/abc123xyz");
+  });
+
+  it("gives click-to-load the same Wistia URL to set on click", async () => {
+    const ctx = makeContext("https://fast.wistia.com/embed/iframe/abc123xyz", {
+      brandedThumb: { clickToLoad: true },
+    } as Partial<PlayerstackConfig>);
+    await sourcesPlugin.init(ctx);
+    expect(ctx.mediaPlayer.hasAttribute("src")).toBe(false);
+    expect(ctx.config.src).toBe("https://fast.wistia.com/medias/abc123xyz");
+  });
+
   it("passes through MP4 URLs unchanged", async () => {
     const url = "https://example.com/v.mp4";
     const ctx = makeContext(url);

@@ -97,6 +97,21 @@ test("Wistia loads only the wistia provider and the Wistia script for the media 
   ]);
 });
 
+for (const form of ["embed/medias", "embed/iframe"]) {
+  test(`Wistia ${form} URLs reach the player with the bare media id (#36)`, async ({ page }) => {
+    await page.route("https://fast.wistia.com/**", (route) =>
+      route.fulfill({
+        contentType: "application/javascript",
+        body: "window.Wistia = {}; window._wq = [];",
+      }),
+    );
+    await openEmbed(page, `https://fast.wistia.com/${form}/abc123xyz`);
+    await expect(page.locator("player-stack wistia-video .wistia_embed")).toHaveClass(
+      /(^|\s)wistia_async_abc123xyz(\s|$)/,
+    );
+  });
+}
+
 test("Twitch loads only the twitch provider and embeds the channel for this host", async ({
   page,
 }) => {
