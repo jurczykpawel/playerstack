@@ -64,7 +64,7 @@ With config:
 | `src`           | string (required) | Video URL — YouTube, Vimeo, MP4, HLS |
 | `poster`        | URL               | Custom poster image                  |
 | `title`         | string            | Accessible title                     |
-| `accent`        | CSS color         | Theme color (e.g. `#008aff`)         |
+| `accent`        | hex color         | Theme color (e.g. `#008aff`)         |
 | `click_to_load` | `true` / `false`  | GDPR-friendly click-to-load          |
 | `cta_title`     | string            | Heading at end of video              |
 | `cta_label`     | string            | CTA button text                      |

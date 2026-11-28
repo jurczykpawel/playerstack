@@ -49,21 +49,22 @@ class PlayerstackShortcode
         $this->enqueue_assets();
 
         $config = [];
-        if (!empty($atts['accent'])) {
-            $config['controls'] = ['accent' => sanitize_hex_color($atts['accent']) ?: $atts['accent']];
+        $accent = sanitize_hex_color($atts['accent']);
+        if (!empty($accent)) {
+            $config['controls'] = ['accent' => $accent];
         }
         if ($atts['click_to_load'] === 'true' || $atts['click_to_load'] === '1') {
             $config['brandedThumb'] = ['enabled' => true, 'clickToLoad' => true];
         }
-        $cta_url = esc_url_raw($atts['cta_url']);
+        $cta_url = esc_url_raw($this->decoded($atts['cta_url']));
         if (!empty($atts['cta_label']) && !empty($cta_url)) {
             $config['ctaEnd'] = [
                 'enabled' => true,
-                'title' => sanitize_text_field($atts['cta_title']),
+                'title' => sanitize_text_field($this->decoded($atts['cta_title'])),
                 'button' => array_filter([
-                    'label' => sanitize_text_field($atts['cta_label']),
+                    'label' => sanitize_text_field($this->decoded($atts['cta_label'])),
                     'url' => $cta_url,
-                    'utm' => sanitize_text_field($atts['cta_utm']),
+                    'utm' => sanitize_text_field($this->decoded($atts['cta_utm'])),
                 ]),
                 'showReplay' => true,
             ];
@@ -79,15 +80,27 @@ class PlayerstackShortcode
             $attributes[] = 'title="' . esc_attr($atts['title']) . '"';
         }
         if (!empty($config)) {
-            // JSON goes inside a single-quoted attribute, so escape any single
-            // quotes/HTML metacharacters that wp_json_encode emits.
-            $attributes[] = "data-config='" . esc_attr(wp_json_encode($config)) . "'";
+            // JSON_HEX_* writes & < > ' " as \u00XX. esc_attr keeps existing
+            // character references such as &quot;, and the browser would decode
+            // them into JSON quotes, letting post authors add their own keys.
+            $json = wp_json_encode($config, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT);
+            $attributes[] = "data-config='" . esc_attr($json) . "'";
         }
 
         return sprintf(
             '<div class="playerstack-wrap" style="background:#000;border-radius:12px;overflow:hidden;aspect-ratio:16/9;"><player-stack %s></player-stack></div>',
             implode(' ', $attributes)
         );
+    }
+
+    /**
+     * Post content stores characters such as & as HTML entities (&amp;).
+     * Decode them here: the JSON below is written with JSON_HEX_*, so the
+     * browser no longer decodes entities inside data-config.
+     */
+    private function decoded(string $value): string
+    {
+        return html_entity_decode($value, ENT_QUOTES | ENT_HTML5, 'UTF-8');
     }
 
     private function enqueue_assets(): void
