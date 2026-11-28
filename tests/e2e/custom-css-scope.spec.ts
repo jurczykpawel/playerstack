@@ -60,6 +60,10 @@ for (const [name, css] of [
     "a semicolon inside a pseudo-class",
     ":is(:not(&),;):is(#outside, #after) { visibility: hidden }",
   ],
+  [
+    "a bracket inside a quoted string",
+    ':is(#outside, #after):not([x=")"], &) { visibility: hidden }',
+  ],
 ]) {
   test(`trusted CSS with ${name} is dropped`, async ({ page }) => {
     await openWithTrustedCss(page, css);

@@ -22,6 +22,7 @@ All notable changes to Playerstack will be documented in this file.
 
 ### Fixed
 
+- `custom-css`: brackets inside quoted strings in a `trustedCss` selector no longer confuse the scope check (they let `&` inside a pseudo-class or a sibling combinator through), and a selector such as `& [x] + span` inside the player is no longer rejected.
 - `custom-css`: the scope check for `trustedCss` also drops sibling combinators after a compound containing `&` (`&:hover ~ p`) and `;`, `{` or `}` inside parentheses or brackets, which could still reach elements outside the player.
 - Wistia `fast.wistia.com/embed/medias/ID` and `/embed/iframe/ID` URLs now play: the player was handed `medias/ID` as the media id (#36).
 
